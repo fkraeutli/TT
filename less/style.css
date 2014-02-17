@@ -51,9 +51,6 @@ svg#timeline,
   fill: none;
   stroke-width: 1px;
 }
-.timeline_axis path {
-  stroke: none;
-}
 .chart {
   margin-bottom: 10px;
 }

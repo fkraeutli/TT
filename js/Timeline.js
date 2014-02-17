@@ -1,6 +1,9 @@
 var Timeline = function() {
 	
+	if(!Timeline.id) Timeline.id = 0;
+	
 	var	initialised = false,
+		id = Timeline.id++,
 		me = {},
 		timeline = this,
 		zoom;
@@ -143,8 +146,8 @@ var Timeline = function() {
 		
 		p.zoomFactor = d3.event.scale;
 		
-		var events = p.elements.events.selectAll("g.event");
-		var ax = p.svg.select("#axis");
+		var events = p.elements.events.selectAll("g.timeline_event");
+		var ax = p.svg.select(".timeline_axis");
 		
 		p.scales.axis.domain( [ p.scales.pxToDate( x.domain()[0] ), p.scales.pxToDate( x.domain()[1] ) ] );
 		
@@ -251,7 +254,7 @@ var Timeline = function() {
 		
 		updateDataValues();
 		
-		var events = p.elements.events.selectAll("g.event")
+		var events = p.elements.events.selectAll("g.timeline_event")
 			.data(p.data.filter(filterEvents), function(d) { return d.id; });
 			
 		// Update events
@@ -264,9 +267,9 @@ var Timeline = function() {
 		var eventsEnter = events.enter()
 			.append("g")
 				.attr("id", function(d) {
-					return "event_" + d.id;
+					return "tl" + id + "_event_" + d.id;
 				})
-			.attr("class", "event")
+			.attr("class", "timeline_event")
 			.attr("transform", attr.event.transform);
 	
 		// Add event appearance
@@ -301,14 +304,16 @@ var Timeline = function() {
 					.orient("top");
 					
 				p.elements.axis = p.svg.append("g")
-					.attr("id","axis")
+					.attr("class", "timeline_axis")
+					.attr("id","tl" + id + "_axis")
 					.call(p.axis)
 					.attr("transform", "translate(0," + (p.view.height - p.view.padding/2) + ")");
 			}
 			
 			function initEvents() {
 				p.elements.events = p.svg.insert("g")
-					.attr("id", "events");
+					.attr("class", "timeline_events")
+					.attr("id", "tl" + id + "_events");
 			}
 				
 			function initScales() {
@@ -329,12 +334,12 @@ var Timeline = function() {
 					.y(y)
 					.scaleExtent( p.scales.minMax.zoom.domain() );
 									
-				d3.select("#events").insert("rect",":first-child")
+				p.svg.select(".timeline_events").insert("rect",":first-child")
 					.attr("width", p.view.width)
 					.attr("height", p.view.height)
 					.attr("class","overlay");
 					
-				d3.select("#events").call(zoom.on("zoom", doZoom));
+				p.svg.select(".timeline_events").call(zoom.on("zoom", doZoom));
 				
 			}
 			

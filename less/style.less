@@ -24,7 +24,7 @@ svg#timeline, #timeline-chart {
 }
 
 
-#axis {
+.timeline_axis {
 	path {
 		fill:none;
 	}
@@ -36,9 +36,9 @@ svg#timeline, #timeline-chart {
 	}
 }
 
-#events {
+.timeline_events {
 
-	.event {
+	.timeline_event {
 		
 		.childrenIcon {
 			rect {
@@ -81,12 +81,16 @@ svg#timeline, #timeline-chart {
 }
 
 
-.axis {
+.timeline_axis {
 	
 	line, path {
 		stroke: @colAxisStroke;
 		fill: none;
 		stroke-width: 1px;
+	}
+	
+	path {
+		stroke: none;
 	}
 	
 }
