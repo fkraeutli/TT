@@ -1,0 +1,81 @@
+body {
+  font-family: "Franklin Gothic Book", "Franklin Gothic", Verdana, sans-serif;
+  font-size: 12px;
+  margin: 0;
+  padding: 1em;
+}
+svg#timeline,
+#timeline-chart {
+  float: left;
+  margin-right: 2em;
+}
+#axis path {
+  fill: none;
+}
+#axis line {
+  stroke: #cccccc;
+}
+#axis text {
+  fill: #000000;
+}
+#events .event .childrenIcon rect {
+  fill: none;
+  cursor: pointer;
+  pointer-events: all;
+}
+#events .event .childrenIcon text {
+  fill: #ffffff;
+}
+#events .event .childrenIcon.open .closed {
+  display: none;
+}
+#events .event .childrenIcon.closed .open {
+  display: none;
+}
+#events .event .eventRect {
+  fill: #008080;
+}
+#events .event .title {
+  fill: #ffffff;
+}
+#events .event .title[text-anchor=end] {
+  fill: #000000;
+}
+.overlay {
+  fill: none;
+  pointer-events: all;
+}
+.axis line,
+.axis path {
+  stroke: #dddddd;
+  fill: none;
+  stroke-width: 1px;
+}
+.chart {
+  margin-bottom: 10px;
+}
+.chart path {
+  fill: #008080;
+}
+.chart path.background {
+  fill: #cccccc;
+}
+.chart .axis path,
+.chart .axis line {
+  fill: none;
+  stroke: #dddddd;
+  shape-rendering: crispEdges;
+}
+.chart .brush rect.extent {
+  fill: steelblue;
+  fill-opacity: .125;
+}
+.chart .brush .resize path {
+  fill: #4682b4;
+  stroke: #666666;
+}
+.chart .reset {
+  padding-left: 1em;
+  font-size: smaller;
+  color: #cccccc;
+}
