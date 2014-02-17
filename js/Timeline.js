@@ -57,7 +57,7 @@ var Timeline = function() {
 				// Update zoom extent here
 				
 				zoom: d3.scale.linear()
-					.domain( [0.9, 1000] ) 
+					.domain( [0.01, 12] ) 
 					.range( [0, 1] )
 				
 			}
@@ -127,7 +127,7 @@ var Timeline = function() {
 			text: {
 			
 				anchor: function(d) {		
-					return p.zoomFactor >= p.thresholds.collapseLevel && d.width * p.zoomFactor > d.title.length * p.fontSize ? "start" : "end";	
+					return p.zoomFactor >= p.thresholds.collapseLevel && d.width * p.zoomFactor > d.title.length * p.styles.events.fontSize ? "start" : "end";	
 				},
 				
 				display: function(d) {
@@ -135,7 +135,7 @@ var Timeline = function() {
 				},
 				
 				x: function (d) {
-					return (d.width * p.zoomFactor > d.title.length * p.fontSize) ? (x(d.x) < 0 && x(d.x) + d.width * p.zoomFactor > 0 ? p.styles.events.padding + -1*x(d.x) : p.styles.events.padding) : -p.styles.events.padding;
+					return (d.width * p.zoomFactor > d.title.length * p.styles.events.fontSize) ? (x(d.x) < 0 && x(d.x) + d.width * p.zoomFactor > 0 ? p.styles.events.padding + -1*x(d.x) : p.styles.events.padding) : -p.styles.events.padding;
 				},
 				
 				y: p.styles.events.height * 0.75
@@ -178,7 +178,7 @@ var Timeline = function() {
 		
 		function filterEvents(d) { 
 		
-			return d.renderLevel > -1 &&//p.thresholds.displayLevel  &&
+			return d.renderLevel > p.thresholds.displayLevel  &&
 				x(d.x) + d.width * p.zoomFactor >= 0 &&
 				x(d.x) <= p.view.width &&
 				d.y + y(0) > -p.styles.events.height && 
@@ -251,7 +251,10 @@ var Timeline = function() {
 					
 					count++;
 					
-				} else {
+				} 
+				
+				/*
+				else {
 				
 					d.x = p.scales.dateToPx(d.from.valueOf());
 					d.width = (p.scales.dateToPx(d.to.valueOf()) - p.scales.dateToPx(d.from.valueOf()));
@@ -266,6 +269,7 @@ var Timeline = function() {
 					}
 					
 				}
+				*/
 			});
 		}
 		
@@ -411,7 +415,7 @@ var Timeline = function() {
 		if(initialised) {
 			updateMinMax();
 			update();
-		};	
+		}
 		
 		return me;
 	};
