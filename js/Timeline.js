@@ -1,3 +1,20 @@
+/*
+
+Generates Timeline view on array of data
+
+data format: {
+
+	id: "",
+	from: Date(),
+	to: Date(),
+	title: ""
+
+}
+
+
+*/
+
+
 var Timeline = function() {
 	
 	if(!Timeline.id) Timeline.id = 0;
@@ -40,7 +57,7 @@ var Timeline = function() {
 				// Update zoom extent here
 				
 				zoom: d3.scale.linear()
-					.domain( [0.01, 12] ) 
+					.domain( [0.9, 1000] ) 
 					.range( [0, 1] )
 				
 			}
@@ -161,7 +178,7 @@ var Timeline = function() {
 		
 		function filterEvents(d) { 
 		
-			return d.renderLevel > p.thresholds.displayLevel  &&
+			return d.renderLevel > -1 &&//p.thresholds.displayLevel  &&
 				x(d.x) + d.width * p.zoomFactor >= 0 &&
 				x(d.x) <= p.view.width &&
 				d.y + y(0) > -p.styles.events.height && 
@@ -234,7 +251,21 @@ var Timeline = function() {
 					
 					count++;
 					
-				} 
+				} else {
+				
+					d.x = p.scales.dateToPx(d.from.valueOf());
+					d.width = (p.scales.dateToPx(d.to.valueOf()) - p.scales.dateToPx(d.from.valueOf()));
+								
+					d.height = 1;
+					d.margin = 1;
+					
+					if(count === 0) {
+						d.y = p.view.padding;
+					} else {
+						d.y = p.styles.events.ys[count - 1] + d.margin;
+					}
+					
+				}
 			});
 		}
 		
