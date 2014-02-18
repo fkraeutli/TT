@@ -1,7 +1,7 @@
 BRITTEN = 0;
 TATE = 1;
 
-loadDataset = BRITTEN;
+loadDataset = TATE;
 
 var currentYear = new Date().getFullYear(),
 	dataset = [],
@@ -139,7 +139,7 @@ var observer = {
 
 function make() {
 
-	timeline = new Timeline().data(dataset);
+	timeline = TT.timeline().data(dataset);
 	
 	d3.select("body").insert("svg", ":first-child")
 		.attr("id", "timeline")
@@ -147,7 +147,7 @@ function make() {
 		.attr("height", 600)
 		.call(timeline);
 			
-	cf = new MyCrossfilter().data(dataset);
+	cf = new TT.crossfilter().data(dataset);
 /*
 
 	// TATE
@@ -168,6 +168,18 @@ function make() {
 	});
 	
 	// BRITTEN
+
+	cf.addFilter({
+		title: "Started Composition",
+		dimension: "from", 
+		group: d3.time.year 
+	});
+		
+	cf.addFilter({
+		title: "Finished Composition",
+		dimension: "to",
+		group: d3.time.year
+	});
 	
 	cf.addFilter({
 	

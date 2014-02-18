@@ -7,20 +7,22 @@ data format: {
 	id: "",
 	from: Date(),
 	to: Date(),
-	title: ""
+	title: "",
+	weight: #
 
 }
 
 
 */
 
+var TT = TT || {};
 
-var Timeline = function() {
+TT.timeline = function() {
 	
-	if(!Timeline.id) Timeline.id = 0;
+	if(!TT.timeline.id) TT.timeline.id = 0;
 	
 	var	initialised = false,
-		id = Timeline.id++,
+		id = TT.timeline.id++,
 		me = {},
 		timeline = this,
 		zoom;
@@ -103,11 +105,8 @@ var Timeline = function() {
 		axis: {
 			tickFormat: function(d) {
 				if( Math.round( (p.axis.scale().domain()[1].getFullYear() - p.axis.scale().domain()[0].getFullYear()) / p.axis.ticks()) >= 1 ) { // If there is not more than one tick per year represented
-				
 					return p.format.year(d);
-				
 				} else {
-				
 					return p.format.date(d);
 				}
 			}
@@ -148,7 +147,7 @@ var Timeline = function() {
 
 	};
 			
-	// Init scales
+	// Init scales used for panning and zooming
 	var x = d3.scale.linear()
 		.domain([0, p.view.width])
 		.range([0, p.view.width ]);
@@ -176,18 +175,9 @@ var Timeline = function() {
 	
 	function update() {
 		
-		function filterEvents(d) { 
-		
-			return d.renderLevel > p.thresholds.displayLevel  &&
-				x(d.x) + d.width * p.zoomFactor >= 0 &&
-				x(d.x) <= p.view.width &&
-				d.y + y(0) > -p.styles.events.height && 
-				d.y + y(0) < p.view.height;
-				
-		}
-		
-		function setEventsAppearance(events) {
+		function createEventsUppearance(events) {
 			
+			// 
 			events.append("rect")
 				.attr("x", 0)
 				.attr("y", 0)
@@ -206,6 +196,24 @@ var Timeline = function() {
 				
 		}
 		
+		function filterEvents(d) { 
+		
+			/*
+			
+			Remove data
+			- If the render level is below the display level
+			- If the item is completely outside of the viewable area
+			
+			*/
+		
+			return d.renderLevel > p.thresholds.displayLevel  &&
+				x(d.x) + d.width * p.zoomFactor >= 0 &&
+				x(d.x) <= p.view.width &&
+				d.y + y(0) > -p.styles.events.height && 
+				d.y + y(0) < p.view.height;
+				
+		}
+				
 		function updateDataValues() {
 				
 			function computeRenderLevel(data, attribute) {
@@ -308,7 +316,7 @@ var Timeline = function() {
 			.attr("transform", attr.event.transform);
 	
 		// Add event appearance
-		setEventsAppearance(eventsEnter);
+		createEventsUppearance(eventsEnter);
 			
 		// Remove events
 		events.exit().remove();
@@ -317,7 +325,8 @@ var Timeline = function() {
 	}
 	
 	function updateMinMax() {
-			
+		
+		// Updates the scales used for semantic zooming
 		p.scales.minMax.works.domain([ d3.min( p.data, function(d) {return d.totalWorks ? d.totalWorks : 0;} ), Math.min(300, d3.max( p.data, function(d) {return d.totalWorks ? d.totalWorks : 0;} )) ]);
 		
 	}
