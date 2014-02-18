@@ -148,49 +148,48 @@ function make() {
 		.call(timeline);
 			
 	cf = new TT.crossfilter().data(dataset);
-/*
-
-	// TATE
-
-	cf.addFilter({
-		dimension: "from", 
-		group: d3.time.year 
-	});
+	
+	if(loadDataset === TATE) {
+	
+		cf.addFilter({
+			dimension: "from", 
+			group: d3.time.year 
+		});
+			
+		cf.addFilter({
+			dimension: "to",
+			group: d3.time.year
+		});
 		
-	cf.addFilter({
-		dimension: "to",
-		group: d3.time.year
-	});
+		cf.addFilter({
+			dimension: "totalWorks", 
+			group: function(d) { return Math.floor(d / 10) * 10;}
+		});
 	
-	cf.addFilter({
-		dimension: "totalWorks", 
-		group: function(d) { return Math.floor(d / 10) * 10;}
-	});
-	
-	// BRITTEN
-
-	cf.addFilter({
-		title: "Started Composition",
-		dimension: "from", 
-		group: d3.time.year 
-	});
+	} else if (loadDataset === BRITTEN) {
 		
-	cf.addFilter({
-		title: "Finished Composition",
-		dimension: "to",
-		group: d3.time.year
-	});
-	
-	cf.addFilter({
-	
-		title: "Period of composition",
-		dimension: function(d) {
-			return d.to - d.from
-		},
-		group: function(d) { return Math.floor(d / 100) * 100;}
-	
-	})
-*/
+		cf.addFilter({
+			title: "Started Composition",
+			dimension: "from", 
+			group: d3.time.year 
+		});
+			
+		cf.addFilter({
+			title: "Finished Composition",
+			dimension: "to",
+			group: d3.time.year
+		});
+			
+		cf.addFilter({
+		
+			title: "Duration of composition",
+			dimension: function(d) {
+				return d.to - d.from
+			},
+			group: function(d) { return Math.floor(d / 100) * 100;}
+		
+		})
+	}
 
 	d3.select("body").insert("div")
 		.attr("id", "crossfilter")

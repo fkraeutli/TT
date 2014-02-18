@@ -72,8 +72,7 @@ TT.timeline = function() {
 				height: 14,
 				fontSize: 12,
 				margin: 1,
-				padding: 2,
-				ys: [0]
+				padding: 2
 			}
 		},
 		
@@ -91,7 +90,8 @@ TT.timeline = function() {
 			
 			width: 800,
 			height: 600,
-			padding: 40
+			padding: 40,
+			ys: [0]
 			
 		},
 		
@@ -251,11 +251,11 @@ TT.timeline = function() {
 						
 					} else {
 					
-						d.y = p.styles.events.ys[count - 1] + d.margin;
+						d.y = p.view.ys[count - 1] + d.margin;
 						
 					}
 					
-					p.styles.events.ys[count] = d.y + d.height;
+					p.view.ys[count] = d.y + d.height;
 					
 					count++;
 					
@@ -273,7 +273,7 @@ TT.timeline = function() {
 					if(count === 0) {
 						d.y = p.view.padding;
 					} else {
-						d.y = p.styles.events.ys[count - 1] + d.margin;
+						d.y = p.view.ys[count - 1] + d.margin;
 					}
 					
 				}
@@ -337,9 +337,10 @@ TT.timeline = function() {
 		function initTimeline() {
 			
 			function initAxis() {
+			
 				p.scales.axis = d3.time.scale()
 					.domain( [ p.scales.pxToDate( x.domain()[0] ), p.scales.pxToDate( x.domain()[1] ) ] )
-					.range([0, p.view.width]);		
+					.range( [0, p.view.width] );
 				
 				p.axis = d3.svg.axis()
 					.scale(p.scales.axis)
@@ -351,24 +352,28 @@ TT.timeline = function() {
 					.attr("class", "timeline_axis")
 					.attr("id","tl" + id + "_axis")
 					.call(p.axis)
-					.attr("transform", "translate(0," + (p.view.height - p.view.padding/2) + ")");
+					.attr("transform", "translate(0," + ( p.view.height - p.view.padding / 2 ) + ")");
+					
 			}
 			
 			function initEvents() {
+			
 				p.elements.events = p.svg.insert("g")
 					.attr("class", "timeline_events")
 					.attr("id", "tl" + id + "_events");
+					
 			}
 				
 			function initScales() {
 			
 				p.scales.dateToPx = d3.scale.linear()
-					.domain([p.view.from.valueOf(), p.view.to.valueOf()])
-					.range([p.view.padding, p.view.width - p.view.padding]);
+					.domain( [ p.view.from.valueOf(), p.view.to.valueOf() ] )
+					.range( [ p.view.padding, p.view.width - p.view.padding ] );
 					
 				p.scales.pxToDate = d3.scale.linear()
-					.domain([p.view.padding, p.view.width - p.view.padding])
-					.range([p.view.from.valueOf(), p.view.to.valueOf()]);
+					.domain( [ p.view.padding, p.view.width - p.view.padding ] )
+					.range( [ p.view.from.valueOf(), p.view.to.valueOf() ] );
+					
 			}	
 			
 			function initZoom() {						
@@ -383,7 +388,7 @@ TT.timeline = function() {
 					.attr("height", p.view.height)
 					.attr("class","overlay");
 					
-				p.svg.select(".timeline_events").call(zoom.on("zoom", doZoom));
+				p.svg.select(".timeline_events").call( zoom.on("zoom", doZoom) );
 				
 			}
 			

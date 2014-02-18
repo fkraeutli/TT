@@ -365,7 +365,7 @@ TT.crossfilter = function() {
 			g.selectAll(".bar").attr("d", barPath);
 		
 			
-		}
+		};
 		
 		// Accessors
 		
@@ -423,7 +423,3 @@ TT.crossfilter = function() {
 		return d3.rebind(me, brush, "on");
 	}
 };
-
-
-//-----------
-
