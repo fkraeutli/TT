@@ -8,7 +8,7 @@ var currentYear = new Date().getFullYear(),
 	timeline,
 	urls = ["data/works.js", "http://otis.local:8888/Tate/allartists.js"];
 	
-
+$j = jQuery.noConflict();
 
 
 d3.json(urls[loadDataset], function(error, data) {
@@ -104,38 +104,6 @@ d3.json(urls[loadDataset], function(error, data) {
 	
 });	
 	
-var observer = {
-
-	addSubscriber: function(callback) {
-		this.subscribers[this.subscribers.length] = callback;
-	},
-
-	removeSubscriber: function(callback) {
-		for (var i = 0; i < this.subscribers.length; i++) {
-			if (this.subscribers[i] === callback) {
-				delete(this.subscribers[i]);
-			} 
-		}
-	},
-	
-	publish: function(what) {
-		for (var i = 0; i < this.subscribers.length; i++) {
-			if (typeof this.subscribers[i] === 'function') {
-
-				this.subscribers[i](what);
-			}
-		} 
-	},
-	
-	make: function(o) { // turns an object into a publisher
-		for(var i in this) {
-			o[i] = this[i];
-			o.subscribers = [];
-		}
-	}
-};
-
-
 
 function make() {
 
@@ -147,7 +115,7 @@ function make() {
 		.attr("height", 600)
 		.call(timeline);
 			
-	cf = new TT.crossfilter().data(dataset);
+	cf = TT.crossfilter().data(dataset);
 	
 	if(loadDataset === TATE) {
 	
@@ -193,11 +161,39 @@ function make() {
 
 	d3.select("body").insert("div")
 		.attr("id", "crossfilter")
-		.call(cf);
+		.call(cf);	
 		
-	observer.make(cf);
+	TT.observer.make(cf);
 	
 	cf.addSubscriber(function(data) {
 		timeline.data(data);
 	})
+	
+	// Make slider
+	$j( "#slider_threshold" ).slider({
+		range: true,
+		min: 0,
+		max: 1,
+		step: 0.01,
+		values: [ timeline.threshold("display"), timeline.threshold("collapse") ],
+		slide: function( event, ui ) {
+			timeline.threshold({
+				display: ui.values[0],
+	      		collapse: ui.values[1]
+	      	});
+		}
+	});
+	
+	$j( "#slider_height" ).slider({
+		min: 0,
+		max: 20,
+		step: 0.1,
+		value:timeline.styles.events("height"),
+		slide: function( event, ui ) {
+			timeline.styles.events({
+				height: ui.value,
+				fontSize: ui.value - 2
+	      	});
+		}
+	});
 }

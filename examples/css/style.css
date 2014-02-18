@@ -14,6 +14,20 @@ svg#timeline,
   width: 400px;
   min-height: 200px;
 }
+.slider {
+  float: left;
+  width: 400px;
+  margin-bottom: 2em;
+}
+.slider .ui-slider-range {
+  background: white;
+}
+.slider .ui-slider-handle {
+  width: 1em;
+  height: 1em;
+  top: -2px;
+  margin-left: -0.5em;
+}
 .timeline_axis path {
   fill: none;
 }

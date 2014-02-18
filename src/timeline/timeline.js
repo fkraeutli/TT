@@ -76,8 +76,8 @@ TT.timeline = function() {
 		
 		thresholds: {
 			
-			collapseLevel: 0.8,
-			displayLevel: 0.6	
+			collapse: 0.8,
+			display: 0.6	
 			
 		},
 		
@@ -124,12 +124,14 @@ TT.timeline = function() {
 			text: {
 			
 				anchor: function(d) {		
-					return p.zoomFactor >= p.thresholds.collapseLevel && d.width * p.zoomFactor > d.title.length * p.styles.events.fontSize ? "start" : "end";	
+					return p.zoomFactor >= p.thresholds.collapse && d.width * p.zoomFactor > d.title.length * p.styles.events.fontSize ? "start" : "end";	
 				},
 				
 				display: function(d) {
-					return d.renderLevel > p.thresholds.collapseLevel ? "block" : "none";	
+					return d.renderLevel > p.thresholds.collapse ? "block" : "none";	
 				},
+				
+				fontSize: p.styles.events.fontSize + "px",
 				
 				x: function (d) {
 					return (d.width * p.zoomFactor > d.title.length * p.styles.events.fontSize) ? (x(d.x) < 0 && x(d.x) + d.width * p.zoomFactor > 0 ? p.styles.events.padding + -1*x(d.x) : p.styles.events.padding) : -p.styles.events.padding;
@@ -204,7 +206,7 @@ TT.timeline = function() {
 			
 			*/
 		
-			return d.renderLevel > p.thresholds.displayLevel  &&
+			return d.renderLevel > p.thresholds.display  &&
 				x(d.x) + d.width * p.zoomFactor >= 0 &&
 				x(d.x) <= p.view.width &&
 				d.y + y(0) > -p.styles.events.height && 
@@ -235,13 +237,13 @@ TT.timeline = function() {
 			
 			p.data.forEach(function(d) {	
 			
-				if( d.renderLevel > p.thresholds.displayLevel ) {
+				if( d.renderLevel > p.thresholds.display ) {
 				
 					d.x = p.scales.dateToPx(d.from.valueOf());
 					d.width = ( p.scales.dateToPx(d.to.valueOf()) - p.scales.dateToPx(d.from.valueOf()) );
 					
-					d.height = d.renderLevel < p.thresholds.collapseLevel ? 1 : p.styles.events.height;
-					d.margin = d.renderLevel < p.thresholds.collapseLevel ? 1 : p.styles.events.margin;
+					d.height = d.renderLevel < p.thresholds.collapse ? 1 : p.styles.events.height;
+					d.margin = d.renderLevel < p.thresholds.collapse ? 1 : p.styles.events.margin;
 					
 					if(count === 0) {
 					
@@ -289,9 +291,12 @@ TT.timeline = function() {
 				.attr("x", attr.event.text.x)
 				.attr("y", attr.event.text.y)
 				.attr("text-anchor", attr.event.text.anchor)
-				.attr("display", attr.event.text.display);
+				.attr("display", attr.event.text.display)
+				.style("font-size", attr.event.text.fontSize);
 				
 		}
+		
+		if( !initialised) return false;
 		
 		updateDataValues();
 		
@@ -413,10 +418,12 @@ TT.timeline = function() {
 		}
 		
 		initTimeline();
+		
+		initialised = true;
+		
 		updateMinMax();
 		update();
 		
-		initialised = true;
 	};
 	
 	// Accessors
@@ -424,13 +431,64 @@ TT.timeline = function() {
 		if( !arguments.length ) return p.data;
 		p.data = _;
 		
-		if(initialised) {
-			updateMinMax();
-			update();
-		}
+		updateMinMax();
+		update();
 		
 		return me;
 	};
+	
+	me.styles = {};
+	
+	me.styles.events = function(name, value) {
+		
+		if (arguments.length < 2) {
+		
+			if(typeof name === "string") {
+				return p.styles.events[name];
+			} else if (typeof name === "object") {
+			
+				for(i in name) {				
+					p.styles.events[i] = name[i];
+				}
+				
+			}
+		
+		} else {
+			
+			p.styles.events[name] = value;
+		}
+		
+		update();
+		
+		return me;
+		
+	}
+
+	
+	me.threshold = function(name, value) {
+		
+		if (arguments.length < 2) {
+		
+			if(typeof name === "string") {
+				return p.thresholds[name];
+			} else if (typeof name === "object") {
+			
+				for(i in name) {				
+					p.thresholds[i] = name[i];
+				}
+				
+			}
+		
+		} else {
+			
+			p.thresholds[name] = value;
+		}
+		
+		update();
+		
+		return me;
+		
+	}
 	
 	return me;
 	

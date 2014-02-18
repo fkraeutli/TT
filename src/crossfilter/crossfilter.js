@@ -68,6 +68,11 @@ TT.crossfilter = function() {
 			charts[i].drawChart();
 		}
 		
+		publishUpdate();
+	}
+	
+	function publishUpdate() {
+		
 		if(me.hasOwnProperty("publish") && charts[0]) {		
 			me.publish(charts[0].dimension().top(999999));
 		}
@@ -141,6 +146,14 @@ TT.crossfilter = function() {
 		
 		cf.remove();
 		cf.add(data);
+		
+		for(var i = 0; i < charts.length; i++) {
+			
+			charts[i].redrawChart();
+			
+		}
+		
+		publishUpdate();
 		
 		return me;
 	};
@@ -242,7 +255,7 @@ TT.crossfilter = function() {
 		};
 	
 		// Methods
-		me.drawChart = function() {
+		me.drawChart = function(redraw) {
 		
 			function barPath(groups) {
 					
@@ -327,7 +340,7 @@ TT.crossfilter = function() {
 			var g = div.select("g");
 			
 			// Create the skeletal chart
-			if( g.empty() ) {
+			if( g.empty() || redraw) {
 				
 				drawChartSkeleton();
 				
@@ -364,6 +377,14 @@ TT.crossfilter = function() {
 		
 			
 		};
+		
+		me.redrawChart = function() {
+			
+			div.select("svg").remove();
+			div.select(".title").remove();
+			me.drawChart(true);
+			
+		}
 		
 		// Accessors
 		

@@ -6,13 +6,13 @@ end = ${srcdir}end.js
 
 # Create the list of modules paths
 modules =	${srcdir}crossfilter/crossfilter.js\
+				${srcdir}observer/observer.js\
 				${srcdir}timeline/timeline.js\
 				
 # Create the list of dependencies
-dependencies =	${srcdir}crossfilter/crossfilter.min.js\
 
 # Build full list of files
-files = ${start} ${modules} ${dependencies} ${end}
+files = ${start} ${modules} ${end}
 #files = ${core} ${modules} ${dependencies} ${initialisation}
 
 # Set both to be built
