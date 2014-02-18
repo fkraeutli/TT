@@ -169,6 +169,9 @@ function make() {
 		timeline.data(data);
 	})
 	
+	cf.forcePublish()
+	
+	
 	// Make slider
 	$j( "#slider_threshold" ).slider({
 		range: true,

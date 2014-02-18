@@ -132,6 +132,12 @@ TT.crossfilter = function() {
 		return me;
 	};
 	
+	me.forcePublish = function() {
+		
+		publishUpdate();
+		
+	}
+	
 	// Accessors
 	
 	me.charts = function() {

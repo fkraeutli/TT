@@ -134,6 +134,12 @@ var  TT = {version: "0.0.1"};
 		return me;
 	};
 	
+	me.forcePublish = function() {
+		
+		publishUpdate();
+		
+	}
+	
 	// Accessors
 	
 	me.charts = function() {
@@ -608,7 +614,7 @@ TT.timeline = function() {
 					return d.renderLevel > p.thresholds.collapse ? "block" : "none";	
 				},
 				
-				fontSize: p.styles.events.fontSize,
+				fontSize: p.styles.events.fontSize + "px",
 				
 				x: function (d) {
 					return (d.width * p.zoomFactor > d.title.length * p.styles.events.fontSize) ? (x(d.x) < 0 && x(d.x) + d.width * p.zoomFactor > 0 ? p.styles.events.padding + -1*x(d.x) : p.styles.events.padding) : -p.styles.events.padding;
