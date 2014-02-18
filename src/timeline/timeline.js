@@ -76,8 +76,8 @@ TT.timeline = function() {
 		
 		thresholds: {
 			
-			collapse: 0.8,
-			display: 0.6	
+			collapse: 0.99,
+			display: 0.7	
 			
 		},
 		
@@ -93,7 +93,9 @@ TT.timeline = function() {
 			
 		},
 		
-		zoomFactor: 1
+		zoom: {
+			factor: 1	
+		}
 		
 		
 	};
@@ -114,17 +116,17 @@ TT.timeline = function() {
 		
 			rect: {
 				height: function(d) {
-						return Math.min(d.height * p.zoomFactor, d.height) + "px";	
+						return Math.min(d.height * p.zoom.factor, d.height) + "px";	
 				},
 				width: function(d) {
-					return (d.width * p.zoomFactor) + "px";
+					return (d.width * p.zoom.factor) + "px";
 				}
 			},
 			
 			text: {
 			
 				anchor: function(d) {		
-					return p.zoomFactor >= p.thresholds.collapse && d.width * p.zoomFactor > d.title.length * p.styles.events.fontSize ? "start" : "end";	
+					return p.zoom.factor >= p.thresholds.collapse && d.width * p.zoom.factor > d.title.length * p.styles.events.fontSize ? "start" : "end";	
 				},
 				
 				display: function(d) {
@@ -134,7 +136,7 @@ TT.timeline = function() {
 				fontSize: p.styles.events.fontSize + "px",
 				
 				x: function (d) {
-					return (d.width * p.zoomFactor > d.title.length * p.styles.events.fontSize) ? (x(d.x) < 0 && x(d.x) + d.width * p.zoomFactor > 0 ? p.styles.events.padding + -1*x(d.x) : p.styles.events.padding) : -p.styles.events.padding;
+					return (d.width * p.zoom.factor > d.title.length * p.styles.events.fontSize) ? (x(d.x) < 0 && x(d.x) + d.width * p.zoom.factor > 0 ? p.styles.events.padding + -1*x(d.x) : p.styles.events.padding) : -p.styles.events.padding;
 				},
 				
 				y: p.styles.events.height * 0.75
@@ -160,7 +162,7 @@ TT.timeline = function() {
 	
 	function doZoom() {
 		
-		p.zoomFactor = d3.event.scale;
+		p.zoom.factor = d3.event.scale;
 		
 		var events = p.elements.events.selectAll("g.timeline_event");
 		var ax = p.svg.select(".timeline_axis");
@@ -207,7 +209,7 @@ TT.timeline = function() {
 			*/
 		
 			return d.renderLevel > p.thresholds.display  &&
-				x(d.x) + d.width * p.zoomFactor >= 0 &&
+				x(d.x) + d.width * p.zoom.factor >= 0 &&
 				x(d.x) <= p.view.width &&
 				d.y + y(0) > -p.styles.events.height && 
 				d.y + y(0) < p.view.height;
@@ -219,7 +221,7 @@ TT.timeline = function() {
 			function computeRenderLevel(data, attribute) {
 				
 				if(data.totalWorks) {
-					return Math.pow( p.scales.minMax.works(data.totalWorks), 0.02 / p.scales.minMax.zoom(p.zoomFactor) ) + p.scales.minMax.zoom(p.zoomFactor); 
+					return Math.pow( p.scales.minMax.works(data.totalWorks), 0.02 / p.scales.minMax.zoom(p.zoom.factor) ) + p.scales.minMax.zoom(p.zoom.factor); 
 				} else {
 					return 0;
 				}
@@ -412,8 +414,13 @@ TT.timeline = function() {
 		
 		if(p.data) {
 			
-			p.view.from = d3.min( p.data, function(d) { return d.from; } );
-			p.view.to = d3.max( p.data, function(d) { return d.to; } );
+			// Initialise visible range with 20% buffer
+			
+			var minFrom = d3.min( p.data, function(d) { return d.from; } ),
+				maxTo = d3.max( p.data, function(d) { return d.to; } );
+				
+			p.view.from = new Date( minFrom.valueOf() - 0.2 * (maxTo.valueOf() - minFrom.valueOf()) );//d3.min( p.data, function(d) { return d.from; } );
+			p.view.to = new Date( maxTo.valueOf() + 0.2 * (maxTo.valueOf() - minFrom.valueOf()) );//d3.max( p.data, function(d) { return d.to; } );
 			
 		}
 		
@@ -425,7 +432,7 @@ TT.timeline = function() {
 		update();
 		
 	};
-	
+
 	// Accessors
 	me.data = function(_) {
 		if( !arguments.length ) return p.data;
@@ -447,7 +454,7 @@ TT.timeline = function() {
 				return p.styles.events[name];
 			} else if (typeof name === "object") {
 			
-				for(i in name) {				
+				for(var i in name) {				
 					p.styles.events[i] = name[i];
 				}
 				
@@ -462,7 +469,7 @@ TT.timeline = function() {
 		
 		return me;
 		
-	}
+	};
 
 	
 	me.threshold = function(name, value) {
@@ -473,7 +480,7 @@ TT.timeline = function() {
 				return p.thresholds[name];
 			} else if (typeof name === "object") {
 			
-				for(i in name) {				
+				for(var i in name) {				
 					p.thresholds[i] = name[i];
 				}
 				
@@ -488,7 +495,7 @@ TT.timeline = function() {
 		
 		return me;
 		
-	}
+	};
 	
 	return me;
 	

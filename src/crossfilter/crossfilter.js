@@ -136,7 +136,7 @@ TT.crossfilter = function() {
 		
 		publishUpdate();
 		
-	}
+	};
 	
 	// Accessors
 	
@@ -390,7 +390,7 @@ TT.crossfilter = function() {
 			div.select(".title").remove();
 			me.drawChart(true);
 			
-		}
+		};
 		
 		// Accessors
 		
