@@ -1,5 +1,3 @@
-var TT = TT || {};
-
 TT.crossfilter = function() {
 	
 	if(!TT.crossfilter.id) TT.crossfilter.id = 0;

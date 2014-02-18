@@ -15,8 +15,6 @@ data format: {
 
 */
 
-var TT = TT || {};
-
 TT.timeline = function() {
 	
 	if(!TT.timeline.id) TT.timeline.id = 0;
