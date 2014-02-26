@@ -1,10 +1,19 @@
-var  TT = {version: "0.0.1"};
+var  TT = {
+	name: "Timeline Tools",
+	author: {
+		name: "Florian Kräutli",
+		email: "florian@kraeutli.com",
+		twitter: "@fkraeutli",
+		url: "http://www.kraeutli.com"
+	},
+	version: "0.0.1"
+};
   
   ;TT.crossfilter = function() {
 	
 	if(!TT.crossfilter.id) TT.crossfilter.id = 0;
 	
-	var cf = crossfilter(),
+	var cf,
 		charts = [],
 		data,
 		div ,
@@ -20,14 +29,16 @@ var  TT = {version: "0.0.1"};
 		}
 	};
 	
-	// Global functions
-	
-	// reset function
-	window.cf_reset = function(i) {
-		charts[i].filter(null);
-		renderAll();
-	};
-	
+	try {
+		
+		cf = crossfilter();
+		
+	} catch(e) {
+		
+		console.error("Crossfilter is not loaded. Get Crossfilter from http://square.github.io/crossfilter/");
+		return false;
+		
+	}	
 	
 	// Private functions
 
@@ -62,6 +73,7 @@ var  TT = {version: "0.0.1"};
 
 		chart.on("brush", renderAll)
 			.on("brushend", renderAll);
+			
 	}
 	
 	function renderAll() {
@@ -137,6 +149,13 @@ var  TT = {version: "0.0.1"};
 	me.forcePublish = function() {
 		
 		publishUpdate();
+		
+	};
+	
+	me.reset = function() {
+		
+		charts[i].filter(null);
+		renderAll();
 		
 	};
 	
@@ -293,10 +312,10 @@ var  TT = {version: "0.0.1"};
 					
 				// Add reset link
 				.append("a")
-					.attr("onclick", "cf_reset(" + id + ")")
 					.attr("class", "reset")
 					.text("reset")
-					.style("display", "none");
+					.style("display", "none")
+					.on("click", me.reset);
 					
 				// Append SVG element
 				g = div.append("svg")
@@ -450,7 +469,7 @@ var  TT = {version: "0.0.1"};
 		return d3.rebind(me, brush, "on");
 	}
 };
-;;TT.observer = {
+;TT.observer = {
 
 	addSubscriber: function(callback) {
 		this.subscribers[this.subscribers.length] = callback;

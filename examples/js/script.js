@@ -1,7 +1,7 @@
 BRITTEN = 0;
 TATE = 1;
 
-loadDataset = TATE;
+loadDataset = TATE ;
 
 var currentYear = new Date().getFullYear(),
 	dataset = [],
@@ -170,8 +170,7 @@ function make() {
 	})
 	
 	cf.forcePublish()
-	
-	
+		
 	// Make slider
 	$j( "#slider_threshold" ).slider({
 		range: true,

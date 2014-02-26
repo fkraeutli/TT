@@ -2,7 +2,7 @@ TT.crossfilter = function() {
 	
 	if(!TT.crossfilter.id) TT.crossfilter.id = 0;
 	
-	var cf = crossfilter(),
+	var cf,
 		charts = [],
 		data,
 		div ,
@@ -18,14 +18,16 @@ TT.crossfilter = function() {
 		}
 	};
 	
-	// Global functions
-	
-	// reset function
-	window.cf_reset = function(i) {
-		charts[i].filter(null);
-		renderAll();
-	};
-	
+	try {
+		
+		cf = crossfilter();
+		
+	} catch(e) {
+		
+		console.error("Crossfilter is not loaded. Get Crossfilter from http://square.github.io/crossfilter/");
+		return false;
+		
+	}	
 	
 	// Private functions
 
@@ -60,6 +62,7 @@ TT.crossfilter = function() {
 
 		chart.on("brush", renderAll)
 			.on("brushend", renderAll);
+			
 	}
 	
 	function renderAll() {
@@ -135,6 +138,13 @@ TT.crossfilter = function() {
 	me.forcePublish = function() {
 		
 		publishUpdate();
+		
+	};
+	
+	me.reset = function() {
+		
+		charts[i].filter(null);
+		renderAll();
 		
 	};
 	
@@ -291,10 +301,10 @@ TT.crossfilter = function() {
 					
 				// Add reset link
 				.append("a")
-					.attr("onclick", "cf_reset(" + id + ")")
 					.attr("class", "reset")
 					.text("reset")
-					.style("display", "none");
+					.style("display", "none")
+					.on("click", me.reset);
 					
 				// Append SVG element
 				g = div.append("svg")
