@@ -76,9 +76,12 @@ TT.crossfilter = function() {
 	
 	function publishUpdate() {
 		
-		if(me.hasOwnProperty("publish") && charts[0]) {		
-			me.publish(charts[0].dimension().top(999999));
+		if(me.hasOwnProperty("publish") && charts[0]) {	
+			
+			me.publish( charts[0].dimension().top(999999) );
+			
 		}
+		
 	}
 
 	// Initialiser
@@ -87,8 +90,10 @@ TT.crossfilter = function() {
 		
 		div = arguments[0];
 		
-		for(var i = 0; i < filters.length; i++) {
+		for( var i = 0; i < filters.length; i++ ) {
+		
 			drawChart( filters[i] );
+			
 		}
 		
 		initialised = true;
@@ -114,13 +119,14 @@ TT.crossfilter = function() {
 			filterFunction = params.dimension;
 
 		} else {
+		
 			return false;
+			
 		}
 	
 		filter.dimension = cf.dimension(filterFunction);
 		
 		filter.group = filter.dimension.group(params.group);
-		
 
 		filter.min = d3.min( data, filterFunction );
 		filter.max = d3.max( data, filterFunction );
@@ -131,7 +137,8 @@ TT.crossfilter = function() {
 		
 		if(initialised) {
 			drawChart(filter);
-		}		
+		}
+		
 		return me;
 	};
 	
@@ -158,6 +165,7 @@ TT.crossfilter = function() {
 	
 	me.data = function(_) {
 		if( !arguments.length ) return data;
+		
 		data = _;
 		
 		cf.remove();
