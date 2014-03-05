@@ -121,6 +121,21 @@ svg#timeline, #timeline-chart {
 
 	margin-bottom: 10px;
 	
+	.title {
+		margin-bottom: 1em;
+		font-weight: bold;
+	
+		a {
+			cursor: pointer;
+			font-weight: normal;
+			font-size: smaller;
+			padding: .2em;
+			margin-left: 1em;
+			background: @colBarBackground;
+			float: right;
+		}
+	}
+	
 	path {
 		fill: @eventBarColor;
 	}
@@ -147,11 +162,5 @@ svg#timeline, #timeline-chart {
 			fill: @colBarForeground;
 			stroke: @colResizePath;
 		}
-	}
-	
-	.reset {
-		padding-left: 1em;
-		font-size: smaller;
-		color: @colBarBackground;
 	}
 }
