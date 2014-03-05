@@ -2,7 +2,7 @@ BRITTEN 	= 0;
 TATE 		= 1;
 JOHNSTON 	= 2;
 
-loadDataset = TATE ;
+loadDataset = JOHNSTON ;
 
 var currentYear = new Date().getFullYear(),
 	dataset = [],
@@ -253,19 +253,21 @@ function make() {
 	} else if(loadDataset === JOHNSTON) {
 	
 		cf.addFilter({
+			title: "Production date",
 			dimension: "from", 
 			group: d3.time.year 
 		});
-			
+		
 		cf.addFilter({
-			dimension: "to",
-			group: d3.time.year
+			title: "Acquisition date",
+			dimension: "acquired_date_from", 
+			group: d3.time.year 
 		});
+		
 		cf.addFilter({
 			dimension: "weight", 
 			group: function(d) { return Math.floor(d / 10) * 10;}
 		});
-	
 	}
 
 	d3.select("body").insert("div")
@@ -375,4 +377,19 @@ function listUniqueValues(attribute) {
 	values.sort();
 	console.log(values);
 	return values;
+}
+
+function sortByAttribute(attribute) {
+	
+	var vals = listUniqueValues(attribute);
+	
+	dataset.sort( function(a,b) {
+		
+		return vals.indexOf( b[attribute] ) - vals.indexOf( a[attribute] );
+		
+	} )
+	
+	timeline.data(dataset);
+	//cf.forcePublish();
+
 }

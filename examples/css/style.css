@@ -76,6 +76,19 @@ svg#timeline,
 .chart {
   margin-bottom: 10px;
 }
+.chart .title {
+  margin-bottom: 1em;
+  font-weight: bold;
+}
+.chart .title a {
+  cursor: pointer;
+  font-weight: normal;
+  font-size: smaller;
+  padding: .2em;
+  margin-left: 1em;
+  background: #cccccc;
+  float: right;
+}
 .chart path {
   fill: #008080;
 }
@@ -95,9 +108,4 @@ svg#timeline,
 .chart .brush .resize path {
   fill: #4682b4;
   stroke: #666666;
-}
-.chart .reset {
-  padding-left: 1em;
-  font-size: smaller;
-  color: #cccccc;
 }
