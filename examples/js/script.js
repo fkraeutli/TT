@@ -2,7 +2,7 @@ BRITTEN 	= 0;
 TATE 		= 1;
 JOHNSTON 	= 2;
 
-loadDataset = TATE;//JOHNSTON ;
+loadDataset = TATE ;
 
 var currentYear = new Date().getFullYear(),
 	dataset = [],
@@ -33,7 +33,7 @@ d3.json(urls[loadDataset], function(error, data) {
 						
 					} else {
 					
-						d.from = new Date(+d.date_completed_year, +d.date_completed_month -1, +d.date_completed_day);
+						d.from = new Date(+d.date_completed_year, +d.date_completed_month - 1, +d.date_completed_day);
 	
 						d.from.setMonth(d.from.getMonth() - 1);
 						
@@ -116,33 +116,20 @@ d3.json(urls[loadDataset], function(error, data) {
 				d.title = d.simple_name || "unknown";
 				d.date = d.production_date_from;
 				
-				d.weight = Math.floor( Math.random() * 500 );
-				
 				if( d.date ) {
 					
 					d.id = d.inventory;
+					d.from = d.date;
 					
-					if( d.summary_date_from ) {
+					if(d.from == d.production_date_to) {
+					
+						d.to = new Date( d.date.valueOf() );
+						d.to.setFullYear( d.date.getFullYear() + 1 );		
 						
-						d.from = d.summary_date_from;
-						
-						if( d.summary_date_to > d.from ) {
-							
-							d.to = d.summary_date_to;
-							
-						} else {
-							
-							d.to = new Date( d.from.valueOf() );
-							d.to.setMonth( d.from.getMonth() + 1 );
-
-							
-						}
-												
 					} else {
 						
-						d.from = d.date;
-						d.to = new Date( d.date.valueOf() );
-						d.to.setFullYear( d.date.getFullYear() + 1 );	
+						d.to = d.production_date_to;
+						
 					}
 					
 					dataset.push(d);
@@ -150,7 +137,53 @@ d3.json(urls[loadDataset], function(error, data) {
 				}
 				
 				
-			})		
+			} );
+			
+			// Calculate weight by uniqueness of terms
+			terms = Array();
+			
+			dataset.forEach( function(d) {
+				
+				if( !terms[d.title] ) {
+				
+					terms[d.title] = 1;
+					
+				} else {
+				
+					terms[d.title]++;
+					
+				}
+				
+			} );
+			
+			var minWeight = undefined, maxWeight = undefined;
+			
+			for(var i in terms) {
+			
+				if( minWeight === undefined || minWeight > terms[i] ) {
+					
+					minWeight = terms[i];
+					
+				}
+				
+				if( maxWeight === undefined || maxWeight < terms[i] ) {
+					
+					maxWeight = terms[i];
+					
+				}
+			
+			}
+			
+			var weightScale = d3.scale.linear()
+				.domain( [minWeight, maxWeight] )
+				.range( [1, 0]);
+				
+			dataset.forEach( function(d) {
+				
+				d.weight = weightScale( terms[d.title] );
+				
+			} );
+			
 			
 		}
 		
@@ -262,6 +295,7 @@ function make() {
 		}
 	});
 	
+	/*
 	$j( "#slider_height" ).slider({
 		min: 0,
 		max: 20,
@@ -274,4 +308,71 @@ function make() {
 	      	});
 		}
 	});
+	*/
+}
+
+
+
+
+function colourByAttribute(attribute) {
+	
+	var color;
+	var values = listUniqueValues(attribute);
+		
+	// pick color scale
+	if (values.length <= 10) {
+		color = d3.scale.category10();
+	} else if (values.length <= 20) {
+		color = d3.scale.category20();
+	}
+
+	if(values.length <= 20) {
+		fillFunction = function(d) {
+			return color(values.indexOf(d[attribute]));
+		}
+	} else {
+		fillFunction = function(d) {
+			var step = 360/values.length;
+			return d3.hsl(values.indexOf(d[attribute]) * step, .5, .5);
+		}
+	}
+
+	dataset.forEach(function(d) {
+		
+		d.color = fillFunction(d);
+		
+	})
+	
+	timeline.data(dataset);
+	cf.forcePublish();
+}
+
+function listAttributes() {
+	var keys = Object.keys(dataset[0]);
+	console.log(keys);
+}
+
+function listDateAttributes() {
+	var keys = Object.keys(dataset[0]);
+	var dateKeys = [];
+	for(i in keys) {
+		if(keys[i].indexOf("date") != -1) {
+			dateKeys.push(keys[i]);
+		}
+	}
+	console.log(dateKeys);
+}
+
+function listUniqueValues(attribute) {
+	var values = Array();
+	for(i in dataset) {
+
+		if(values.indexOf(dataset[i][attribute]) == -1) {
+			values.push(dataset[i][attribute])
+		}
+		
+	}
+	values.sort();
+	console.log(values);
+	return values;
 }
