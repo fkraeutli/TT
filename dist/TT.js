@@ -159,12 +159,6 @@ var  TT = {
 		
 	};
 	
-	me.reset = function() {
-		
-		charts[i].filter(null);
-		renderAll();
-		
-	};
 	
 	// Accessors
 	
@@ -323,7 +317,7 @@ var  TT = {
 					.attr("class", "reset")
 					.text("reset")
 					.style("display", "none")
-					.on("click", me.reset);
+					.on("click", function() { me.reset(); } );
 					
 				// Append SVG element
 				g = div.append("svg")
@@ -401,6 +395,7 @@ var  TT = {
 				} else {
 					
 					var extent = brush.extent();
+					
 					g.selectAll("#clip-" + id + " rect")
 						.attr( "x", x(extent[0]) )
 						.attr( "width", x(extent[1]) - x(extent[0]) );
@@ -410,6 +405,13 @@ var  TT = {
 			
 			g.selectAll(".bar").attr("d", barPath);
 		
+			
+		};
+		
+		me.reset = function() {
+			
+			charts[id].filter(null);
+			renderAll();
 			
 		};
 		
@@ -473,7 +475,6 @@ var  TT = {
 			return me;
 		};
 		
-		
 		return d3.rebind(me, brush, "on");
 	}
 };
@@ -535,7 +536,8 @@ TT.timeline = function() {
 		timeline = this,
 		zoom;
 		
-	var p = {
+	//var 
+	p = {
 		
 		axis: {},
 		
@@ -567,7 +569,7 @@ TT.timeline = function() {
 				// Update zoom extent here
 				
 				zoom: d3.scale.linear()
-					.domain( [0.01, 12] ) 
+					.domain( [0.01, 120] ) 
 					.range( [0, 1] )
 				
 			}
@@ -613,6 +615,7 @@ TT.timeline = function() {
 	var attr = {
 		
 		axis: {
+		
 			tickFormat: function(d) {
 				if( Math.round( (p.axis.scale().domain()[1].getFullYear() - p.axis.scale().domain()[0].getFullYear()) / p.axis.ticks()) >= 1 ) { // If there is not more than one tick per year represented
 					return p.format.year(d);
@@ -629,7 +632,9 @@ TT.timeline = function() {
 						return Math.min(d.height * p.zoom.factor, d.height) + "px";	
 				},
 				width: function(d) {
+				
 					return (d.width * p.zoom.factor) + "px";
+					
 				}
 			},
 			
@@ -687,7 +692,7 @@ TT.timeline = function() {
 	
 	function update() {
 		
-		function createEventsUppearance(events) {
+		function createEventsAppearance(events) {
 			
 			// 
 			events.append("rect")
@@ -695,7 +700,8 @@ TT.timeline = function() {
 				.attr("y", 0)
 				.attr("height", attr.event.rect.height)
 				.attr("width", attr.event.rect.width)
-				.attr("class", "eventRect");
+				.attr("class", "eventRect")
+				.on("click", function(d) { console.log(d); });
 					
 			// Add event text
 			events.append("text")
@@ -730,8 +736,8 @@ TT.timeline = function() {
 				
 			function computeRenderLevel(data, attribute) {
 				
-				if(data.totalWorks) {
-					return Math.pow( p.scales.minMax.works(data.totalWorks), 0.02 / p.scales.minMax.zoom(p.zoom.factor) ) + p.scales.minMax.zoom(p.zoom.factor); 
+				if(data.weight) {
+					return Math.pow( p.scales.minMax.works(data.weight), 0.02 / p.scales.minMax.zoom(p.zoom.factor) ) + p.scales.minMax.zoom(p.zoom.factor); 
 				} else {
 					return 0;
 				}
@@ -831,7 +837,7 @@ TT.timeline = function() {
 			.attr("transform", attr.event.transform);
 	
 		// Add event appearance
-		createEventsUppearance(eventsEnter);
+		createEventsAppearance(eventsEnter);
 			
 		// Remove events
 		events.exit().remove();
@@ -842,7 +848,7 @@ TT.timeline = function() {
 	function updateMinMax() {
 		
 		// Updates the scales used for semantic zooming
-		p.scales.minMax.works.domain([ d3.min( p.data, function(d) {return d.totalWorks ? d.totalWorks : 0;} ), Math.min(300, d3.max( p.data, function(d) {return d.totalWorks ? d.totalWorks : 0;} )) ]);
+		p.scales.minMax.works.domain([ d3.min( p.data, function(d) {return d.weight ? d.weight : 0;} ), Math.min(300, d3.max( p.data, function(d) {return d.weight ? d.weight : 0;} )) ]);
 		
 	}
 
