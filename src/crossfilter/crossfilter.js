@@ -9,12 +9,13 @@ TT.crossfilter = function() {
 		filters = [],
 		id = TT.crossfilter.id++,
 		initialised = false,
+		selectedChart = false,
 		me = {};
 		
 	var p = {
 		view: {
 			width: 400,
-			height: 200
+			height: 30
 		}
 	};
 	
@@ -36,7 +37,7 @@ TT.crossfilter = function() {
 		var chart = new BarChart()
 			.dimension(filter.dimension)
 			.group(filter.group)
-			.title(filter.title);
+			.title( filter.title.ucfirst() );
 		
 		
 		if(filter.isDate) {
@@ -63,6 +64,8 @@ TT.crossfilter = function() {
 		chart.on("brush", renderAll)
 			.on("brushend", renderAll);
 			
+		return chart;
+			
 	}
 	
 	function renderAll() {
@@ -76,10 +79,11 @@ TT.crossfilter = function() {
 	
 	function publishUpdate() {
 		
-		if(me.hasOwnProperty("publish") && charts[0]) {	
+		if(me.hasOwnProperty("publish") && charts.length) {	
 			
-			me.publish( charts[0].dimension().top(999999) );
-			
+			// Publish all records, ordered according to selected chart
+			publishFrom = selectedChart || charts[0];
+			me.publish( publishFrom.dimension().top( Infinity ) );
 		}
 		
 	}
@@ -135,8 +139,10 @@ TT.crossfilter = function() {
 		
 		filters.push(filter);
 		
-		if(initialised) {
+		if (initialised) {
+		
 			drawChart(filter);
+		
 		}
 		
 		return me;
@@ -195,7 +201,7 @@ TT.crossfilter = function() {
 		var div,
 			me = {},
 			x,
-			y = d3.scale.linear().range([100, 0]),
+			y = d3.scale.linear().range([p.view.height, 0]),
 			id = BarChart.id++,
 			axis = d3.svg.axis().orient("bottom"),
 			axisHeight = 20,
@@ -297,16 +303,23 @@ TT.crossfilter = function() {
 			
 			function drawChartSkeleton() {
 				// Add title 
-				div.append("div")
+				var div_title = div.append("div")
 					.attr("class", "title")
-					.text(title)		
+					.text(title);
 					
 				// Add reset link
-				.append("a")
+				div_title.append("a")
 					.attr("class", "reset")
-					.text("reset")
+					.text("Reset")
 					.style("display", "none")
-					.on("click", function() { me.reset(); } );
+					.on("click", me.reset );
+					
+				// Add sort by link
+				div_title.append("a")
+					.attr("class", "sort")
+					.text("Sort by")
+					.style("display", id === 0 ? "none" : "")
+					.on("click", function() { me.sortBy( id ); } );
 					
 				// Append SVG element
 				g = div.append("svg")
@@ -412,6 +425,18 @@ TT.crossfilter = function() {
 			
 		};
 		
+		me.sortBy = function(id) {
+			
+			d3.selectAll(".title .sort")
+				.style("display", "block");
+				
+			d3.select("#barChart_" + id + " .sort")
+				.style("display", "none");
+			
+			selectedChart = charts[id];
+			publishUpdate();
+			
+		};
 		// Accessors
 		
 		me.dimension = function(_) {
@@ -466,4 +491,8 @@ TT.crossfilter = function() {
 		
 		return d3.rebind(me, brush, "on");
 	}
+};
+
+String.prototype.ucfirst = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
 };
