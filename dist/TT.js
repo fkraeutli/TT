@@ -595,8 +595,8 @@ TT.timeline = function() {
 		
 		view: {
 			
-			from: new Date( 1800 , 0, 1 ),
-			to: new Date( 2020 , 0, 1 ),
+			from: new Date( 1900 , 0, 1 ),
+			to: new Date( 2000 , 0, 1 ),
 			
 			width: 800,
 			height: 600,
@@ -616,7 +616,7 @@ TT.timeline = function() {
 		
 		axis: {
 		
-			tickFormat: function(d) {
+			tickFormat: function (d) {
 				if( Math.round( (p.axis.scale().domain()[1].getFullYear() - p.axis.scale().domain()[0].getFullYear()) / p.axis.ticks()) >= 1 ) { // If there is not more than one tick per year represented
 					return p.format.year(d);
 				} else {
@@ -628,10 +628,16 @@ TT.timeline = function() {
 		event: {
 		
 			rect: {
-				height: function(d) {
+			
+				fill: function (d) {
+					return d.color || null;	
+				},
+			
+				height: function (d) {
 						return Math.min(d.height * p.zoom.factor, d.height) + "px";	
 				},
-				width: function(d) {
+				
+				width: function (d) {
 				
 					return (d.width * p.zoom.factor) + "px";
 					
@@ -640,11 +646,11 @@ TT.timeline = function() {
 			
 			text: {
 			
-				anchor: function(d) {		
+				anchor: function (d) {		
 					return p.zoom.factor >= p.thresholds.collapse && d.width * p.zoom.factor > d.title.length * p.styles.events.fontSize ? "start" : "end";	
 				},
 				
-				display: function(d) {
+				display: function (d) {
 					return d.renderLevel > p.thresholds.collapse ? "block" : "none";	
 				},
 				
@@ -694,14 +700,14 @@ TT.timeline = function() {
 		
 		function createEventsAppearance(events) {
 			
-			// 
+			// Rectangle
 			events.append("rect")
+				.attr("class", "eventRect")
 				.attr("x", 0)
 				.attr("y", 0)
 				.attr("height", attr.event.rect.height)
 				.attr("width", attr.event.rect.width)
-				.attr("class", "eventRect")
-				.on("click", function(d) { console.log(d); });
+				.style("fill", attr.event.rect.fill);
 					
 			// Add event text
 			events.append("text")
@@ -803,7 +809,8 @@ TT.timeline = function() {
 			
 			events.select("rect.eventRect")
 				.attr("width", attr.event.rect.width)
-				.attr("height", attr.event.rect.height);
+				.attr("height", attr.event.rect.height)
+				.style("fill", attr.event.rect.fill);
 				
 			events.select("text.title")
 				.attr("x", attr.event.text.x)
@@ -834,7 +841,8 @@ TT.timeline = function() {
 					return "tl" + id + "_event_" + d.id;
 				})
 			.attr("class", "timeline_event")
-			.attr("transform", attr.event.transform);
+			.attr("transform", attr.event.transform)
+			.on("click", function(d) { console.log(d); });
 	
 		// Add event appearance
 		createEventsAppearance(eventsEnter);
@@ -987,7 +995,6 @@ TT.timeline = function() {
 		
 	};
 
-	
 	me.threshold = function(name, value) {
 		
 		if (arguments.length < 2) {
