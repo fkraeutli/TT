@@ -148,12 +148,6 @@ TT.crossfilter = function() {
 		
 	};
 	
-	me.reset = function() {
-		
-		charts[i].filter(null);
-		renderAll();
-		
-	};
 	
 	// Accessors
 	
@@ -312,7 +306,7 @@ TT.crossfilter = function() {
 					.attr("class", "reset")
 					.text("reset")
 					.style("display", "none")
-					.on("click", me.reset);
+					.on("click", function() { me.reset(); } );
 					
 				// Append SVG element
 				g = div.append("svg")
@@ -390,6 +384,7 @@ TT.crossfilter = function() {
 				} else {
 					
 					var extent = brush.extent();
+					
 					g.selectAll("#clip-" + id + " rect")
 						.attr( "x", x(extent[0]) )
 						.attr( "width", x(extent[1]) - x(extent[0]) );
@@ -399,6 +394,13 @@ TT.crossfilter = function() {
 			
 			g.selectAll(".bar").attr("d", barPath);
 		
+			
+		};
+		
+		me.reset = function() {
+			
+			charts[id].filter(null);
+			renderAll();
 			
 		};
 		
@@ -461,7 +463,6 @@ TT.crossfilter = function() {
 			y = _;
 			return me;
 		};
-		
 		
 		return d3.rebind(me, brush, "on");
 	}
