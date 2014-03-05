@@ -1,12 +1,13 @@
-BRITTEN = 0;
-TATE = 1;
+BRITTEN 	= 0;
+TATE 		= 1;
+JOHNSTON 	= 2;
 
-loadDataset = TATE ;
+loadDataset = TATE;//JOHNSTON ;
 
 var currentYear = new Date().getFullYear(),
 	dataset = [],
 	timeline,
-	urls = ["data/works.js", "http://otis.local:8888/Tate/allartists.js"];
+	urls = ["data/works.js", "http://otis.local:8888/Tate/allartists.js", "http://otis.local:8888/ltm/data/Johnston-Data.json"];
 	
 $j = jQuery.noConflict();
 
@@ -39,7 +40,7 @@ d3.json(urls[loadDataset], function(error, data) {
 					}		
 					d.date = d.from;
 					d.id = d.catalogue_no;
-					d.totalWorks = 0;
+					d.weight = 0;
 					
 					if(d.from > d.to) {
 						
@@ -60,12 +61,12 @@ d3.json(urls[loadDataset], function(error, data) {
 					
 					if(worksPerGenre[id]) {
 					
-						d.totalWorks = Math.min(500, worksPerGenre[id]);
+						d.weight = Math.min(500, worksPerGenre[id]);
 						
 					} else {
 						
 						worksPerGenre[id] = dataset.filter( function(e) {return e.genre == id;} ).length
-						d.totalWorks = Math.min(500, worksPerGenre[id]);
+						d.weight = Math.min(500, worksPerGenre[id]);
 						
 					}
 					
@@ -86,11 +87,70 @@ d3.json(urls[loadDataset], function(error, data) {
 					d.date		= d.yearOfBirth;
 					d.from		= d.yearOfBirth;
 					d.to		= d.yearOfDeath;
+					d.weight	= d.totalWorks
 				
 					dataset.push(d);
 				}
 		
 			});
+			
+		} else if (loadDataset === JOHNSTON) {
+			
+			data.forEach( function(d) {
+				
+				for( var attribute in d ) {
+					
+					
+					if( attribute.indexOf("date") != -1 ) {
+						
+						d[attribute] = new Date(d[attribute]);
+						
+					} else if( d[attribute] == +d[attribute] ) {
+						
+						d[attribute] = +d[attribute];
+						
+					}
+					
+				}
+				
+				d.title = d.simple_name || "unknown";
+				d.date = d.production_date_from;
+				
+				d.weight = Math.floor( Math.random() * 500 );
+				
+				if( d.date ) {
+					
+					d.id = d.inventory;
+					
+					if( d.summary_date_from ) {
+						
+						d.from = d.summary_date_from;
+						
+						if( d.summary_date_to > d.from ) {
+							
+							d.to = d.summary_date_to;
+							
+						} else {
+							
+							d.to = new Date( d.from.valueOf() );
+							d.to.setMonth( d.from.getMonth() + 1 );
+
+							
+						}
+												
+					} else {
+						
+						d.from = d.date;
+						d.to = new Date( d.date.valueOf() );
+						d.to.setFullYear( d.date.getFullYear() + 1 );	
+					}
+					
+					dataset.push(d);
+					
+				}
+				
+				
+			})		
 			
 		}
 		
@@ -98,7 +158,7 @@ d3.json(urls[loadDataset], function(error, data) {
 	
 	} else {
 	
-		console.log(error);
+		console.error(error);
 		
 	}
 	
@@ -130,7 +190,7 @@ function make() {
 		});
 		
 		cf.addFilter({
-			dimension: "totalWorks", 
+			dimension: "weight", 
 			group: function(d) { return Math.floor(d / 10) * 10;}
 		});
 	
@@ -157,6 +217,22 @@ function make() {
 			group: function(d) { return Math.floor(d / 100) * 100;}
 		
 		})
+	} else if(loadDataset === JOHNSTON) {
+	
+		cf.addFilter({
+			dimension: "from", 
+			group: d3.time.year 
+		});
+			
+		cf.addFilter({
+			dimension: "to",
+			group: d3.time.year
+		});
+		cf.addFilter({
+			dimension: "weight", 
+			group: function(d) { return Math.floor(d / 10) * 10;}
+		});
+	
 	}
 
 	d3.select("body").insert("div")
