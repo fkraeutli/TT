@@ -68,9 +68,11 @@ TT.timeline = function() {
 		styles: {
 			
 			events: {
-				height: 14,
+				height: 12,
+				collapsedHeight: 0.5,
 				fontSize: 12,
 				margin: 1,
+				collapsedMargin: 0.1,
 				padding: 2
 			}
 		},
@@ -90,6 +92,7 @@ TT.timeline = function() {
 			width: 800,
 			height: 600,
 			padding: 40,
+			
 			ys: [0]
 			
 		},
@@ -255,8 +258,8 @@ TT.timeline = function() {
 					d.x = p.scales.dateToPx(d.from.valueOf());
 					d.width = ( p.scales.dateToPx(d.to.valueOf()) - p.scales.dateToPx(d.from.valueOf()) );
 					
-					d.height = d.renderLevel < p.thresholds.collapse ? 1 : p.styles.events.height;
-					d.margin = d.renderLevel < p.thresholds.collapse ? 1 : p.styles.events.margin;
+					d.height = d.renderLevel < p.thresholds.collapse ? p.styles.events.collapsedHeight : p.styles.events.height;
+					d.margin = d.renderLevel < p.thresholds.collapse ? p.styles.events.collapsedMargin : p.styles.events.margin;
 					
 					if(count === 0) {
 					
