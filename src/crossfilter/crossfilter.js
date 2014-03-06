@@ -130,7 +130,9 @@ TT.crossfilter = function() {
 	
 		filter.dimension = cf.dimension(filterFunction);
 		
-		filter.group = filter.dimension.group(params.group);
+		if(params.group) {
+			filter.group = filter.dimension.group(params.group);
+		}
 
 		filter.min = d3.min( data, filterFunction );
 		filter.max = d3.max( data, filterFunction );
