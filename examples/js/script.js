@@ -1,3 +1,6 @@
+
+
+
 BRITTEN 	= 0;
 TATE 		= 1;
 JOHNSTON 	= 2;
@@ -15,7 +18,6 @@ $j = jQuery.noConflict();
 d3.json(urls[loadDataset], function(error, data) {
 		
 	if(!error) {
-			
 		
 		if(loadDataset === BRITTEN) {
 				
@@ -39,7 +41,7 @@ d3.json(urls[loadDataset], function(error, data) {
 						
 					}		
 					d.date = d.from;
-					d.id = d.catalogue_no;
+					d.id = d.catalogue_no.replace("/", "-");
 					d.weight = 0;
 					
 					if(d.from > d.to) {
@@ -96,13 +98,19 @@ d3.json(urls[loadDataset], function(error, data) {
 			
 		} else if (loadDataset === JOHNSTON) {
 			
+			console.log(data.length);
+			
 			data.forEach( function(d) {
 				
 				for( var attribute in d ) {
 					
+					if( attribute.indexOf("date") != -1  && d[attribute] !== null) {
 					
-					if( attribute.indexOf("date") != -1 ) {
+						d[attribute + "_orig"] = d[attribute];
 						
+						if(d[attribute] instanceof String) {
+							d[attribute] = d[attribute].replace(/BST/, "GMT");						
+						}
 						d[attribute] = new Date(d[attribute]);
 						
 					} else if( d[attribute] == +d[attribute] ) {
@@ -114,21 +122,21 @@ d3.json(urls[loadDataset], function(error, data) {
 				}
 				
 				d.title = d.simple_name || "unknown";
-				d.date = d.production_date_from;
+				d.date = d.production_date_from || new Date();
 				
-				if( d.date ) {
+				if( d.date instanceof Date ) {
 					
 					d.id = d.inventory;
 					d.from = d.date;
 					
-					if(d.from == d.production_date_to) {
+					if( d.production_date_to instanceof Date && d.from.valueOf() <= d.production_date_to.valueOf() ) {
 					
 						d.to = new Date( d.date.valueOf() );
 						d.to.setFullYear( d.date.getFullYear() + 1 );		
 						
 					} else {
 						
-						d.to = d.production_date_to;
+						d.to = d.production_date_to || new Date();
 						
 					}
 					
@@ -180,6 +188,7 @@ d3.json(urls[loadDataset], function(error, data) {
 				
 			dataset.forEach( function(d) {
 				
+				d.title = d.title;
 				d.weight = weightScale( terms[d.title] );
 				
 			} );
@@ -258,11 +267,15 @@ function make() {
 			group: d3.time.year 
 		});
 		
+
 		cf.addFilter({
 			title: "Acquisition date",
-			dimension: "acquired_date_from", 
+			dimension: function(d) {
+				return d.acquired_date_from || new Date();;
+			}, 
 			group: d3.time.year 
 		});
+
 		
 		cf.addFilter({
 			dimension: "weight", 
