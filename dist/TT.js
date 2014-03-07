@@ -13,7 +13,7 @@ var  TT = {
 	
 	if(!TT.crossfilter.id) TT.crossfilter.id = 0;
 	
-	var cf,
+	var	cf,
 		charts = [],
 		data,
 		div ,
@@ -32,7 +32,8 @@ var  TT = {
 	
 	try {
 		
-		cf = crossfilter();
+		cf = crossfilter();		
+		test_cf = cf; // REMOVE THIS, only for testing expose cf to global namespace
 		
 	} catch(e) {
 		
@@ -141,7 +142,9 @@ var  TT = {
 	
 		filter.dimension = cf.dimension(filterFunction);
 		
-		filter.group = filter.dimension.group(params.group);
+		if(params.group) {
+			filter.group = filter.dimension.group(params.group);
+		}
 
 		filter.min = d3.min( data, filterFunction );
 		filter.max = d3.max( data, filterFunction );
@@ -608,9 +611,11 @@ TT.timeline = function() {
 		styles: {
 			
 			events: {
-				height: 14,
+				height: 12,
+				collapsedHeight: 0.5,
 				fontSize: 12,
 				margin: 1,
+				collapsedMargin: 0.1,
 				padding: 2
 			}
 		},
@@ -630,6 +635,7 @@ TT.timeline = function() {
 			width: 800,
 			height: 600,
 			padding: 40,
+			
 			ys: [0]
 			
 		},
@@ -781,10 +787,20 @@ TT.timeline = function() {
 			}
 
 			p.data.forEach(function(d) {
-			
-				d.renderLevel = computeRenderLevel(d);
 				
+				d.renderLevel = computeRenderLevel(d);
+					
 			});
+			
+			// If only one item is visible or all have the same level they should automatically get displayed
+			
+			if( p.data.length == 1 || d3.min( p.data, function(d) {return d.renderLevel;} ) == d3.max( p.data, function(d) {return d.renderLevel;} ) ) {
+			
+				p.data.forEach( function(d) {
+					d.renderLevel = 1;		
+				} );
+			
+			}				
 			
 			var count = 0;
 			
@@ -795,8 +811,8 @@ TT.timeline = function() {
 					d.x = p.scales.dateToPx(d.from.valueOf());
 					d.width = ( p.scales.dateToPx(d.to.valueOf()) - p.scales.dateToPx(d.from.valueOf()) );
 					
-					d.height = d.renderLevel < p.thresholds.collapse ? 1 : p.styles.events.height;
-					d.margin = d.renderLevel < p.thresholds.collapse ? 1 : p.styles.events.margin;
+					d.height = d.renderLevel < p.thresholds.collapse ? p.styles.events.collapsedHeight : p.styles.events.height;
+					d.margin = d.renderLevel < p.thresholds.collapse ? p.styles.events.collapsedMargin : p.styles.events.margin;
 					
 					if(count === 0) {
 					
@@ -854,6 +870,8 @@ TT.timeline = function() {
 		
 		updateDataValues();
 		
+		test_pdata = p.data; // REMOVE THIS, only for testing expose p.data to global namespace
+		
 		var events = p.elements.events.selectAll("g.timeline_event")
 			.data(p.data.filter(filterEvents), function(d) { return d.id; });
 			
@@ -871,7 +889,22 @@ TT.timeline = function() {
 				})
 			.attr("class", "timeline_event")
 			.attr("transform", attr.event.transform)
-			.on("click", function(d) { console.log(d); });
+			.on("click", function(d) { console.log(d); })
+			
+			// REMOVE THIS --> (Specific to Johnston)
+			
+			.on("mouseover", function(d) {
+				if(d.summary) {
+					d3.select(this).select("text").text( function(d) { return d.summary;});
+				}
+			})
+			.on("mouseout", function(d) { 
+				if(d.summary) {
+					d3.select(this).select("text").text( function(d) { return d.title;} );
+				}
+			});
+			
+			// <-- REMOVE THIS
 	
 		// Add event appearance
 		createEventsAppearance(eventsEnter);
