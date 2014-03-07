@@ -244,10 +244,19 @@ TT.timeline = function() {
 			}
 
 			p.data.forEach(function(d) {
-			
-				d.renderLevel = computeRenderLevel(d);
 				
+				d.renderLevel = computeRenderLevel(d);
+					
 			});
+			
+			// If only one item is visible or all have the same level they should automatically get displayed
+			if( p.data.length == 1 || d3.min( p.data, function(d) {return d.renderLevel;} ) == d3.max( p.data, function(d) {return d.renderLevel;} ) ) {
+			
+				p.data.forEach( function(d) {
+					d.renderLevel = 1;		
+				} );
+			
+			}				
 			
 			var count = 0;
 			
