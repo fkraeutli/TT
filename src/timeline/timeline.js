@@ -346,7 +346,7 @@ TT.timeline = function() {
 				})
 			.attr("class", "timeline_event")
 			.attr("transform", attr.event.transform)
-			.on("click", function(d) { console.log(d); })
+			.on("click", function(d) { console.log(d); });
 	
 		// Add event appearance
 		createEventsAppearance(eventsEnter);

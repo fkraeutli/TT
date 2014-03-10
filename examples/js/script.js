@@ -222,7 +222,8 @@ function make() {
 	
 	if(loadDataset === TATE) {
 	
-		cf.addFilter({
+	/*
+	cf.addFilter({
 			title: "Year born",
 			dimension: "from", 
 			group: d3.time.year 
@@ -238,6 +239,7 @@ function make() {
 			dimension: "weight", 
 			group: function(d) { return Math.floor(d / 10) * 10;}
 		});
+*/
 	
 	} else if (loadDataset === BRITTEN) {
 		
@@ -301,7 +303,7 @@ function make() {
 	// Make slider
 	$j( "#slider_threshold" ).rangeSlider( {
 		 
-		bounds: { min: 0.001, max: 1 },
+		bounds: { min: 0.001, max: 0.999 },
 		defaultValues: {
 			min: timeline.threshold("display"),	
 			max: timeline.threshold("collapse")

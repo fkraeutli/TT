@@ -11,6 +11,10 @@ var  TT = {
   
   ;TT.crossfilter = function() {
 	
+	var FILTER_TYPE_CONTINUOUS		= "continuous",
+		FILTER_TYPE_TAGS			= "tags",
+		FILTER_TYPE_UNIQUE			= "unique";
+	
 	if(!TT.crossfilter.id) TT.crossfilter.id = 0;
 	
 	var	cf,
@@ -46,10 +50,29 @@ var  TT = {
 
 	function drawChart(filter) {
 		
-		var chart = new BarChart()
-			.dimension(filter.dimension)
-			.group(filter.group)
-			.title( filter.title.ucfirst() );
+		var chart;
+		
+		
+		switch(filter.type) {
+		
+			case FILTER_TYPE_CONTINUOUS:
+				chart = new BarChart()
+					.dimension(filter.dimension)
+					.group(filter.group)
+					.title(filter.title);
+					break;
+					
+			case FILTER_TYPE_TAGS:
+				chart = new WordCloud()
+					.dimension(filter.dimension)
+					.group(filter.group)
+					.title(filter.title);
+					break;
+					
+			default:
+				console.error("Invalid filter " + filter.type);
+				break;
+		}
 		
 		
 		if(filter.isDate) {
@@ -119,37 +142,89 @@ var  TT = {
 	// Methods
 	
 	me.addFilter = function(params) {
+	
+		/*
+		
+			params {
+				
+				dimension: 
+					- Dimension to filter as String or function
+					
+				(optional)
+				group:
+					- Grouping function for dimension
+				title:
+					- Title. If none given, dimension string will be used
+			
+			}
+		
+		*/
 		
 		var filter = {};
-		
+	
 		filter.title = params.title || params.dimension.toString();
 		
-		if(typeof params.dimension === "string") {
+		var filterFunction;
 		
-			filterFunction = function(d) {
-				return d[params.dimension];
-			};
-			
-		} else if (typeof params.dimension === "function") {
+		if (typeof params.dimension === "function") {
 
 			filterFunction = params.dimension;
 
 		} else {
 		
-			return false;
+			filterFunction = function(d) {
+				return d[params.dimension];
+			};
 			
 		}
 	
 		filter.dimension = cf.dimension(filterFunction);
-		
-		if(params.group) {
-			filter.group = filter.dimension.group(params.group);
-		}
 
+		// Group filter (if no function provided, identity function is used)	
+		if( params.group ) {
+			
+			filter.group = filter.dimension.group(params.group);
+			
+		} else {
+			
+			filter.group = filter.dimension.group( function(d) {return d;} );
+			
+		}
+		
 		filter.min = d3.min( data, filterFunction );
 		filter.max = d3.max( data, filterFunction );
 		
 		filter.isDate = (filter.min instanceof Date);
+		
+		// determine filter type based on data
+		var allNumeric = true;
+		var groupValues = filter.group.all();
+		
+		for( var i = 0; i < groupValues.length; i++ ) {
+		
+			if( isNaN( +groupValues[i].key.valueOf() ) ) {
+			
+				allNumeric = false;
+				break;
+				
+			}	
+		}
+		
+		if ( allNumeric ) {
+			
+			filter.type = FILTER_TYPE_CONTINUOUS;
+			
+		}
+		
+		else if ( filter.group.all().length == filter.dimension.top(Infinity).length ) {
+
+			filter.type = FILTER_TYPE_UNIQUE;
+
+		} else {
+			
+			filter.type = FILTER_TYPE_TAGS;
+			
+		}
 		
 		filters.push(filter);
 		
@@ -889,22 +964,7 @@ TT.timeline = function() {
 				})
 			.attr("class", "timeline_event")
 			.attr("transform", attr.event.transform)
-			.on("click", function(d) { console.log(d); })
-			
-			// REMOVE THIS --> (Specific to Johnston)
-			
-			.on("mouseover", function(d) {
-				if(d.summary) {
-					d3.select(this).select("text").text( function(d) { return d.summary;});
-				}
-			})
-			.on("mouseout", function(d) { 
-				if(d.summary) {
-					d3.select(this).select("text").text( function(d) { return d.title;} );
-				}
-			});
-			
-			// <-- REMOVE THIS
+			.on("click", function(d) { console.log(d); });
 	
 		// Add event appearance
 		createEventsAppearance(eventsEnter);
