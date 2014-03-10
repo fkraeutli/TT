@@ -18,16 +18,177 @@ body {
 	padding: 1em;
 }
 
-svg#timeline, #timeline-chart {
-	float: left;
-	margin-right: 2em;
-}
 
 #crossfilter {
 	float: left;
 	width:400px;
 	min-height: 200px;
+	
+	.chart {
+	
+		margin-bottom: 2em;
+		
+		.title {
+			margin-bottom: 1em;
+			font-weight: bold;
+		
+			a {
+				cursor: pointer;
+				font-weight: normal;
+				font-size: smaller;
+				padding: .2em;
+				margin-left: 1em;
+				background: @colBarBackground;
+				float: right;
+			}
+		}
+		
+		path {
+			fill: @eventBarColor;
+		}
+		
+		path.background  {
+			fill: @colBarBackground;
+		}
+		
+		.axis {
+			path, line {
+				fill:none;
+				stroke: @colAxisStroke;
+				shape-rendering: crispEdges;
+			}
+		}
+		
+		
+		.brush {
+			rect.extent {
+				fill: steelblue;
+				fill-opacity: .125;
+			}
+			.resize path {
+				fill: @colBarForeground;
+				stroke: @colResizePath;
+			}
+		}
+	}
+	
 }
+
+#slider_threshold {
+	
+	float: left;
+	width: 400px;
+	margin-bottom: 2em;
+		
+	height: 2em;
+	
+	.ui-rangeSlider-container {
+		height: 2em;
+		border-bottom: @colAxisStroke 1px solid;
+		
+		.ui-rangeSlider-bar {
+			height: 100%;
+			background: @colBarForeground;
+			opacity: .125;
+			cursor: move;
+			cursor: grab;
+		}
+		
+		.ui-rangeSlider-handle {
+			background: @colBarBackground;
+			width: .5em;
+			height: 100%;
+			cursor: ew-resize;
+		}
+	}
+	
+	.ui-rangeSlider-label  {
+		.ui-rangeSlider-label-value {
+			display: none;
+		}
+	}
+	
+}
+
+svg.timeline {
+
+	float: left;
+	margin-right: 2em;
+	
+	.timeline_axis {
+		path {
+			fill:none;
+		}
+		line {
+			stroke: @axisLineColor;
+		}
+		text {
+			fill: @axisTextColor;
+		}
+	}
+	
+	.timeline_events {
+	
+		.timeline_event {
+			
+			.childrenIcon {
+				rect {
+					fill: none;
+					cursor: pointer;
+					pointer-events: all;
+				}
+				text {
+					fill: @eventTitleColor;
+				}
+			}
+			
+			.childrenIcon.open {
+				.closed {
+					display: none;
+				}
+			}
+			
+			.childrenIcon.closed {
+				.open {
+					display: none;
+				}
+			}
+			.eventRect {
+				fill: @eventBarColor;
+			}
+			.title {
+				fill: @eventTitleColor;
+			}
+			
+			.title[text-anchor=end] {
+				fill: @eventTitleOutsideColor;
+			}
+		}
+	}
+	
+	.overlay {
+		fill:none;
+		pointer-events: all;
+	}
+	
+	
+	.timeline_axis {
+		
+		line, path {
+			stroke: @colAxisStroke;
+			fill: none;
+			stroke-width: 1px;
+		}
+		
+		path {
+			stroke: none;
+		}
+		
+	}
+	
+}
+
+/*
 
 .slider {
 	float: left;
@@ -45,122 +206,5 @@ svg#timeline, #timeline-chart {
 		margin-left:-0.5em;
 	}
 }
+*/
 
-.timeline_axis {
-	path {
-		fill:none;
-	}
-	line {
-		stroke: @axisLineColor;
-	}
-	text {
-		fill: @axisTextColor;
-	}
-}
-
-.timeline_events {
-
-	.timeline_event {
-		
-		.childrenIcon {
-			rect {
-				fill: none;
-				cursor: pointer;
-				pointer-events: all;
-			}
-			text {
-				fill: @eventTitleColor;
-			}
-		}
-		
-		.childrenIcon.open {
-			.closed {
-				display: none;
-			}
-		}
-		
-		.childrenIcon.closed {
-			.open {
-				display: none;
-			}
-		}
-		.eventRect {
-			fill: @eventBarColor;
-		}
-		.title {
-			fill: @eventTitleColor;
-		}
-		
-		.title[text-anchor=end] {
-			fill: @eventTitleOutsideColor;
-		}
-	}
-}
-
-.overlay {
-	fill:none;
-	pointer-events: all;
-}
-
-
-.timeline_axis {
-	
-	line, path {
-		stroke: @colAxisStroke;
-		fill: none;
-		stroke-width: 1px;
-	}
-	
-	path {
-		stroke: none;
-	}
-	
-}
-
-.chart {
-
-	margin-bottom: 10px;
-	
-	.title {
-		margin-bottom: 1em;
-		font-weight: bold;
-	
-		a {
-			cursor: pointer;
-			font-weight: normal;
-			font-size: smaller;
-			padding: .2em;
-			margin-left: 1em;
-			background: @colBarBackground;
-			float: right;
-		}
-	}
-	
-	path {
-		fill: @eventBarColor;
-	}
-	
-	path.background  {
-		fill: @colBarBackground;
-	}
-	
-	.axis {
-		path, line {
-			fill:none;
-			stroke: @colAxisStroke;
-			shape-rendering: crispEdges;
-		}
-	}
-	
-	
-	.brush {
-		rect.extent {
-			fill: steelblue;
-			fill-opacity: .125;
-		}
-		.resize path {
-			fill: @colBarForeground;
-			stroke: @colResizePath;
-		}
-	}
-}

@@ -5,7 +5,7 @@ BRITTEN 	= 0;
 TATE 		= 1;
 JOHNSTON 	= 2;
 
-loadDataset = JOHNSTON ;
+loadDataset = TATE ;
 
 var currentYear = new Date().getFullYear(),
 	dataset = [],
@@ -213,6 +213,7 @@ function make() {
 	
 	d3.select("body").insert("svg", ":first-child")
 		.attr("id", "timeline")
+		.attr("class", "timeline")
 		.attr("width", 800)
 		.attr("height", 600)
 		.call(timeline);
@@ -222,13 +223,15 @@ function make() {
 	if(loadDataset === TATE) {
 	
 		cf.addFilter({
+			title: "Year born",
 			dimension: "from", 
 			group: d3.time.year 
 		});
 			
 		cf.addFilter({
+			title: "Year died",
 			dimension: "to",
-			group: d3.time.year
+			group: d3.time.year 
 		});
 		
 		cf.addFilter({
@@ -296,7 +299,29 @@ function make() {
 	cf.forcePublish()
 		
 	// Make slider
-	$j( "#slider_threshold" ).slider({
+	$j( "#slider_threshold" ).rangeSlider( {
+		 
+		bounds: { min: 0.001, max: 1 },
+		defaultValues: {
+			min: timeline.threshold("display"),	
+			max: timeline.threshold("collapse")
+		},
+		formatter:function(val){
+	        var value = Math.round(val * 100) / 100,
+				decimal = value - Math.round(val);
+			return decimal == 0 ? value.toString() + ".0" : value.toString();
+		},
+		step: 0.01
+		
+	} ).on("valuesChanging", function(e, data){
+		timeline.threshold({
+			display: data.values.min,
+      		collapse: data.values.max
+		});
+	});
+	
+	/*
+{
 		range: true,
 		min: 0,
 		max: 1,
@@ -308,7 +333,8 @@ function make() {
 	      		collapse: ui.values[1]
 	      	});
 		}
-	});
+	}
+*/
 	
 	/*
 	$j( "#slider_height" ).slider({
