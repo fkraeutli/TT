@@ -250,6 +250,7 @@ TT.timeline = function() {
 			});
 			
 			// If only one item is visible or all have the same level they should automatically get displayed
+			
 			if( p.data.length == 1 || d3.min( p.data, function(d) {return d.renderLevel;} ) == d3.max( p.data, function(d) {return d.renderLevel;} ) ) {
 			
 				p.data.forEach( function(d) {
@@ -326,6 +327,8 @@ TT.timeline = function() {
 		
 		updateDataValues();
 		
+		test_pdata = p.data; // REMOVE THIS, only for testing expose p.data to global namespace
+		
 		var events = p.elements.events.selectAll("g.timeline_event")
 			.data(p.data.filter(filterEvents), function(d) { return d.id; });
 			
@@ -343,7 +346,7 @@ TT.timeline = function() {
 				})
 			.attr("class", "timeline_event")
 			.attr("transform", attr.event.transform)
-			.on("click", function(d) { console.log(d); });
+			.on("click", function(d) { console.log(d); })
 	
 		// Add event appearance
 		createEventsAppearance(eventsEnter);

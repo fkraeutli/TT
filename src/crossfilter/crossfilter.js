@@ -2,7 +2,7 @@ TT.crossfilter = function() {
 	
 	if(!TT.crossfilter.id) TT.crossfilter.id = 0;
 	
-	var cf,
+	var	cf,
 		charts = [],
 		data,
 		div ,
@@ -21,7 +21,8 @@ TT.crossfilter = function() {
 	
 	try {
 		
-		cf = crossfilter();
+		cf = crossfilter();		
+		test_cf = cf; // REMOVE THIS, only for testing expose cf to global namespace
 		
 	} catch(e) {
 		
