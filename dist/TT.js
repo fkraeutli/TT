@@ -16,7 +16,7 @@ var  TT = {
 		FILTER_TYPE_UNIQUE			= "unique";
 	
 	if(!TT.crossfilter.id) TT.crossfilter.id = 0;
-	
+
 	var	cf,
 		charts = [],
 		data,
@@ -52,7 +52,6 @@ var  TT = {
 		
 		var chart;
 		
-		
 		switch(filter.type) {
 		
 			case FILTER_TYPE_CONTINUOUS:
@@ -77,6 +76,9 @@ var  TT = {
 						);
 						
 					}
+
+					chart.on("brush", renderAll)
+						.on("brushend", renderAll);
 					
 					break;
 					
@@ -93,11 +95,7 @@ var  TT = {
 		}
 		
 		charts.push(chart);
-
 		div.call(chart);
-
-		chart.on("brush", renderAll)
-			.on("brushend", renderAll);
 			
 		return chart;
 			
@@ -279,19 +277,14 @@ var  TT = {
 	
 	return me;
 	
-	
 	// -- BarChart
-
-
 	function BarChart() {
-		
-		if(!BarChart.id) BarChart.id = 0;
 		
 		var div,
 			me = {},
 			x,
 			y = d3.scale.linear().range([p.view.height, 0]),
-			id = BarChart.id++,
+			id = charts.length, // CHANGE THIS dangerous to use index as unique identifier
 			axis = d3.svg.axis().orient("bottom"),
 			axisHeight = 20,
 			brush = d3.svg.brush(),
@@ -309,8 +302,8 @@ var  TT = {
 			
 			var div = d3.select(this.parentNode.parentNode.parentNode);
 			
-			div.select(".title a")
-				.style("display", null);
+			div.select(".title a.reset")
+				.style("display", "block");
 			
 		} );
 		
@@ -338,7 +331,7 @@ var  TT = {
 					
 					var div = d3.select(this.parentNode.parentNode.parentNode);
 					
-					div.select(".title a")
+					div.select(".title a.reset")
 						.style("display", "none");
 						
 					div.select("#clip-" + id + " rect")
@@ -356,11 +349,19 @@ var  TT = {
 		
 		me.apply = function() {
 			
-			div = arguments[0];
+			try {
+			
+				div = arguments[0];
+				
+			} catch(e) {
+			
+				console.error("No DOM element specified");
+				
+			}
 			
 			div = div.append("div")
 				.attr("id", "barChart_" + id)
-				.attr("class", "chart");
+				.attr("class", "chart barchart");
 				
 			initBrush();
 			me.drawChart();
@@ -400,7 +401,6 @@ var  TT = {
 				div_title.append("a")
 					.attr("class", "reset")
 					.text("Reset")
-					.style("display", "none")
 					.on("click", me.reset );
 					
 				// Add sort by link
@@ -456,7 +456,7 @@ var  TT = {
 			var height = y.range()[0];
 			
 			y.domain( [0, group.top(1)[0].value] );
-			
+	
 			var g = div.select("g");
 			
 			// Create the skeletal chart
@@ -473,8 +473,8 @@ var  TT = {
 					.call(brush);
 				
 				// Display reset button if brush is usde
-				div.select(".title a")
-					.style("display", brush.empty() ? "none" : null);
+				div.select(".title a.reset")
+					.style("display", brush.empty() ? "" : "block");
 				
 				// Adjust clipping area
 				if( brush.empty() ) {
@@ -526,6 +526,7 @@ var  TT = {
 			publishUpdate();
 			
 		};
+		
 		// Accessors
 		
 		me.dimension = function(_) {
@@ -580,6 +581,228 @@ var  TT = {
 		
 		return d3.rebind(me, brush, "on");
 	}
+	
+	// -- WordCloud
+	function WordCloud() {
+	
+		if ( !WordCloud.id ) WordCloud.id = 0;
+
+		var activeTerms = [],
+			dimension,
+			div,
+			group,
+			me = {},
+			id = charts.length, // CHANGE THIS dangerous to use index as unique identifier
+			title;
+		
+		// Initialiser
+		
+		me.apply = function() {
+			
+			try {
+			
+				div = arguments[0];
+				
+			} catch(e) {
+			
+				console.error("No DOM element specified");
+				return false;
+			}
+			
+			div = div.append("div")
+				.attr("id", "wordCloud_" + id)
+				.attr("class", "chart wordCloud");
+				
+			me.drawChart();
+			
+		};
+		
+		// Methods
+		
+		me.drawChart = function( redraw ) {
+		
+			function drawChartSkeleton() {
+				
+				// Add title
+				var div_title = div.append("div")
+					.attr("class", "title")
+					.text(title);
+				
+				// Add reset link
+				div_title.append("a")
+					.attr("class", "reset")
+					.text("Reset")
+					.on("click", me.reset );
+					
+				// Add sort by link
+				div_title.append("a")
+					.attr("class", "sort")
+					.text("Sort by")
+					.style("display", id === 0 ? "none" : "")
+					.on("click", function() { me.sortBy( id ); } );
+					
+				// Append element for wordCloud
+				g = div.append("div")
+					.attr("width", width)
+					.attr("class", "wordcloud_container");
+				
+			}
+			
+			function filterFunction(d) {
+				
+				return activeTerms.indexOf( d ) !== -1;
+				
+			}
+			
+			var width = p.view.width;
+			
+			var g = div.select("div.wordcloud_container");
+			
+			if ( g.empty() || redraw ) {
+				
+				drawChartSkeleton();
+				
+			}
+			
+			
+			var words_update = g.selectAll("span")
+				.data( group.all()
+					.filter( function(d) { 
+					if( d.value > 0) {
+						return d;
+					}
+				}), function(d) { return d.key; } )
+					.sort( function (a,b) {
+						return b.key < a.key;	
+					}),
+				words_enter = words_update.enter(),
+				words_exit = words_update.exit(),
+				words_scale = d3.scale.linear()
+					.domain( [ 0, Math.min( d3.max( group.all(), function(d) { return d.value; }), 10 ) ] ) // Manual maximum of 500 (not very elegant, CHANGE)
+					.range( [ 0, 1 ]);
+					
+				words_attributes = {
+					
+					fontSize: function(d) {
+						
+						return Math.min( words_scale( d.value ), 1) * 9 + 8 + "px";
+						
+					}
+					
+				};
+			
+			words_update.style("font-size", words_attributes.fontSize);
+			
+			words_enter.append("span")
+				.text( function(d) { return d.key; } )
+				.style("font-size", words_attributes.fontSize)
+				.attr("class", function(d) {
+					return "term term_" + d.key + " " + ( activeTerms.indexOf( d.key ) !== -1 ? "selected" : "");
+				})
+				.on( "click", function(d) {
+					
+					if ( activeTerms.indexOf( d.key ) === -1) {
+						
+						activeTerms.push( d.key );
+						d3.select(this).classed("selected", 1);
+						
+					} else {
+						
+						activeTerms.splice( activeTerms.indexOf( d.key) , 1);
+						d3.select(this).classed("selected", 0);
+
+					}
+					
+					if( activeTerms.length ) {
+					
+						dimension.filterFunction( filterFunction );
+						d3.select( this.parentNode ).classed("filtered", 1);
+						div.select(".title a.reset")
+							.style("display", "block");			
+						
+					} else {	
+					
+						me.reset();
+						
+					}
+					
+					
+					renderAll();
+					
+				});
+				
+			words_exit.remove();
+			
+		};
+		
+		me.redrawChart = function() {
+			
+			div.select("div.wordcloud_container").remove();
+			div.select(".title").remove();
+			me.drawChart(true);
+			
+		};
+		
+		me.reset = function() {
+			
+			activeTerms = [];
+			dimension.filterAll();
+			
+			div.selectAll(".term")
+				.style("color", "");
+			
+			div.select(".filtered")
+				.classed("filtered" , 0);
+				
+			div.selectAll(".selected")
+				.classed("selected" , 0);
+				
+			div.select(".title a.reset")
+			.style("display", null);
+							
+			renderAll();
+			
+		};	
+		
+		me.sortBy = function(id) {
+			
+			console.log("Hello" + id);
+			
+			d3.selectAll(".title .sort")
+				.style("display", "block");
+				
+			d3.select("#wordCloud_" + id + " .sort")
+				.style("display", "none");
+			
+			selectedChart = charts[id];
+			publishUpdate();
+			
+		};
+		
+		// Accessors
+		
+		me.dimension = function(_) {
+			if (!arguments.length) return dimension;
+			dimension = _;
+			return me;
+		};
+		
+		me.group = function(_) {
+			if (!arguments.length) return group;
+			group = _;
+			return me;
+		};
+	
+		me.title = function(_) {
+			if (!arguments.length) return title;
+			title = _;
+			return me;
+		};
+	
+		return me;
+		
+	}
+	
 };
 
 String.prototype.ucfirst = function() {
@@ -687,18 +910,18 @@ TT.timeline = function() {
 			
 			events: {
 				height: 12,
-				collapsedHeight: 0.5,
+				collapsedHeight: 2,
 				fontSize: 12,
 				margin: 1,
-				collapsedMargin: 0.1,
+				collapsedMargin: 1,
 				padding: 2
 			}
 		},
 		
 		thresholds: {
 			
-			collapse: 0.99,
-			display: 0.7	
+			collapse: 0.6,
+			display: 0.2	
 			
 		},
 		
@@ -840,7 +1063,7 @@ TT.timeline = function() {
 			
 			*/
 		
-			return d.renderLevel > p.thresholds.display  &&
+			return d.renderLevel >= p.thresholds.display  &&
 				x(d.x) + d.width * p.zoom.factor >= 0 &&
 				x(d.x) <= p.view.width &&
 				d.y + y(0) > -p.styles.events.height && 
