@@ -69,18 +69,18 @@ TT.timeline = function() {
 			
 			events: {
 				height: 12,
-				collapsedHeight: 0.5,
+				collapsedHeight: 2,
 				fontSize: 12,
 				margin: 1,
-				collapsedMargin: 0.1,
+				collapsedMargin: 1,
 				padding: 2
 			}
 		},
 		
 		thresholds: {
 			
-			collapse: 0.99,
-			display: 0.7	
+			collapse: 0.6,
+			display: 0.2	
 			
 		},
 		
@@ -222,7 +222,7 @@ TT.timeline = function() {
 			
 			*/
 		
-			return d.renderLevel > p.thresholds.display  &&
+			return d.renderLevel >= p.thresholds.display  &&
 				x(d.x) + d.width * p.zoom.factor >= 0 &&
 				x(d.x) <= p.view.width &&
 				d.y + y(0) > -p.styles.events.height && 
