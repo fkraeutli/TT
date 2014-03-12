@@ -222,8 +222,7 @@ function make() {
 	
 	if(loadDataset === TATE) {
 	
-	/*
-	cf.addFilter({
+		cf.addFilter({
 			title: "Year born",
 			dimension: "from", 
 			group: d3.time.year 
@@ -239,7 +238,6 @@ function make() {
 			dimension: "weight", 
 			group: function(d) { return Math.floor(d / 10) * 10;}
 		});
-*/
 	
 	} else if (loadDataset === BRITTEN) {
 		

@@ -60,6 +60,24 @@ var  TT = {
 					.dimension(filter.dimension)
 					.group(filter.group)
 					.title(filter.title);
+												
+					if(filter.isDate) {
+					
+						chart.x(
+							d3.time.scale()
+								.domain([filter.min, filter.max])
+								.rangeRound( [0, p.view.width] )
+						);
+						
+					} else {
+						
+						chart.x( d3.scale.linear()
+							.domain( [filter.min, filter.max] )
+							.rangeRound( [0, p.view.width] ) 
+						);
+						
+					}
+					
 					break;
 					
 			case FILTER_TYPE_TAGS:
@@ -72,24 +90,6 @@ var  TT = {
 			default:
 				console.error("Invalid filter " + filter.type);
 				break;
-		}
-		
-		
-		if(filter.isDate) {
-		
-			chart.x(
-				d3.time.scale()
-					.domain([filter.min, filter.max])
-					.rangeRound( [0, p.view.width] )
-			);
-			
-		} else {
-			
-			chart.x( d3.scale.linear()
-				.domain( [filter.min, filter.max] )
-				.rangeRound( [0, p.view.width] ) 
-			);
-			
 		}
 		
 		charts.push(chart);
@@ -857,7 +857,6 @@ TT.timeline = function() {
 				} else {
 					return 0;
 				}
-
 		
 			}
 

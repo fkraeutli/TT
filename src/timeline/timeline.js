@@ -239,7 +239,6 @@ TT.timeline = function() {
 				} else {
 					return 0;
 				}
-
 		
 			}
 
