@@ -3,14 +3,15 @@
 
 BRITTEN 	= 0;
 TATE 		= 1;
-JOHNSTON 	= 2;
+TATEART		= 2;
+JOHNSTON 	= 3;
 
 loadDataset = TATE ;
 
 var currentYear = new Date().getFullYear(),
 	dataset = [],
 	timeline,
-	urls = ["data/works.js", "http://otis.local:8888/Tate/allartists.js", "http://otis.local:8888/ltm/data/Johnston-Data.json"];
+	urls = ["data/works.js", "http://otis.local:8888/Tate/allartists.js", "http://otis.local:8888/Tate/allartworks.js", "http://otis.local:8888/ltm/data/Johnston-Data.json"];
 	
 $j = jQuery.noConflict();
 
@@ -95,6 +96,52 @@ d3.json(urls[loadDataset], function(error, data) {
 				}
 		
 			});
+			
+		} else if (loadDataset === TATEART) {
+						
+			data.splice(0, 60000);
+							
+			var artistCount = {};
+			
+			data.forEach( function(d) {
+				
+				if(d.dateRange && d.dateRange != null && d.dateRange.startYear) {
+					
+					d.from = new Date( +d.dateRange.startYear, 0, 1 );
+					
+					if ( d.dateRange.endYear ) {
+					
+						d.to = new Date( +d.dateRange.endYear,0 ,1 );
+						
+					} else {
+						d.to = new Date( d.from.valueOf() );
+						d.to.setFullYear( d.from.getFullYear() + 1 );
+					}
+				
+					if( artistCount.hasOwnProperty( d.all_artists ) ) {
+						
+						artistCount[d.all_artists]++;
+						
+					} else {
+
+						artistCount[d.all_artists] = 0;
+						
+					}
+					
+					dataset.push(d);	
+				}
+				
+			} );
+			
+			
+			// determine importance
+			
+			dataset.forEach( function(d) {
+				
+				d.weight = artistCount[d.all_artists];
+				
+			} )
+			
 			
 		} else if (loadDataset === JOHNSTON) {
 			
@@ -211,11 +258,10 @@ function make() {
 
 	timeline = TT.timeline().data(dataset);
 	
-	d3.select("body").insert("svg", ":first-child")
-		.attr("id", "timeline")
+	d3.select("svg#timeline")
 		.attr("class", "timeline")
 		.attr("width", 800)
-		.attr("height", 600)
+		.attr("height", 900)
 		.call(timeline);
 			
 	cf = TT.crossfilter().data(dataset);
@@ -234,12 +280,50 @@ function make() {
 			group: d3.time.year 
 		});
 		
+		
 		cf.addFilter({
-			dimension: "weight", 
-			group: function(d) { return Math.floor(d / 10) * 10;}
+			title: "Number of works (log)",
+			dimension: function(d) {
+			
+				return Math.log(d.totalWorks);
+				return d.totalWorks < 500 ? d.totalWorks : 500;
+				
+			}
 		});
+
+		cf.addFilter({
+			dimension: function(d) {
+				return d.gender || "unknown";
+			},
+			title: "Gender"
+		});
+		
+		cf.addFilter( { 
+			title: "Movement", 
+			dimension: function(d) {
+				if(d.movements.length) { 
+					return d.movements[0].name;
+				} else {
+					return "unknown";
+				}; 
+			} 
+		} )
 	
-	} else if (loadDataset === BRITTEN) {
+	} else if (loadDataset = TATEART) {
+		
+		cf.addFilter({
+			title: "Year",
+			dimension: "from"
+		});
+		
+		cf.addFilter({title: "Medium", dimension: "medium"});
+		
+		cf.addFilter({
+			title: "Artist",
+			dimension: function(d) { return d.contributors[0].fc; }
+		});
+		
+	}	else if (loadDataset === BRITTEN) {
 		
 		cf.addFilter({
 			title: "Started Composition",
@@ -284,10 +368,14 @@ function make() {
 			dimension: "weight", 
 			group: function(d) { return Math.floor(d / 10) * 10;}
 		});
+		
+		cf.addFilter( { 
+			title: "Production Role", 
+			dimension: function(d) {if(d.production_role) {return d.production_role.split(";")[0]} else {return "unknown"}; } 
+		})
 	}
 
-	d3.select("body").insert("div")
-		.attr("id", "crossfilter")
+	d3.select("#crossfilter")
 		.call(cf);	
 		
 	TT.observer.make(cf);
@@ -314,11 +402,13 @@ function make() {
 		step: 0.01
 		
 	} ).on("valuesChanging", function(e, data){
+	
 		timeline.threshold({
 			display: data.values.min,
       		collapse: data.values.max
 		});
 	});
+	
 	
 	/*
 {
@@ -350,15 +440,17 @@ function make() {
 		}
 	});
 	*/
+	
 }
 
 
 
 
-function colourByAttribute(attribute) {
+function colourByAttribute(attribute, dataset) {
 	
 	var color;
 	var values = listUniqueValues(attribute);
+	var fillFunction;
 		
 	// pick color scale
 	if (values.length <= 10) {
@@ -369,12 +461,28 @@ function colourByAttribute(attribute) {
 
 	if(values.length <= 20) {
 		fillFunction = function(d) {
-			return color(values.indexOf(d[attribute]));
+			var value;
+			if(typeof attribute == "function") {
+				value = attribute.call( attribute, d );
+			} else {
+				value = d[attribute];
+			}
+			return color(values.indexOf( value ) );
+			
 		}
 	} else {
 		fillFunction = function(d) {
-			var step = 360/values.length;
-			return d3.hsl(values.indexOf(d[attribute]) * step, .5, .5);
+		
+			var step = 360/values.length,
+				value;
+			if(typeof attribute == "function") {
+				value = attribute.call( attribute, d );
+			} else {
+				value = d[attribute];
+			}
+			
+			return d3.hsl(values.indexOf( value ) * step, .5, .5);
+			
 		}
 	}
 
@@ -386,6 +494,19 @@ function colourByAttribute(attribute) {
 	
 	timeline.data(dataset);
 	cf.forcePublish();
+}
+
+function colourByMovementName(dataset) {
+	
+	return colourByAttribute( function (d) {
+		if(d.movements.length) { 
+			return d.movements[0].name;
+		} else {
+			return "unknown";
+		}; 
+
+	}, dataset)
+	
 }
 
 function listAttributes() {
@@ -406,15 +527,26 @@ function listDateAttributes() {
 
 function listUniqueValues(attribute) {
 	var values = Array();
+	
 	for(i in dataset) {
 
-		if(values.indexOf(dataset[i][attribute]) == -1) {
-			values.push(dataset[i][attribute])
+		if(typeof attribute == "function") {
+			
+			var value = attribute.call(attribute, dataset[i]);
+			
+			if(values.indexOf(value) == -1) {
+				values.push( value );
+			}
+			
+		} else {
+	
+			if(values.indexOf(dataset[i][attribute]) == -1) {
+				values.push(dataset[i][attribute])
+			}
+			
 		}
-		
 	}
 	values.sort();
-	console.log(values);
 	return values;
 }
 
