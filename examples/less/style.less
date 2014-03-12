@@ -9,6 +9,7 @@
 @axisTextColor: #000;
 @eventBarColor: teal;
 @eventTitleColor: #fff;
+@crossfilterTitleColor: #1b7c8d;
 @eventTitleOutsideColor: #000;
 
 body {
@@ -16,11 +17,22 @@ body {
 	font-size: 12px;
 	margin: 0;
 	padding: 1em;
+	width:1220px;
+	margin: auto;
 }
 
+#leftCol {
+	float: left;
+	width:800px;
+	margin-right: 20px;
+}
+
+#rightCol {
+	float: left;
+	width:400px;
+}
 
 #crossfilter {
-	float: left;
 	width:400px;
 	min-height: 200px;
 	
@@ -30,7 +42,8 @@ body {
 		
 		.title {
 			margin-bottom: 1em;
-			font-weight: bold;
+			
+			color: @crossfilterTitleColor;
 		
 			a {
 				cursor: pointer;
@@ -39,10 +52,18 @@ body {
 				padding: .2em;
 				margin-left: 1em;
 				background: @colBarBackground;
+				color: black;
 				float: right;
+			}
+			
+			a.reset {
+				display: none;
 			}
 		}
 		
+	}
+	
+	.chart.barchart {
 		path {
 			fill: @eventBarColor;
 		}
@@ -72,12 +93,43 @@ body {
 		}
 	}
 	
+	.chart.wordCloud {
+		
+		
+		.filtered {
+			
+			span {
+				color: @axisLineColor;
+			}
+			span.selected {
+				color: black;
+			}
+			
+			.title {
+				a.reset {
+					display: block;
+				}
+			}
+		}
+		
+		.term {
+			cursor: pointer;
+			margin-right: 10px;
+			-webkit-transition: font-size .3s linear;
+		}
+		
+		.term:hover {
+			font-size: 17px !important;
+		}
+		
+	}
+
 }
 
 #slider_threshold {
-	
-	float: left;
-	width: 400px;
+
+
+	width: 800px;
 	margin-bottom: 2em;
 		
 	height: 2em;
@@ -112,7 +164,6 @@ body {
 
 svg.timeline {
 
-	float: left;
 	margin-right: 2em;
 	
 	.timeline_axis {
