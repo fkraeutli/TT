@@ -1,0 +1,170 @@
+body {
+  font-family: "Franklin Gothic Book", "Franklin Gothic", Verdana, sans-serif;
+  font-size: 12px;
+  margin: 0;
+  padding: 1em;
+  width: 1220px;
+  margin: auto;
+}
+#leftCol {
+  float: left;
+  width: 800px;
+  margin-right: 20px;
+}
+#rightCol {
+  float: left;
+  width: 400px;
+}
+#crossfilter {
+  width: 400px;
+  min-height: 200px;
+}
+#crossfilter .chart {
+  margin-bottom: 2em;
+}
+#crossfilter .chart .title {
+  margin-bottom: 1em;
+  color: #1b7c8d;
+}
+#crossfilter .chart .title a {
+  cursor: pointer;
+  font-weight: normal;
+  font-size: smaller;
+  padding: .2em;
+  margin-left: 1em;
+  background: #cccccc;
+  color: black;
+  float: right;
+}
+#crossfilter .chart .title a.reset {
+  display: none;
+}
+#crossfilter .chart.barchart path {
+  fill: #008080;
+}
+#crossfilter .chart.barchart path.background {
+  fill: #cccccc;
+}
+#crossfilter .chart.barchart .axis path,
+#crossfilter .chart.barchart .axis line {
+  fill: none;
+  stroke: #dddddd;
+  shape-rendering: crispEdges;
+}
+#crossfilter .chart.barchart .brush rect.extent {
+  fill: steelblue;
+  fill-opacity: .125;
+}
+#crossfilter .chart.barchart .brush .resize path {
+  fill: #4682b4;
+  stroke: #666666;
+}
+#crossfilter .chart.wordCloud .filtered span {
+  color: #cccccc;
+}
+#crossfilter .chart.wordCloud .filtered span.selected {
+  color: black;
+}
+#crossfilter .chart.wordCloud .filtered .title a.reset {
+  display: block;
+}
+#crossfilter .chart.wordCloud .term {
+  cursor: pointer;
+  margin-right: 10px;
+  -webkit-transition: font-size 0.3s linear;
+}
+#crossfilter .chart.wordCloud .term:hover {
+  font-size: 17px !important;
+}
+#slider_threshold {
+  width: 800px;
+  margin-bottom: 2em;
+  height: 2em;
+}
+#slider_threshold .ui-rangeSlider-container {
+  height: 2em;
+  border-bottom: #dddddd 1px solid;
+}
+#slider_threshold .ui-rangeSlider-container .ui-rangeSlider-bar {
+  height: 100%;
+  background: #4682b4;
+  opacity: .125;
+  cursor: move;
+  cursor: grab;
+}
+#slider_threshold .ui-rangeSlider-container .ui-rangeSlider-handle {
+  background: #cccccc;
+  width: .5em;
+  height: 100%;
+  cursor: ew-resize;
+}
+#slider_threshold .ui-rangeSlider-label .ui-rangeSlider-label-value {
+  display: none;
+}
+svg.timeline {
+  margin-right: 2em;
+}
+svg.timeline .timeline_axis path {
+  fill: none;
+}
+svg.timeline .timeline_axis line {
+  stroke: #cccccc;
+}
+svg.timeline .timeline_axis text {
+  fill: #000000;
+}
+svg.timeline .timeline_events .timeline_event .childrenIcon rect {
+  fill: none;
+  cursor: pointer;
+  pointer-events: all;
+}
+svg.timeline .timeline_events .timeline_event .childrenIcon text {
+  fill: #ffffff;
+}
+svg.timeline .timeline_events .timeline_event .childrenIcon.open .closed {
+  display: none;
+}
+svg.timeline .timeline_events .timeline_event .childrenIcon.closed .open {
+  display: none;
+}
+svg.timeline .timeline_events .timeline_event .eventRect {
+  fill: #008080;
+}
+svg.timeline .timeline_events .timeline_event .title {
+  fill: #ffffff;
+}
+svg.timeline .timeline_events .timeline_event .title[text-anchor=end] {
+  fill: #000000;
+}
+svg.timeline .overlay {
+  fill: none;
+  pointer-events: all;
+}
+svg.timeline .timeline_axis line,
+svg.timeline .timeline_axis path {
+  stroke: #dddddd;
+  fill: none;
+  stroke-width: 1px;
+}
+svg.timeline .timeline_axis path {
+  stroke: none;
+}
+/*
+
+.slider {
+	float: left;
+	width:400px;
+	margin-bottom: 2em;
+	
+	.ui-slider-range {
+		background: white;
+	}
+	
+	.ui-slider-handle {
+		width: 1em;
+		height: 1em;
+		top:-2px;
+		margin-left:-0.5em;
+	}
+}
+*/
