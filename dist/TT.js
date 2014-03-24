@@ -856,9 +856,8 @@ TT.heap = function() {
 		grid: {
 			
 			availableWidth: null,
-			availableHeight: null,
 			numCols: null,
-			numRows: 1000,
+			numRows: 1,
 			initialised: false,
 			range: null,
 			resolution: null,
@@ -1014,8 +1013,22 @@ TT.heap = function() {
 					
 					// Select the column one row above the item 
 					var minCol = d[nmsp].initCol,
-						minRow = Math.min( d[nmsp].row + 1, p.grid.numRows - 1);
-						minItems = p.grid.table[ minCol ][ minRow ].length;
+						minRow = d[nmsp].row + 1;
+						
+					// Increase grid rows if necessary
+					if( p.grid.numRows <= minRow) {
+					
+						for( var gridCol = 0; gridCol < p.grid.numCols; gridCol++ ) {
+					
+							p.grid.table[gridCol][p.grid.numRows] = Array();
+							
+						}
+						p.grid.numRows++;
+					}
+					
+					var	minItems = p.grid.table[ minCol ][ minRow ].length;
+					
+				
 					
 					// Examine other candidate columns on current row
 					
@@ -1096,12 +1109,11 @@ TT.heap = function() {
 				for( var i = 0; i < p.grid.numCols; i++ ) {
 					
 					p.grid.table[i] = Array();
-					
-					for (var j = 0; j < p.grid.numRows; j++ ) {
-						p.grid.table[i][j] = Array();
-					}
+					p.grid.table[i][0] = Array();
 					
 				}
+				
+				p.grid.numRows = 1;
 				
 			}
 		
