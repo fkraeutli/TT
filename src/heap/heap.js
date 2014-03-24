@@ -72,7 +72,7 @@ TT.heap = function() {
 		styles: {
 			
 			events: {
-				diameter: 4
+				diameter: 2
 			}
 		},
 		
@@ -120,7 +120,7 @@ TT.heap = function() {
 					return d.color || null;	
 				},
 			
-				radius: p.zoom.factor * p.styles.events.diameter / 2
+				r: function() { return Math.min(3, p.zoom.factor) * p.styles.events.diameter / 2; }
 				
 			},
 			
@@ -165,9 +165,9 @@ TT.heap = function() {
 			// Circle
 			events.append("circle")
 				.attr("class", "eventCircle")
-				.attr("cx", attr.event.circle.x)
-				.attr("cy", attr.event.circle.y)
-				.attr("r", attr.event.circle.radius)
+				.attr("cx", attr.event.circle.cx)
+				.attr("cy", attr.event.circle.cy)
+				.attr("r", attr.event.circle.r)
 				.style("fill", attr.event.circle.fill);
 				
 		}
@@ -213,16 +213,20 @@ TT.heap = function() {
 							p.grid.table[gridCol][p.grid.numRows] = Array();
 							
 						}
+						
 						p.grid.numRows++;
 					}
 					
 					var	minItems = p.grid.table[ minCol ][ minRow ].length;
 					
-				
-					
 					// Examine other candidate columns on current row
 					
 					for (var i = d[nmsp].minCol; i < d[nmsp].maxCol; i++) {
+						
+						
+						if(minItems === 0) {
+							break;
+						}
 						
 						// Select other candidate if number of items is minimal
 						if (p.grid.table[ i ][ d[nmsp].row ].length < minItems && d[nmsp].trace.indexOf( parseFloat( i + "." + d[nmsp].row) ) == -1) {
@@ -250,7 +254,6 @@ TT.heap = function() {
 					// Keep track of visited cells
 					d[nmsp].trace.push( parseFloat( d[nmsp].col + "." + d[nmsp].row) );
 					
-					
 					p.grid.table[ d[nmsp].col ][ d[nmsp].row ].push( d );
 					
 				}
@@ -272,7 +275,7 @@ TT.heap = function() {
 				var exec = 0,
 					maxExec = 0.1 * p.data.length;
 					
-					while( !gridIsPerfect() && exec < maxExec) {
+				while( !gridIsPerfect() && exec < maxExec) {
 						
 						p.data.forEach(arrangeItem);
 						exec++;
@@ -282,7 +285,7 @@ TT.heap = function() {
 					
 			function updateGrid() {
 				
-				p.grid.availableWidth = p.view.width * p.zoom.factor;
+				p.grid.availableWidth = p.view.width;
 				p.grid.numCols = Math.floor( p.grid.availableWidth / p.styles.events.diameter );
 				/*
 				p.grid.availableHeight = p.view.height / p.zoom.factor;
@@ -335,7 +338,7 @@ TT.heap = function() {
 			p.data.forEach( function(d) {
 				
 				d[nmsp].x = d[nmsp].col * p.grid.colWidth;
-				d[nmsp].y = -d[nmsp].row * p.styles.events.diameter + p.view.height;
+				d[nmsp].y = -d[nmsp].row * p.styles.events.diameter + p.view.height - p.view.padding;
 				
 				if (d[nmsp].row % 2) {
 					d[nmsp].x += p.styles.events.diameter / 2;
@@ -349,7 +352,7 @@ TT.heap = function() {
 		function updateEventsAppearance(events) {
 		
 			events.select("circle.eventCircle")
-				.attr("radius", attr.event.circle.radius)
+				.attr("r", attr.event.circle.r)
 				.style("fill", attr.event.circle.fill);
 			
 		}		
@@ -499,6 +502,8 @@ TT.heap = function() {
 				d[nmsp] = {};
 			}
 		});
+		
+		//p.grid.initialised = false;
 		
 		updateMinMax();
 		update();

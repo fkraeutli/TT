@@ -6,7 +6,7 @@ TATE 		= 1;
 TATEART		= 2;
 JOHNSTON 	= 3;
 
-loadDataset = TATE ;
+loadDataset = BRITTEN;
 
 var currentYear = new Date().getFullYear(),
 	dataset = [],
