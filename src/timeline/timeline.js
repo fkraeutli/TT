@@ -21,12 +21,12 @@ TT.timeline = function() {
 	
 	var	initialised = false,
 		id = TT.timeline.id++,
+		nmsp = "tl_" + id,
 		me = {},
 		timeline = this,
 		zoom;
 		
-	//var 
-	p = {
+	var p = {
 		
 		axis: {},
 		
@@ -126,12 +126,12 @@ TT.timeline = function() {
 				},
 			
 				height: function (d) {
-						return Math.min(d.height * p.zoom.factor, d.height) + "px";	
+						return Math.min(d[nmsp].height * p.zoom.factor, d[nmsp].height) + "px";	
 				},
 				
 				width: function (d) {
 				
-					return (d.width * p.zoom.factor) + "px";
+					return (d[nmsp].width * p.zoom.factor) + "px";
 					
 				}
 			},
@@ -139,24 +139,24 @@ TT.timeline = function() {
 			text: {
 			
 				anchor: function (d) {		
-					return p.zoom.factor >= p.thresholds.collapse && d.width * p.zoom.factor > d.title.length * p.styles.events.fontSize ? "start" : "end";	
+					return p.zoom.factor >= p.thresholds.collapse && d[nmsp].width * p.zoom.factor > d.title.length * p.styles.events.fontSize ? "start" : "end";	
 				},
 				
 				display: function (d) {
-					return d.renderLevel > p.thresholds.collapse ? "block" : "none";	
+					return d[nmsp].renderLevel > p.thresholds.collapse ? "block" : "none";	
 				},
 				
 				fontSize: p.styles.events.fontSize + "px",
 				
 				x: function (d) {
-					return (d.width * p.zoom.factor > d.title.length * p.styles.events.fontSize) ? (x(d.x) < 0 && x(d.x) + d.width * p.zoom.factor > 0 ? p.styles.events.padding + -1*x(d.x) : p.styles.events.padding) : -p.styles.events.padding;
+					return (d[nmsp].width * p.zoom.factor > d.title.length * p.styles.events.fontSize) ? (x(d[nmsp].x) < 0 && x(d[nmsp].x) + d[nmsp].width * p.zoom.factor > 0 ? p.styles.events.padding + -1*x(d[nmsp].x) : p.styles.events.padding) : -p.styles.events.padding;
 				},
 				
 				y: p.styles.events.height * 0.75
 			},
 			
 			transform: function (d)  {
-				return "translate(" + x(d.x) + "," + (d.y + y(0)) + ")";
+				return "translate(" + x(d[nmsp].x) + "," + (d[nmsp].y + y(0)) + ")";
 			}
 		},
 
@@ -222,11 +222,11 @@ TT.timeline = function() {
 			
 			*/
 		
-			return d.renderLevel >= p.thresholds.display  &&
-				x(d.x) + d.width * p.zoom.factor >= 0 &&
-				x(d.x) <= p.view.width &&
-				d.y + y(0) > -p.styles.events.height && 
-				d.y + y(0) < p.view.height;
+			return d[nmsp].renderLevel >= p.thresholds.display  &&
+				x(d[nmsp].x) + d[nmsp].width * p.zoom.factor >= 0 &&
+				x(d[nmsp].x) <= p.view.width &&
+				d[nmsp].y + y(0) > -p.styles.events.height && 
+				d[nmsp].y + y(0) < p.view.height;
 				
 		}
 				
@@ -244,16 +244,16 @@ TT.timeline = function() {
 
 			p.data.forEach(function(d) {
 				
-				d.renderLevel = computeRenderLevel(d);
+				d[nmsp].renderLevel = computeRenderLevel(d);
 					
 			});
 			
 			// If only one item is visible or all have the same level they should automatically get displayed
 			
-			if( p.data.length == 1 || d3.min( p.data, function(d) {return d.renderLevel;} ) == d3.max( p.data, function(d) {return d.renderLevel;} ) ) {
+			if( p.data.length == 1 || d3.min( p.data, function(d) {return d[nmsp].renderLevel;} ) == d3.max( p.data, function(d) {return d[nmsp].renderLevel;} ) ) {
 			
 				p.data.forEach( function(d) {
-					d.renderLevel = 1;		
+					d[nmsp].renderLevel = 1;		
 				} );
 			
 			}				
@@ -262,25 +262,25 @@ TT.timeline = function() {
 			
 			p.data.forEach(function(d) {	
 			
-				if( d.renderLevel > p.thresholds.display ) {
+				if( d[nmsp].renderLevel > p.thresholds.display ) {
 				
-					d.x = p.scales.dateToPx(d.from.valueOf());
-					d.width = ( p.scales.dateToPx(d.to.valueOf()) - p.scales.dateToPx(d.from.valueOf()) );
+					d[nmsp].x = p.scales.dateToPx(d.from.valueOf());
+					d[nmsp].width = ( p.scales.dateToPx(d.to.valueOf()) - p.scales.dateToPx(d.from.valueOf()) );
 					
-					d.height = d.renderLevel < p.thresholds.collapse ? p.styles.events.collapsedHeight : p.styles.events.height;
-					d.margin = d.renderLevel < p.thresholds.collapse ? p.styles.events.collapsedMargin : p.styles.events.margin;
+					d[nmsp].height = d[nmsp].renderLevel < p.thresholds.collapse ? p.styles.events.collapsedHeight : p.styles.events.height;
+					d[nmsp].margin = d[nmsp].renderLevel < p.thresholds.collapse ? p.styles.events.collapsedMargin : p.styles.events.margin;
 					
 					if(count === 0) {
 					
-						d.y = p.view.padding;
+						d[nmsp].y = p.view.padding;
 						
 					} else {
 					
-						d.y = p.view.ys[count - 1] + d.margin;
+						d[nmsp].y = p.view.ys[count - 1] + d[nmsp].margin;
 						
 					}
 					
-					p.view.ys[count] = d.y + d.height;
+					p.view.ys[count] = d[nmsp].y + d[nmsp].height;
 					
 					count++;
 					
@@ -289,16 +289,16 @@ TT.timeline = function() {
 				/*
 				else {
 				
-					d.x = p.scales.dateToPx(d.from.valueOf());
-					d.width = (p.scales.dateToPx(d.to.valueOf()) - p.scales.dateToPx(d.from.valueOf()));
+					d[nmsp].x = p.scales.dateToPx(d.from.valueOf());
+					d[nmsp].width = (p.scales.dateToPx(d.to.valueOf()) - p.scales.dateToPx(d.from.valueOf()));
 								
-					d.height = 1;
-					d.margin = 1;
+					d[nmsp].height = 1;
+					d[nmsp].margin = 1;
 					
 					if(count === 0) {
-						d.y = p.view.padding;
+						d[nmsp].y = p.view.padding;
 					} else {
-						d.y = p.view.ys[count - 1] + d.margin;
+						d[nmsp].y = p.view.ys[count - 1] + d[nmsp].margin;
 					}
 					
 				}
@@ -325,8 +325,6 @@ TT.timeline = function() {
 		if( !initialised) return false;
 		
 		updateDataValues();
-		
-		test_pdata = p.data; // REMOVE THIS, only for testing expose p.data to global namespace
 		
 		var events = p.elements.events.selectAll("g.timeline_event")
 			.data(p.data.filter(filterEvents), function(d) { return d.id; });
@@ -464,9 +462,31 @@ TT.timeline = function() {
 	me.data = function(_) {
 		if( !arguments.length ) return p.data;
 		p.data = _;
+				
+		p.data.forEach( function(d) {
+			if( !d.hasOwnProperty(nmsp) ) {
+				d[nmsp] = {};
+			}
+		});
 		
 		updateMinMax();
 		update();
+		
+		return me;
+	};
+	
+	
+	// Linking accessors
+	me.x = function(_) {
+		if( !arguments.length ) return x;
+		x = _;
+		
+		return me;
+	};
+		
+	me.y = function(_) {
+		if( !arguments.length ) return y;
+		y = _;
 		
 		return me;
 	};
