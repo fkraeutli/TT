@@ -162,11 +162,11 @@ body {
 	
 }
 
-svg.timeline {
+svg.timeline, svg.heap {
 
 	margin-right: 2em;
 	
-	.timeline_axis {
+	.timeline_axis, .heap_axis {
 		path {
 			fill:none;
 		}
@@ -217,13 +217,19 @@ svg.timeline {
 		}
 	}
 	
+	.heap_events {
+		circle {
+			fill: @eventBarColor;
+		}
+	}
+	
 	.overlay {
 		fill:none;
 		pointer-events: all;
 	}
 	
 	
-	.timeline_axis {
+	.timeline_axis, .heap_axis {
 		
 		line, path {
 			stroke: @colAxisStroke;

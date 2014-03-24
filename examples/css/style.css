@@ -101,52 +101,83 @@ body {
 #slider_threshold .ui-rangeSlider-label .ui-rangeSlider-label-value {
   display: none;
 }
-svg.timeline {
+svg.timeline,
+svg.heap {
   margin-right: 2em;
 }
-svg.timeline .timeline_axis path {
+svg.timeline .timeline_axis path,
+svg.heap .timeline_axis path,
+svg.timeline .heap_axis path,
+svg.heap .heap_axis path {
   fill: none;
 }
-svg.timeline .timeline_axis line {
+svg.timeline .timeline_axis line,
+svg.heap .timeline_axis line,
+svg.timeline .heap_axis line,
+svg.heap .heap_axis line {
   stroke: #cccccc;
 }
-svg.timeline .timeline_axis text {
+svg.timeline .timeline_axis text,
+svg.heap .timeline_axis text,
+svg.timeline .heap_axis text,
+svg.heap .heap_axis text {
   fill: #000000;
 }
-svg.timeline .timeline_events .timeline_event .childrenIcon rect {
+svg.timeline .timeline_events .timeline_event .childrenIcon rect,
+svg.heap .timeline_events .timeline_event .childrenIcon rect {
   fill: none;
   cursor: pointer;
   pointer-events: all;
 }
-svg.timeline .timeline_events .timeline_event .childrenIcon text {
+svg.timeline .timeline_events .timeline_event .childrenIcon text,
+svg.heap .timeline_events .timeline_event .childrenIcon text {
   fill: #ffffff;
 }
-svg.timeline .timeline_events .timeline_event .childrenIcon.open .closed {
+svg.timeline .timeline_events .timeline_event .childrenIcon.open .closed,
+svg.heap .timeline_events .timeline_event .childrenIcon.open .closed {
   display: none;
 }
-svg.timeline .timeline_events .timeline_event .childrenIcon.closed .open {
+svg.timeline .timeline_events .timeline_event .childrenIcon.closed .open,
+svg.heap .timeline_events .timeline_event .childrenIcon.closed .open {
   display: none;
 }
-svg.timeline .timeline_events .timeline_event .eventRect {
+svg.timeline .timeline_events .timeline_event .eventRect,
+svg.heap .timeline_events .timeline_event .eventRect {
   fill: #008080;
 }
-svg.timeline .timeline_events .timeline_event .title {
+svg.timeline .timeline_events .timeline_event .title,
+svg.heap .timeline_events .timeline_event .title {
   fill: #ffffff;
 }
-svg.timeline .timeline_events .timeline_event .title[text-anchor=end] {
+svg.timeline .timeline_events .timeline_event .title[text-anchor=end],
+svg.heap .timeline_events .timeline_event .title[text-anchor=end] {
   fill: #000000;
 }
-svg.timeline .overlay {
+svg.timeline .heap_events circle,
+svg.heap .heap_events circle {
+  fill: #008080;
+}
+svg.timeline .overlay,
+svg.heap .overlay {
   fill: none;
   pointer-events: all;
 }
 svg.timeline .timeline_axis line,
-svg.timeline .timeline_axis path {
+svg.heap .timeline_axis line,
+svg.timeline .heap_axis line,
+svg.heap .heap_axis line,
+svg.timeline .timeline_axis path,
+svg.heap .timeline_axis path,
+svg.timeline .heap_axis path,
+svg.heap .heap_axis path {
   stroke: #dddddd;
   fill: none;
   stroke-width: 1px;
 }
-svg.timeline .timeline_axis path {
+svg.timeline .timeline_axis path,
+svg.heap .timeline_axis path,
+svg.timeline .heap_axis path,
+svg.heap .heap_axis path {
   stroke: none;
 }
 /*

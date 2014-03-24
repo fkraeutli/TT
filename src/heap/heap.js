@@ -23,10 +23,60 @@ TT.heap = function() {
 		id = TT.heap.id++,
 		me = {},
 		heap = this,
+		nmsp = "hp_" + id,
 		zoom;
+	
+	var p = {
 		
-	//var 
-	p = {
+		axis: {},
+		
+		data: [],
+		
+		elements: {
+			
+		},
+		
+		format: {
+			
+			year: d3.time.format("%Y"),
+			date: d3.time.format("%d %b %Y")
+			
+		},
+		
+		grid: {
+			
+			availableWidth: null,
+			availableHeight: null,
+			numCols: null,
+			numRows: 1000,
+			initialised: false,
+			range: null,
+			resolution: null,
+			table: []
+			
+		},
+		
+		scales: {
+			
+			minMax: {
+				
+				// Update zoom extent here
+				
+				zoom: d3.scale.linear()
+					.domain( [0.01, 120] ) 
+					.range( [0, 1] )
+				
+			}
+			
+		},
+		
+		styles: {
+			
+			events: {
+				diameter: 4
+			}
+		},
+		
 		view: {
 			
 			from: new Date( 1900 , 0, 1 ),
@@ -35,13 +85,51 @@ TT.heap = function() {
 			width: 800,
 			height: 600,
 			
+			padding: 40
+			
 		},
 		zoom: {
 			factor: 1
 		}	
 	};
 	
+	// REMOVE
+	test_heap_p  = p;
+	
 	var attr = {
+		
+		axis: {
+		
+			tickFormat: function (d) {
+				if( Math.round( (p.axis.scale().domain()[1].getFullYear() - p.axis.scale().domain()[0].getFullYear()) / p.axis.ticks()) >= 1 ) { // If there is not more than one tick per year represented
+					return p.format.year(d);
+				} else {
+					return p.format.date(d);
+				}
+			}
+		},
+		
+		event: {
+			
+			circle: {
+				
+				cx: -p.styles.events.diameter / 2,
+				
+				cy: -p.styles.events.diameter / 2,
+				
+				fill: function (d) {
+					return d.color || null;	
+				},
+			
+				radius: p.zoom.factor * p.styles.events.diameter / 2
+				
+			},
+			
+			transform: function (d)  {
+				return "translate(" + x(d[nmsp].x) + "," + y(d[nmsp].y) + ")";
+			}
+			
+		}
 
 	};
 			
@@ -58,25 +146,244 @@ TT.heap = function() {
 	
 	function doZoom() {
 		
-		p.zoom.factor = d3.event.scale;
+		if(d3.event)
+			p.zoom.factor = d3.event.scale;
 		
-		var ax = p.svg.select(".timeline_axis");
+		var ax = p.svg.select(".heap_axis");
 		
 		p.scales.axis.domain( [ p.scales.pxToDate( x.domain()[0] ), p.scales.pxToDate( x.domain()[1] ) ] );
 		
 		update();
 		
-	}
-	
-	function update() {		
+		ax.call(p.axis);
 		
 	}
 	
+	function update() {		
+	
+		function createEventsAppearance(events) {
+			
+			// Circle
+			events.append("circle")
+				.attr("class", "eventCircle")
+				.attr("cx", attr.event.circle.x)
+				.attr("cy", attr.event.circle.y)
+				.attr("r", attr.event.circle.radius)
+				.style("fill", attr.event.circle.fill);
+				
+		}
+		
+		function filterEvents(d) { 
+		
+			/*
+			
+			Remove data
+			- If the item is completely outside of the viewable area
+			
+			*/
+		
+			return x(d[nmsp].x)  >= 0 &&
+				x(d[nmsp].x) <= p.view.width &&
+				y(d[nmsp].y) > -p.styles.events.diameter && 
+				y(d[nmsp].y) < p.view.height;
+				
+		}
+		
+		function updateDataValues() {
+		
+			if (p.grid.initialised) return false;
+		
+			function buildHeap() {
+				
+				function arrangeItem(d) {
+					
+					// If the item is the only one in its cell we don't need to do anything
+					if ( p.grid.table[ d[nmsp].col ][ d[nmsp].row ].length <= 1 ) {
+						return false;
+					}
+					
+					// Select the column one row above the item 
+					var minCol = d[nmsp].initCol,
+						minRow = Math.min( d[nmsp].row + 1, p.grid.numRows - 1);
+						minItems = p.grid.table[ minCol ][ minRow ].length;
+					
+					// Examine other candidate columns on current row
+					
+					for (var i = d[nmsp].minCol; i < d[nmsp].maxCol; i++) {
+						
+						// Select other candidate if number of items is minimal
+						if (p.grid.table[ i ][ d[nmsp].row ].length < minItems && d[nmsp].trace.indexOf( parseFloat( i + "." + d[nmsp].row) ) == -1) {
+							
+							minItems = p.grid.table[ i ][ d[nmsp].row ].length;
+							minCol = i;
+							minRow = d[nmsp].row;
+							
+						}
+						
+					}
+					
+					// Reposition item in grid
+					for (var j = 0; j < p.grid.table[ d[nmsp].col ][ d[nmsp].row ].length; j++ ) {
+						
+						if( p.grid.table[ d[nmsp].col ][ d[nmsp].row ][ j ] == d) {
+							p.grid.table[ d[nmsp].col ][ d[nmsp].row ].splice( j, 1 );
+							break;
+						}
+						
+					}
+					
+					d[nmsp].col = minCol;
+					d[nmsp].row = minRow;					
+					// Keep track of visited cells
+					d[nmsp].trace.push( parseFloat( d[nmsp].col + "." + d[nmsp].row) );
+					
+					
+					p.grid.table[ d[nmsp].col ][ d[nmsp].row ].push( d );
+					
+				}
+				
+				function gridIsPerfect() {
+					
+					for ( var col = 0; col < p.grid.table.length; col++ ) {
+						for (var row = 0; row < p.grid.table[col].length; row++ ) {
+							if ( p.grid.table[ col ][ row ].length > 1) {
+								return false;
+							}
+						}
+					}
+					
+					return true;
+					
+				}
+				
+				var exec = 0,
+					maxExec = 0.1 * p.data.length;
+					
+					while( !gridIsPerfect() && exec < maxExec) {
+						
+						p.data.forEach(arrangeItem);
+						exec++;
+						
+					}
+			}
+					
+			function updateGrid() {
+				
+				p.grid.availableWidth = p.view.width * p.zoom.factor;
+				p.grid.numCols = Math.floor( p.grid.availableWidth / p.styles.events.diameter );
+				/*
+				p.grid.availableHeight = p.view.height / p.zoom.factor;
+				p.grid.numRows = Math.floor( p.grid.availableHeight / p.styles.events.diameter );
+				*/
+					
+				p.grid.range = p.view.to - p.view.from;
+				p.grid.resolution = p.grid.range / p.grid.numCols;
+				
+				p.grid.colWidth = p.grid.availableWidth / ( p.grid.range / p.grid.resolution );
+				
+				p.grid.table = [];
+				
+				for( var i = 0; i < p.grid.numCols; i++ ) {
+					
+					p.grid.table[i] = Array();
+					
+					for (var j = 0; j < p.grid.numRows; j++ ) {
+						p.grid.table[i][j] = Array();
+					}
+					
+				}
+				
+			}
+		
+			updateGrid();
+			
+			// Set initial parameters
+			p.data.forEach( function(d) {
+				
+				// Initialise trace which keeps track of where the item has been
+				d[nmsp].trace = Array();
+				
+				// Select initial column and row
+				d[nmsp].col = d[nmsp].initCol = Math.floor( ( (d.from.valueOf() + ( d.to.valueOf() - d.from.valueOf() ) / 2) - p.view.from.valueOf() ) / p.grid.resolution );
+				d[nmsp].row = 0;
+				d[nmsp].trace.push( parseFloat( d[nmsp].col + "." + d[nmsp].row) );
+				
+				// Define tolerance columns based on from/to dates;
+				d[nmsp].minCol = Math.max( Math.floor( ( d.from.valueOf() - p.view.from.valueOf() ) / p.grid.resolution ), 0); // Lowest possible column or zero
+				d[nmsp].maxCol = Math.min( Math.ceil( ( d.to.valueOf() - p.view.from.valueOf() ) / p.grid.resolution ), p.grid.numCols); // Highest possible column or maxiumum
+				
+				// Add to grid
+				p.grid.table[ d[nmsp].col ][ d[nmsp].row ].push(d);
+			} );
+			
+			//Run heap building algorithm
+			buildHeap();
+			
+			// Translate columns and rows to x,y coordinates
+			p.data.forEach( function(d) {
+				
+				d[nmsp].x = d[nmsp].col * p.grid.colWidth;
+				d[nmsp].y = -d[nmsp].row * p.styles.events.diameter + p.view.height;
+				
+				if (d[nmsp].row % 2) {
+					d[nmsp].x += p.styles.events.diameter / 2;
+				}
+				
+			});
+			
+			p.grid.initialised = true;
+		}
+		
+		function updateEventsAppearance(events) {
+		
+			events.select("circle.eventCircle")
+				.attr("radius", attr.event.circle.radius)
+				.style("fill", attr.event.circle.fill);
+			
+		}		
+		
+		if ( !initialised ) return false;
+	
+		updateDataValues();
+		
+		var events = p.elements.events.selectAll("g.heap_event")
+			.data( p.data.filter(filterEvents), function(d) {return d.id;} );
+			
+		// Update events
+		events.attr("transform", attr.event.transform);
+		
+		// Update event appearance
+		updateEventsAppearance(events);
+		
+		// Add new events
+		var eventsEnter = events.enter()
+			.append("g")
+			.attr("id", function(d) {
+					return "hp" + id + "_event_" + d.id;
+				})
+			.attr("class", "heap_event")
+			.attr("transform", attr.event.transform);
+			
+		// Add event appearance
+		createEventsAppearance( eventsEnter );
+		
+		// Remove events
+		events.exit().remove();
+	
+	}
+	
+	function updateMinMax() {
+		
+		// Updates the scales used for semantic zooming
+		//p.scales.minMax.works.domain([ d3.min( p.data, function(d) {return d.weight ? d.weight : 0;} ), Math.min(300, d3.max( p.data, function(d) {return d.weight ? d.weight : 0;} )) ]);
+		
+	}
+
 
 	// Initialiser
 	me.apply = function () {
 		
-		function initTimeline() {
+		function initHeap() {
 			
 			function initAxis() {
 			
@@ -91,8 +398,8 @@ TT.heap = function() {
 					.orient("top");
 					
 				p.elements.axis = p.svg.append("g")
-					.attr("class", "timeline_axis")
-					.attr("id","tl" + id + "_axis")
+					.attr("class", "heap_axis")
+					.attr("id","hp" + id + "_axis")
 					.call(p.axis)
 					.attr("transform", "translate(0," + ( p.view.height - p.view.padding / 2 ) + ")");
 					
@@ -101,8 +408,8 @@ TT.heap = function() {
 			function initEvents() {
 			
 				p.elements.events = p.svg.insert("g")
-					.attr("class", "timeline_events")
-					.attr("id", "tl" + id + "_events");
+					.attr("class", "heap_events")
+					.attr("id", "hp" + id + "_events");
 					
 			}
 				
@@ -125,12 +432,12 @@ TT.heap = function() {
 					.y(y)
 					.scaleExtent( p.scales.minMax.zoom.domain() );
 									
-				p.svg.select(".timeline_events").insert("rect",":first-child")
+				p.svg.select(".heap_events").insert("rect",":first-child")
 					.attr("width", p.view.width)
 					.attr("height", p.view.height)
 					.attr("class","overlay");
 					
-				p.svg.select(".timeline_events").call( zoom.on("zoom", doZoom) );
+				p.svg.select(".heap_events").call( zoom.on("zoom", doZoom) );
 				
 			}
 			
@@ -146,8 +453,8 @@ TT.heap = function() {
 		
 		p.svg = arguments[0];
 
-		p.view.width = p.svg.attr("width");
-		p.view.height = p.svg.attr("height");
+		p.view.width = +p.svg.attr("width");
+		p.view.height = +p.svg.attr("height");
 		
 		if(p.data) {
 			
@@ -161,7 +468,7 @@ TT.heap = function() {
 			
 		}
 		
-		initTimeline();
+		initHeap();
 		
 		initialised = true;
 		
@@ -175,8 +482,33 @@ TT.heap = function() {
 		if( !arguments.length ) return p.data;
 		p.data = _;
 		
+		p.data.forEach( function(d) {
+			if( !d.hasOwnProperty(nmsp) ) {
+				d[nmsp] = {};
+			}
+		});
+		
 		updateMinMax();
 		update();
+		
+		return me;
+	};
+	
+	me.update = function() {
+		doZoom();
+	};
+	
+	// Linking accessors	
+	me.x = function(_) {
+		if( !arguments.length ) return x;
+		x = _;
+		
+		return me;
+	};
+		
+	me.y = function(_) {
+		if( !arguments.length ) return y;
+		y = _;
 		
 		return me;
 	};

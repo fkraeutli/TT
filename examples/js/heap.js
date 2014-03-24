@@ -10,7 +10,7 @@ loadDataset = TATE ;
 
 var currentYear = new Date().getFullYear(),
 	dataset = [],
-	timeline,
+	heap,
 	urls = ["data/works.js", "http://otis.local:8888/Tate/allartists.js", "http://otis.local:8888/Tate/allartworks.js", "http://otis.local:8888/ltm/data/Johnston-Data.json"];
 	
 $j = jQuery.noConflict();
@@ -372,42 +372,21 @@ function make() {
 	d3.select("#crossfilter")
 		.call(cf);	
 		
-	TT.observer.make(cf);		
-
-	timeline = TT.timeline().data(dataset);
+	TT.observer.make(cf);
 	
-	d3.select("svg#timeline")
-		.attr("class", "timeline")
+	heap = TT.heap().data(dataset);
+	
+	d3.select("svg#heap")
+		.attr("class", "heap")
 		.attr("width", 800)
-		.attr("height", 900)
-		.call(timeline);
+		.attr("height", 600)
+		.call(heap);
 			
-	// Make slider
-	$j( "#slider_threshold" ).rangeSlider( {
-		 
-		bounds: { min: 0.001, max: 0.999 },
-		defaultValues: {
-			min: timeline.threshold("display"),	
-			max: timeline.threshold("collapse")
-		},
-		formatter:function(val){
-	        var value = Math.round(val * 100) / 100,
-				decimal = value - Math.round(val);
-			return decimal == 0 ? value.toString() + ".0" : value.toString();
-		},
-		step: 0.01
-		
-	} ).on("valuesChanging", function(e, data){
-	
-		timeline.threshold({
-			display: data.values.min,
-      		collapse: data.values.max
-		});
-	});
 	
 	cf.addSubscriber(function(data) {
-		timeline.data(data);
+		heap.data(data);
 	})
+			
 	cf.forcePublish()	
 }
 
@@ -460,7 +439,7 @@ function colourByAttribute(attribute, dataset) {
 		
 	})
 	
-	timeline.data(dataset);
+	heap.data(dataset);
 	cf.forcePublish();
 }
 
@@ -528,7 +507,7 @@ function sortByAttribute(attribute) {
 		
 	} )
 	
-	timeline.data(dataset);
+	heap.data(dataset);
 	//cf.forcePublish();
 
 }
