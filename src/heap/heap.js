@@ -70,7 +70,7 @@ TT.heap = function() {
 		styles: {
 			
 			events: {
-				diameter: 2
+				diameter: 1
 			}
 		},
 		
@@ -221,23 +221,28 @@ TT.heap = function() {
 					var	minItems = p.grid.table[ minCol ][ minRow ].length;
 					
 					// Examine other candidate columns on current row
-					for (var i = d[nmsp].minCol; i < d[nmsp].maxCol; i++) {
+					if(d[nmsp].candidateCols) {
 						
-						if(minItems === 0) {
-							break;
-						}
-						
-						// Select other candidate if number of items is minimal
-						var numItemsCandidate = p.grid.table[ i ][ d[nmsp].row ].length;
-						
-						if (numItemsCandidate < minItems && d[nmsp].trace.indexOf( parseFloat( i + "." + d[nmsp].row) ) == -1) {
+						for(var k = 0; k < d[nmsp].candidateCols.length; k++) {
 							
-							minItems = numItemsCandidate;
-							minCol = i;
-							minRow = d[nmsp].row;
+							var i = d[nmsp].candidateCols[k];
+							
+							if(minItems === 0) {
+								break;
+							}
+							
+							// Select other candidate if number of items is minimal
+							var numItemsCandidate = p.grid.table[ i ][ d[nmsp].row ].length;
+							
+							if (numItemsCandidate < minItems && d[nmsp].trace.indexOf( parseFloat( i + "." + d[nmsp].row) ) == -1) {
+								
+								minItems = numItemsCandidate;
+								minCol = i;
+								minRow = d[nmsp].row;
+								
+							}
 							
 						}
-						
 					}
 					
 					// Reposition item in grid
@@ -311,7 +316,7 @@ TT.heap = function() {
 				p.data.forEach( function(d) {
 					
 					// Initialise trace which keeps track of where the item has been
-					d[nmsp].trace = Array();
+					d[nmsp].trace = d[nmsp].trace || Array();
 					
 					// Select initial column and row
 					d[nmsp].col = d[nmsp].initCol = Math.floor( ( (d.from.valueOf() + ( d.to.valueOf() - d.from.valueOf() ) / 2) - p.view.from.valueOf() ) / p.grid.resolution );
@@ -321,6 +326,11 @@ TT.heap = function() {
 					// Define tolerance columns based on from/to dates;
 					d[nmsp].minCol = Math.max( Math.floor( ( d.from.valueOf() - p.view.from.valueOf() ) / p.grid.resolution ), 0); // Lowest possible column or zero
 					d[nmsp].maxCol = Math.min( Math.ceil( ( d.to.valueOf() - p.view.from.valueOf() ) / p.grid.resolution ), p.grid.numCols); // Highest possible column or maxiumum
+					
+					// Generate array for candidate column selection
+					if( d[nmsp].maxCol > d[nmsp].initCol) {
+						d[nmsp].candidateCols = d3.range( d[nmsp].initCol, d[nmsp].minCol ).concat( d3.range( d[nmsp].initCol + 1, d[nmsp].maxCol ) );
+					}
 					
 					// Add to grid
 					p.grid.table[ d[nmsp].col ][ d[nmsp].row ].push(d);
@@ -500,7 +510,10 @@ TT.heap = function() {
 		p.grid.initialised = false;
 		
 		updateMinMax();
-		update();
+		
+		if(initialised) {
+			update();
+		}
 		
 		return me;
 	};
