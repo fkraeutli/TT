@@ -219,10 +219,8 @@ TT.heap = function() {
 					
 					var	minItems = p.grid.table[ minCol ][ minRow ].length;
 					
-					// Examine other candidate columns on current row
-					
+					// Examine other candidate columns on current row		
 					for (var i = d[nmsp].minCol; i < d[nmsp].maxCol; i++) {
-						
 						
 						if(minItems === 0) {
 							break;
@@ -276,21 +274,17 @@ TT.heap = function() {
 					maxExec = 0.1 * p.data.length;
 					
 				while( !gridIsPerfect() && exec < maxExec) {
-						
-						p.data.forEach(arrangeItem);
-						exec++;
-						
-					}
+					
+					p.data.forEach(arrangeItem);
+					exec++;
+					
+				}
 			}
 					
-			function updateGrid() {
+			function initGrid() {
 				
 				p.grid.availableWidth = p.view.width;
 				p.grid.numCols = Math.floor( p.grid.availableWidth / p.styles.events.diameter );
-				/*
-				p.grid.availableHeight = p.view.height / p.zoom.factor;
-				p.grid.numRows = Math.floor( p.grid.availableHeight / p.styles.events.diameter );
-				*/
 					
 				p.grid.range = p.view.to - p.view.from;
 				p.grid.resolution = p.grid.range / p.grid.numCols;
@@ -307,29 +301,30 @@ TT.heap = function() {
 				}
 				
 				p.grid.numRows = 1;
+						
+				// Set initial parameters
+				p.data.forEach( function(d) {
+					
+					// Initialise trace which keeps track of where the item has been
+					d[nmsp].trace = Array();
+					
+					// Select initial column and row
+					d[nmsp].col = d[nmsp].initCol = Math.floor( ( (d.from.valueOf() + ( d.to.valueOf() - d.from.valueOf() ) / 2) - p.view.from.valueOf() ) / p.grid.resolution );
+					d[nmsp].row = 0;
+					d[nmsp].trace.push( parseFloat( d[nmsp].col + "." + d[nmsp].row) );
+					
+					// Define tolerance columns based on from/to dates;
+					d[nmsp].minCol = Math.max( Math.floor( ( d.from.valueOf() - p.view.from.valueOf() ) / p.grid.resolution ), 0); // Lowest possible column or zero
+					d[nmsp].maxCol = Math.min( Math.ceil( ( d.to.valueOf() - p.view.from.valueOf() ) / p.grid.resolution ), p.grid.numCols); // Highest possible column or maxiumum
+					
+					// Add to grid
+					p.grid.table[ d[nmsp].col ][ d[nmsp].row ].push(d);
+				} );
 				
 			}
 		
-			updateGrid();
-			
-			// Set initial parameters
-			p.data.forEach( function(d) {
-				
-				// Initialise trace which keeps track of where the item has been
-				d[nmsp].trace = Array();
-				
-				// Select initial column and row
-				d[nmsp].col = d[nmsp].initCol = Math.floor( ( (d.from.valueOf() + ( d.to.valueOf() - d.from.valueOf() ) / 2) - p.view.from.valueOf() ) / p.grid.resolution );
-				d[nmsp].row = 0;
-				d[nmsp].trace.push( parseFloat( d[nmsp].col + "." + d[nmsp].row) );
-				
-				// Define tolerance columns based on from/to dates;
-				d[nmsp].minCol = Math.max( Math.floor( ( d.from.valueOf() - p.view.from.valueOf() ) / p.grid.resolution ), 0); // Lowest possible column or zero
-				d[nmsp].maxCol = Math.min( Math.ceil( ( d.to.valueOf() - p.view.from.valueOf() ) / p.grid.resolution ), p.grid.numCols); // Highest possible column or maxiumum
-				
-				// Add to grid
-				p.grid.table[ d[nmsp].col ][ d[nmsp].row ].push(d);
-			} );
+			// Initialise heap grid
+			initGrid();	
 			
 			//Run heap building algorithm
 			buildHeap();

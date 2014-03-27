@@ -6,7 +6,7 @@ TATE 		= 1;
 TATEART		= 2;
 JOHNSTON 	= 3;
 
-loadDataset = BRITTEN;
+loadDataset = TATE;
 
 var currentYear = new Date().getFullYear(),
 	dataset = [],
@@ -267,11 +267,12 @@ function make() {
 			dimension: "from", 
 			group: d3.time.year 
 		});
-			
+		
 		cf.addFilter({
-			title: "Year died",
-			dimension: "to",
-			group: d3.time.year 
+			title: "Age",
+			dimension: function(d) {
+				return d.to.getFullYear() - d.from.getFullYear();
+			}
 		});
 		
 		

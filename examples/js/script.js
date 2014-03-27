@@ -267,13 +267,13 @@ function make() {
 			dimension: "from", 
 			group: d3.time.year 
 		});
-			
-		cf.addFilter({
-			title: "Year died",
-			dimension: "to",
-			group: d3.time.year 
-		});
 		
+		cf.addFilter({
+			title: "Age",
+			dimension: function(d) {
+				return d.to.getFullYear() - d.from.getFullYear();
+			}
+		});
 		
 		cf.addFilter({
 			title: "Number of works (log)",
