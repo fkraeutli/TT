@@ -119,7 +119,7 @@ TT.heap = function() {
 					return d.color || null;	
 				},
 			
-				r: function() { return Math.min(3, p.zoom.factor) * p.styles.events.diameter / 2; }
+				r: function() { return Math.min(10, p.zoom.factor) * p.styles.events.diameter / 2; }
 				
 			},
 			
@@ -367,11 +367,9 @@ TT.heap = function() {
 			p.data.forEach( function(d) {
 				
 				d[nmsp].x = p.scales.dateToPx( d[nmsp].col * p.grid.resolution + p.view.from.valueOf() );
-				d[nmsp].y = -d[nmsp].row * p.styles.events.diameter + p.view.height - p.view.padding;
 				
-				if (d[nmsp].row % 2) {
-					d[nmsp].x += p.styles.events.diameter / 2;
-				}
+				var displace = p.grid.table[ d[nmsp].col ].length * p.styles.events.diameter / 2  + p.view.height / 2 ;
+				d[nmsp].y = -d[nmsp].row * p.styles.events.diameter + displace - displace % p.styles.events.diameter;
 				
 			});
 			
