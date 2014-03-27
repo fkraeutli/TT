@@ -56,26 +56,7 @@ d3.json(urls[loadDataset], function(error, data) {
 					dataset.push(d);
 				}
 				
-				var worksPerGenre = [];
-	
-				dataset.forEach( function(d) {
-					
-					var id = d.genre;
-					
-					if(worksPerGenre[id]) {
-					
-						d.weight = Math.min(500, worksPerGenre[id]);
-						
-					} else {
-						
-						worksPerGenre[id] = dataset.filter( function(e) {return e.genre == id;} ).length
-						d.weight = Math.min(500, worksPerGenre[id]);
-						
-					}
-					
-				} )
 				
-				dataset.sort( function(a,b) { return b.from - a.from } )
 
 			});
 			
@@ -85,7 +66,7 @@ d3.json(urls[loadDataset], function(error, data) {
 	
 				if(d.birth && d.birth.time) {
 					d.yearOfBirth = new Date( +d.birth.time.startYear, 0, 1 );
-					d.yearOfDeath = new Date( (d.death ? (d.death.time ? d.death.time.startYear : +d.birth.time.startYear + 80) : currentYear) , 0 , 1 ); // here I'm assuming a lifetime of 80 years (might extend to future)
+					d.yearOfDeath = new Date( (d.death ? (d.death.time ? d.death.time.startYear : (+d.birth.time.startYear + 80 > currentYear ? currentYear : +d.birth.time.startYear + 80)) : currentYear) , 0 , 1 ); // here I'm assuming a lifetime of 80 years 
 					d.title		= d.fc;
 					d.date		= d.yearOfBirth;
 					d.from		= d.yearOfBirth;
@@ -96,6 +77,7 @@ d3.json(urls[loadDataset], function(error, data) {
 				}
 		
 			});
+			
 			
 		} else if (loadDataset === TATEART) {
 						

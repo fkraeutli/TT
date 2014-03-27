@@ -816,9 +816,7 @@ data format: {
 
 	id: "",
 	from: Date(),
-	to: Date(),
-	title: "",
-	weight: #
+	to: Date()
 
 }
 
@@ -916,6 +914,7 @@ TT.heap = function() {
 					return p.format.date(d);
 				}
 			}
+			
 		},
 		
 		event: {
@@ -935,7 +934,9 @@ TT.heap = function() {
 			},
 			
 			transform: function (d)  {
+			
 				return "translate(" + x(d[nmsp].x) + "," + y(d[nmsp].y) + ")";
+				
 			}
 			
 		}
@@ -1002,7 +1003,7 @@ TT.heap = function() {
 		
 			if (p.grid.initialised) return false;
 		
-			function buildHeap() {
+			function buildHeap() {	
 				
 				function arrangeItem(d) {
 					
@@ -1029,7 +1030,7 @@ TT.heap = function() {
 					
 					var	minItems = p.grid.table[ minCol ][ minRow ].length;
 					
-					// Examine other candidate columns on current row		
+					// Examine other candidate columns on current row
 					for (var i = d[nmsp].minCol; i < d[nmsp].maxCol; i++) {
 						
 						if(minItems === 0) {
@@ -1037,9 +1038,11 @@ TT.heap = function() {
 						}
 						
 						// Select other candidate if number of items is minimal
-						if (p.grid.table[ i ][ d[nmsp].row ].length < minItems && d[nmsp].trace.indexOf( parseFloat( i + "." + d[nmsp].row) ) == -1) {
+						var numItemsCandidate = p.grid.table[ i ][ d[nmsp].row ].length;
+						
+						if (numItemsCandidate < minItems && d[nmsp].trace.indexOf( parseFloat( i + "." + d[nmsp].row) ) == -1) {
 							
-							minItems = p.grid.table[ i ][ d[nmsp].row ].length;
+							minItems = numItemsCandidate;
 							minCol = i;
 							minRow = d[nmsp].row;
 							
@@ -1063,7 +1066,7 @@ TT.heap = function() {
 					d[nmsp].trace.push( parseFloat( d[nmsp].col + "." + d[nmsp].row) );
 					
 					p.grid.table[ d[nmsp].col ][ d[nmsp].row ].push( d );
-					
+				
 				}
 				
 				function gridIsPerfect() {
@@ -1086,20 +1089,22 @@ TT.heap = function() {
 				while( !gridIsPerfect() && exec < maxExec) {
 					
 					p.data.forEach(arrangeItem);
+					
 					exec++;
 					
 				}
+				
 			}
 					
 			function initGrid() {
 				
-				p.grid.availableWidth = p.view.width;
+				p.grid.availableWidth = p.scales.dateToPx(p.view.to) - p.scales.dateToPx(p.view.from);
 				p.grid.numCols = Math.floor( p.grid.availableWidth / p.styles.events.diameter );
 					
 				p.grid.range = p.view.to - p.view.from;
 				p.grid.resolution = p.grid.range / p.grid.numCols;
 				
-				p.grid.colWidth = p.grid.availableWidth / ( p.grid.range / p.grid.resolution );
+				p.grid.colWidth = p.styles.events.diameter;
 				
 				p.grid.table = [];
 				
@@ -1131,6 +1136,7 @@ TT.heap = function() {
 					p.grid.table[ d[nmsp].col ][ d[nmsp].row ].push(d);
 				} );
 				
+				
 			}
 		
 			// Initialise heap grid
@@ -1142,7 +1148,7 @@ TT.heap = function() {
 			// Translate columns and rows to x,y coordinates
 			p.data.forEach( function(d) {
 				
-				d[nmsp].x = d[nmsp].col * p.grid.colWidth;
+				d[nmsp].x = p.scales.dateToPx( d[nmsp].col * p.grid.resolution + p.view.from.valueOf() );
 				d[nmsp].y = -d[nmsp].row * p.styles.events.diameter + p.view.height - p.view.padding;
 				
 				if (d[nmsp].row % 2) {
@@ -1182,7 +1188,8 @@ TT.heap = function() {
 					return "hp" + id + "_event_" + d.id;
 				})
 			.attr("class", "heap_event")
-			.attr("transform", attr.event.transform);
+			.attr("transform", attr.event.transform)
+			.on("click", function(d) { console.log(d); });
 			
 		// Add event appearance
 		createEventsAppearance( eventsEnter );
@@ -1194,9 +1201,13 @@ TT.heap = function() {
 	
 	function updateMinMax() {
 		
-		// Updates the scales used for semantic zooming
-		//p.scales.minMax.works.domain([ d3.min( p.data, function(d) {return d.weight ? d.weight : 0;} ), Math.min(300, d3.max( p.data, function(d) {return d.weight ? d.weight : 0;} )) ]);
-		
+		if(p.data) {
+			var minFrom = d3.min( p.data, function(d) { return d.from; } ),
+				maxTo = d3.max( p.data, function(d) { return d.to; } );
+					
+			p.view.from = minFrom;//new Date( minFrom.valueOf() - 0.2 * (maxTo.valueOf() - minFrom.valueOf()) );
+			p.view.to = maxTo;//new Date( maxTo.valueOf() + 0.2 * (maxTo.valueOf() - minFrom.valueOf()) );
+		}
 	}
 
 
@@ -1276,23 +1287,11 @@ TT.heap = function() {
 		p.view.width = +p.svg.attr("width");
 		p.view.height = +p.svg.attr("height");
 		
-		if(p.data) {
-			
-			// Initialise visible range with 20% buffer
-			
-			var minFrom = d3.min( p.data, function(d) { return d.from; } ),
-				maxTo = d3.max( p.data, function(d) { return d.to; } );
-				
-			p.view.from = new Date( minFrom.valueOf() - 0.2 * (maxTo.valueOf() - minFrom.valueOf()) );//d3.min( p.data, function(d) { return d.from; } );
-			p.view.to = new Date( maxTo.valueOf() + 0.2 * (maxTo.valueOf() - minFrom.valueOf()) );//d3.max( p.data, function(d) { return d.to; } );
-			
-		}
-		
+		updateMinMax();
 		initHeap();
 		
 		initialised = true;
 		
-		updateMinMax();
 		update();
 		
 	};
@@ -1308,7 +1307,7 @@ TT.heap = function() {
 			}
 		});
 		
-		//p.grid.initialised = false;
+		p.grid.initialised = false;
 		
 		updateMinMax();
 		update();
