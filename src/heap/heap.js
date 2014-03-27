@@ -207,6 +207,7 @@ TT.heap = function() {
 						minRow = d[nmsp].row + 1;
 						
 					// Increase grid rows if necessary
+					/*
 					if( p.grid.numRows <= minRow) {
 					
 						for( var gridCol = 0; gridCol < p.grid.numCols; gridCol++ ) {
@@ -216,6 +217,12 @@ TT.heap = function() {
 						}
 						
 						p.grid.numRows++;
+					}*/
+					
+					if( !p.grid.table[ minCol ][ minRow ]) {
+						
+						p.grid.table[ minCol ][ minRow ] = Array();
+						
 					}
 					
 					var	minItems = p.grid.table[ minCol ][ minRow ].length;
@@ -232,9 +239,20 @@ TT.heap = function() {
 							}
 							
 							// Select other candidate if number of items is minimal
-							var numItemsCandidate = p.grid.table[ i ][ d[nmsp].row ].length;
+							var numItemsCandidate, rowCreated = false;
+							if( !p.grid.table[ i ][ d[nmsp].row ]) {
+						
+								p.grid.table[ i ][ d[nmsp].row ]  = Array();
+								numItemsCandidate = 0;
+								rowCreated = true;
+								
+							} else {
+					
+								numItemsCandidate = p.grid.table[ i ][ d[nmsp].row ].length;
+								
+							}
 							
-							if (numItemsCandidate < minItems && d[nmsp].trace.indexOf( parseFloat( i + "." + d[nmsp].row) ) == -1) {
+							if (rowCreated || ( numItemsCandidate < minItems && d[nmsp].trace.indexOf( parseFloat( i + "." + d[nmsp].row) ) == -1) ) {
 								
 								minItems = numItemsCandidate;
 								minCol = i;
