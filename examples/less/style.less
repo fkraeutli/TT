@@ -162,11 +162,11 @@ body {
 	
 }
 
-svg.timeline, svg.heap {
+svg.timeline, svg.heap, svg.histogram {
 
 	margin-right: 2em;
 	
-	.timeline_axis, .heap_axis {
+	.timeline_axis, .heap_axis, .histogram_axis {
 		path {
 			fill:none;
 		}
@@ -217,7 +217,7 @@ svg.timeline, svg.heap {
 		}
 	}
 	
-	.heap_events {
+	.heap_events, .histogram_events {
 		circle {
 			fill: @eventBarColor;
 		}
@@ -229,7 +229,7 @@ svg.timeline, svg.heap {
 	}
 	
 	
-	.timeline_axis, .heap_axis {
+	.timeline_axis, .heap_axis, .histogram_axis {
 		
 		line, path {
 			stroke: @colAxisStroke;

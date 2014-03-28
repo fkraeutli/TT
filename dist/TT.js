@@ -854,8 +854,8 @@ TT.heap = function() {
 		grid: {
 			
 			availableWidth: null,
+			maxRow: 1,
 			numCols: null,
-			numRows: 1,
 			initialised: false,
 			range: null,
 			resolution: null,
@@ -870,7 +870,7 @@ TT.heap = function() {
 				// Update zoom extent here
 				
 				zoom: d3.scale.linear()
-					.domain( [0.01, 120] ) 
+					.domain( [0.9, 240] ) 
 					.range( [0, 1] )
 				
 			}
@@ -880,7 +880,11 @@ TT.heap = function() {
 		styles: {
 			
 			events: {
-				diameter: 1
+				diameter: 2
+			},
+			
+			images: {
+				factor: 2
 			}
 		},
 		
@@ -980,6 +984,8 @@ TT.heap = function() {
 				.attr("cy", attr.event.circle.cy)
 				.attr("r", attr.event.circle.r)
 				.style("fill", attr.event.circle.fill);
+			
+			updateEventsImages(events);
 				
 		}
 		
@@ -1002,122 +1008,6 @@ TT.heap = function() {
 		function updateDataValues() {
 		
 			if (p.grid.initialised) return false;
-		
-			function buildHeap() {	
-				
-				function arrangeItem(d) {
-					
-					// If the item is the only one in its cell we don't need to do anything
-					if ( p.grid.table[ d[nmsp].col ][ d[nmsp].row ].length <= 1 ) {
-						return false;
-					}
-					
-					// Select the column one row above the item 
-					var minCol = d[nmsp].initCol,
-						minRow = d[nmsp].row + 1;
-						
-					// Increase grid rows if necessary
-					/*
-					if( p.grid.numRows <= minRow) {
-					
-						for( var gridCol = 0; gridCol < p.grid.numCols; gridCol++ ) {
-					
-							p.grid.table[gridCol][p.grid.numRows] = Array();
-							
-						}
-						
-						p.grid.numRows++;
-					}*/
-					
-					if( !p.grid.table[ minCol ][ minRow ]) {
-						
-						p.grid.table[ minCol ][ minRow ] = Array();
-						
-					}
-					
-					var	minItems = p.grid.table[ minCol ][ minRow ].length;
-					
-					// Examine other candidate columns on current row
-					if(d[nmsp].candidateCols) {
-						
-						for(var k = 0; k < d[nmsp].candidateCols.length; k++) {
-							
-							var i = d[nmsp].candidateCols[k];
-							
-							if(minItems === 0) {
-								break;
-							}
-							
-							// Select other candidate if number of items is minimal
-							var numItemsCandidate, rowCreated = false;
-							if( !p.grid.table[ i ][ d[nmsp].row ]) {
-						
-								p.grid.table[ i ][ d[nmsp].row ]  = Array();
-								numItemsCandidate = 0;
-								rowCreated = true;
-								
-							} else {
-					
-								numItemsCandidate = p.grid.table[ i ][ d[nmsp].row ].length;
-								
-							}
-							
-							if (rowCreated || ( numItemsCandidate < minItems && d[nmsp].trace.indexOf( parseFloat( i + "." + d[nmsp].row) ) == -1) ) {
-								
-								minItems = numItemsCandidate;
-								minCol = i;
-								minRow = d[nmsp].row;
-								
-							}
-							
-						}
-					}
-					
-					// Reposition item in grid
-					for (var j = 0; j < p.grid.table[ d[nmsp].col ][ d[nmsp].row ].length; j++ ) {
-						
-						if( p.grid.table[ d[nmsp].col ][ d[nmsp].row ][ j ] == d) {
-							p.grid.table[ d[nmsp].col ][ d[nmsp].row ].splice( j, 1 );
-							break;
-						}
-						
-					}
-					
-					d[nmsp].col = minCol;
-					d[nmsp].row = minRow;					
-					// Keep track of visited cells
-					d[nmsp].trace.push( parseFloat( d[nmsp].col + "." + d[nmsp].row) );
-					
-					p.grid.table[ d[nmsp].col ][ d[nmsp].row ].push( d );
-				
-				}
-				
-				function gridIsPerfect() {
-					
-					for ( var col = 0; col < p.grid.table.length; col++ ) {
-						for (var row = 0; row < p.grid.table[col].length; row++ ) {
-							if ( p.grid.table[ col ][ row ].length > 1) {
-								return false;
-							}
-						}
-					}
-					
-					return true;
-					
-				}
-				
-				var exec = 0,
-					maxExec = 0.1 * p.data.length;
-					
-				while( !gridIsPerfect() && exec < maxExec) {
-					
-					p.data.forEach(arrangeItem);
-					
-					exec++;
-					
-				}
-				
-			}
 					
 			function initGrid() {
 				
@@ -1126,8 +1016,6 @@ TT.heap = function() {
 					
 				p.grid.range = p.view.to - p.view.from;
 				p.grid.resolution = p.grid.range / p.grid.numCols;
-				
-				p.grid.colWidth = p.styles.events.diameter;
 				
 				p.grid.table = [];
 				
@@ -1138,40 +1026,63 @@ TT.heap = function() {
 					
 				}
 				
-				p.grid.numRows = 1;
+				p.grid.maxRow = 0;
 						
 				// Set initial parameters
 				p.data.forEach( function(d) {
 					
-					// Initialise trace which keeps track of where the item has been
-					d[nmsp].trace = d[nmsp].trace || Array();
-					
 					// Select initial column and row
-					d[nmsp].col = d[nmsp].initCol = Math.floor( ( (d.from.valueOf() + ( d.to.valueOf() - d.from.valueOf() ) / 2) - p.view.from.valueOf() ) / p.grid.resolution );
-					d[nmsp].row = 0;
-					d[nmsp].trace.push( parseFloat( d[nmsp].col + "." + d[nmsp].row) );
-					
+					d[nmsp].col = d[nmsp].initCol = Math.min( Math.floor( ( (d.from.valueOf() + ( d.to.valueOf() - d.from.valueOf() ) / 2) - p.view.from.valueOf() ) / p.grid.resolution ), p.grid.numCols - 1);		
+
 					// Define tolerance columns based on from/to dates;
 					d[nmsp].minCol = Math.max( Math.floor( ( d.from.valueOf() - p.view.from.valueOf() ) / p.grid.resolution ), 0); // Lowest possible column or zero
-					d[nmsp].maxCol = Math.min( Math.ceil( ( d.to.valueOf() - p.view.from.valueOf() ) / p.grid.resolution ), p.grid.numCols); // Highest possible column or maxiumum
+					d[nmsp].maxCol = Math.min( Math.ceil( ( d.to.valueOf() - p.view.from.valueOf() ) / p.grid.resolution ), p.grid.numCols - 1); // Highest possible column or maxiumum
 					
 					// Generate array for candidate column selection
-					if( d[nmsp].maxCol > d[nmsp].initCol) {
-						d[nmsp].candidateCols = d3.range( d[nmsp].initCol, d[nmsp].minCol ).concat( d3.range( d[nmsp].initCol + 1, d[nmsp].maxCol ) );
+					d[nmsp].candidateCols = d3.range( d[nmsp].initCol, d[nmsp].minCol - 1, -1 ).concat( d3.range( d[nmsp].initCol + 1, d[nmsp].maxCol + 1 ) );
+					if(d[nmsp].candidateCols.length === 0) {
+						
+						console.log(d[nmsp]);
+						
 					}
+
+			
+					// Add item to row smallest row
+					var minRow = p.grid.maxRow;
+					
+					for( var i = 0; i < d[nmsp].candidateCols.length; i++ ) {
+						
+						if ( p.grid.table[ d[nmsp].candidateCols[i] ].length < minRow) {
+							d[nmsp].col = d[nmsp].candidateCols[i];
+							minRow = p.grid.table[ d[nmsp].candidateCols[i] ].length;
+						}
+						
+					}
+					d[nmsp].row = minRow;
 					
 					// Add to grid
-					p.grid.table[ d[nmsp].col ][ d[nmsp].row ].push(d);
+					p.grid.table[ d[nmsp].col ][ d[nmsp].row ] = Array(d);
+					
+					if (minRow == p.grid.maxRow) {
+						p.grid.maxRow++;
+					}
+
 				} );
 				
 				
 			}
+			
+			function extendGrid(col, to) {		
+			
+				for(var i = p.grid.table[ col ].length; i <= to; i++) {
+				
+					p.grid.table[ col ][ i ] = Array();
+					
+				}
+			}
 		
 			// Initialise heap grid
 			initGrid();	
-			
-			//Run heap building algorithm
-			buildHeap();
 			
 			// Translate columns and rows to x,y coordinates
 			p.data.forEach( function(d) {
@@ -1191,8 +1102,35 @@ TT.heap = function() {
 			events.select("circle.eventCircle")
 				.attr("r", attr.event.circle.r)
 				.style("fill", attr.event.circle.fill);
+				
+			updateEventsImages(events);
 			
 		}		
+		
+		function updateEventsImages(events) {
+			
+			if(p.zoom.factor > 10) {
+				
+				events.filter(function(d) { return !d.hasImage && d.thumbnailUrl; }).append("image")
+					.attr("xlink:href", function(d) {
+						d.hasImage = true;
+						return d.thumbnailUrl;
+					});
+					
+				events.selectAll("image")
+					.attr("x", -p.zoom.factor / 2 * p.styles.images.factor)
+					.attr("y", -p.zoom.factor / 2 * p.styles.images.factor)
+					.attr("width", p.zoom.factor * p.styles.images.factor + "px")
+					.attr("height", p.zoom.factor * p.styles.images.factor + "px");
+				
+			} else {
+			
+				events.selectAll("image").remove();
+				events.each( function(d) { d.hasImage = false; } );
+				
+			}
+			
+		}
 		
 		if ( !initialised ) return false;
 	
@@ -1200,25 +1138,26 @@ TT.heap = function() {
 		
 		var events = p.elements.events.selectAll("g.heap_event")
 			.data( p.data.filter(filterEvents), function(d) {return d.id;} );
-			
-		// Update events
-		events.attr("transform", attr.event.transform);
-		
-		// Update event appearance
-		updateEventsAppearance(events);
 		
 		// Add new events
 		var eventsEnter = events.enter()
 			.append("g")
 			.attr("id", function(d) {
-					return "hp" + id + "_event_" + d.id;
+					return "hs" + id + "_event_" + d.id;
 				})
 			.attr("class", "heap_event")
 			.attr("transform", attr.event.transform)
-			.on("click", function(d) { console.log(d); });
+			.on("click", function(d) { console.log(d); })
+			.each(function(d) { d.hasImage = false; } );
 			
 		// Add event appearance
 		createEventsAppearance( eventsEnter );
+		
+		// Update events
+		events.attr("transform", attr.event.transform);
+		
+		// Update event appearance
+		updateEventsAppearance(events);
 		
 		// Remove events
 		events.exit().remove();
@@ -1256,7 +1195,7 @@ TT.heap = function() {
 					
 				p.elements.axis = p.svg.append("g")
 					.attr("class", "heap_axis")
-					.attr("id","hp" + id + "_axis")
+					.attr("id","hs" + id + "_axis")
 					.call(p.axis)
 					.attr("transform", "translate(0," + ( p.view.height - p.view.padding / 2 ) + ")");
 					
@@ -1266,7 +1205,7 @@ TT.heap = function() {
 			
 				p.elements.events = p.svg.insert("g")
 					.attr("class", "heap_events")
-					.attr("id", "hp" + id + "_events");
+					.attr("id", "hs" + id + "_events");
 					
 			}
 				

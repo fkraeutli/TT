@@ -6,237 +6,227 @@ TATE 		= 1;
 TATEART		= 2;
 JOHNSTON 	= 3;
 
-loadDataset = TATE;
+loadDataset = TATEART;
 
 var currentYear = new Date().getFullYear(),
 	dataset = [],
 	heap,
-	urls = ["data/works.js", "http://otis.local:8888/Tate/allartists.js", "http://otis.local:8888/Tate/allartworks.js", "http://otis.local:8888/ltm/data/Johnston-Data.json"];
+	urls = ["data/works.js", "http://otis.local:8888/Tate/allartists.js", "http://otis.local:8888/Tate/artwork_data.csv", "http://otis.local:8888/ltm/data/Johnston-Data.json"];
 	
 $j = jQuery.noConflict();
 
-
-d3.json(urls[loadDataset], function(error, data) {
-		
-	if(!error) {
-		
-		if(loadDataset === BRITTEN) {
-				
-			data = data.works;
-		
-			data.forEach(function(d) {
-						
-				if(d.date_completed_year) {
-					
-					d.to = new Date(+d.date_completed_year, +d.date_completed_month - 1, +d.date_completed_day);
-					
-					if(d.date_commenced_year) {
-						
-						d.from = new Date(+d.date_commenced_year, +d.date_commenced_month - 1, +d.date_commenced_day);
-						
-					} else {
-					
-						d.from = new Date(+d.date_completed_year, +d.date_completed_month - 1, +d.date_completed_day);
+if ( loadDataset !== TATEART ) {
 	
-						d.from.setMonth(d.from.getMonth() - 1);
-						
-					}		
-					d.date = d.from;
-					d.id = d.catalogue_no.replace("/", "-");
-					d.weight = 0;
+	d3.json(urls[loadDataset], function(error, data) {
+			
+		if(!error) {
+			
+			if(loadDataset === BRITTEN) {
 					
-					if(d.from > d.to) {
+				data = data.works;
+			
+				data.forEach(function(d) {
+							
+					if(d.date_completed_year) {
 						
-						d._from = d.from;
-						d.from = d.to;
-						d.to = d._from;
+						d.to = new Date(+d.date_completed_year, +d.date_completed_month - 1, +d.date_completed_day);
+						
+						if(d.date_commenced_year) {
+							
+							d.from = new Date(+d.date_commenced_year, +d.date_commenced_month - 1, +d.date_commenced_day);
+							
+						} else {
+						
+							d.from = new Date(+d.date_completed_year, +d.date_completed_month - 1, +d.date_completed_day);
+		
+							d.from.setMonth(d.from.getMonth() - 1);
+							
+						}		
+						d.date = d.from;
+						d.id = d.catalogue_no.replace("/", "-");
+						d.weight = 0;
+						
+						if(d.from > d.to) {
+							
+							d._from = d.from;
+							d.from = d.to;
+							d.to = d._from;
+							
+						}
+						
+						dataset.push(d);
+					}
+					
+					
+	
+				});
+				
+			}  else if (loadDataset === TATE) {
+					
+				data.forEach(function(d) {
+		
+					if(d.birth && d.birth.time) {
+						d.yearOfBirth = new Date( +d.birth.time.startYear, 0, 1 );
+						d.yearOfDeath = new Date( (d.death ? (d.death.time ? d.death.time.startYear : (+d.birth.time.startYear + 80 > currentYear ? currentYear : +d.birth.time.startYear + 80)) : currentYear) , 0 , 1 ); // here I'm assuming a lifetime of 80 years 
+						d.title		= d.fc;
+						d.date		= d.yearOfBirth;
+						d.from		= d.yearOfBirth;
+						d.to		= d.yearOfDeath;
+						d.weight	= d.totalWorks
+					
+						dataset.push(d);
+					}
+			
+				});
+				
+				
+			} else if (loadDataset === JOHNSTON) {
+				
+				console.log(data.length);
+				
+				data.forEach( function(d) {
+					
+					for( var attribute in d ) {
+						
+						if( attribute.indexOf("date") != -1  && d[attribute] !== null) {
+						
+							d[attribute + "_orig"] = d[attribute];
+							
+							if(d[attribute].replace) {
+								d[attribute] = d[attribute].replace(/BST/, "GMT");						
+							}
+							d[attribute] = new Date( d[attribute] );
+							
+						} else if( d[attribute] == +d[attribute] ) {
+							
+							d[attribute] = +d[attribute];
+							
+						}
 						
 					}
 					
-					dataset.push(d);
-				}
-				
-				
-
-			});
-			
-		}  else if (loadDataset === TATE) {
-				
-			data.forEach(function(d) {
-	
-				if(d.birth && d.birth.time) {
-					d.yearOfBirth = new Date( +d.birth.time.startYear, 0, 1 );
-					d.yearOfDeath = new Date( (d.death ? (d.death.time ? d.death.time.startYear : (+d.birth.time.startYear + 80 > currentYear ? currentYear : +d.birth.time.startYear + 80)) : currentYear) , 0 , 1 ); // here I'm assuming a lifetime of 80 years 
-					d.title		= d.fc;
-					d.date		= d.yearOfBirth;
-					d.from		= d.yearOfBirth;
-					d.to		= d.yearOfDeath;
-					d.weight	= d.totalWorks
-				
-					dataset.push(d);
-				}
-		
-			});
-			
-			
-		} else if (loadDataset === TATEART) {
+					d.title = d.simple_name || "unknown";
+					d.date = d.production_date_from || new Date();
+					
+					if( d.date instanceof Date ) {
 						
-			data.splice(0, 60000);
+						d.id = d.inventory;
+						d.from = d.date;
+						
+						if( d.production_date_to instanceof Date && d.from.valueOf() <= d.production_date_to.valueOf() ) {
+						
+							d.to = new Date( d.date.valueOf() );
+							d.to.setFullYear( d.date.getFullYear() + 1 );		
+							
+						} else {
+							
+							d.to = d.production_date_to || new Date();
+							
+						}
+						
+						if( !isNaN( d.from.valueOf() ) && !isNaN( d.to.valueOf() )) {
+							dataset.push(d);
+						}
+						
+					}
+					
+					
+				} );
+				
+				// Calculate weight by uniqueness of terms
+				terms = Array();
+				
+				dataset.forEach( function(d) {
+					
+					if( !terms[d.title] ) {
+					
+						terms[d.title] = 1;
+						
+					} else {
+					
+						terms[d.title]++;
+						
+					}
+					
+				} );
+				
+				var minWeight = undefined, maxWeight = undefined;
+				
+				for(var i in terms) {
+				
+					if( minWeight === undefined || minWeight > terms[i] ) {
+						
+						minWeight = terms[i];
+						
+					}
+					
+					if( maxWeight === undefined || maxWeight < terms[i] ) {
+						
+						maxWeight = terms[i];
+						
+					}
+				
+				}
+				
+				var weightScale = d3.scale.linear()
+					.domain( [minWeight, maxWeight] )
+					.range( [1, 0]);
+					
+				dataset.forEach( function(d) {
+					
+					d.title = d.title;
+					d.weight = weightScale( terms[d.title] );
+					
+				} );
+				
+				
+			}
+			
+			make();
+		
+		} else {
+		
+			console.error(error);
+			
+		}
+		
+	});
+	
+} else if (loadDataset === TATEART) {
+						
+	d3.csv(urls[loadDataset], function(error, data) {
+	
+		if( !error ) {
 							
 			var artistCount = {};
 			
 			data.forEach( function(d) {
 				
-				if(d.dateRange && d.dateRange != null && d.dateRange.startYear) {
+				if(d.year) {
 					
-					d.from = new Date( +d.dateRange.startYear, 0, 1 );
+					d.from = new Date( +d.year, 0, 1 );
 					
-					if ( d.dateRange.endYear ) {
-					
-						d.to = new Date( +d.dateRange.endYear,0 ,1 );
-						
-					} else {
-						d.to = new Date( d.from.valueOf() );
-						d.to.setFullYear( d.from.getFullYear() + 1 );
-					}
+					d.to = new Date( d.from.valueOf() );
+					d.to.setFullYear( d.from.getFullYear() + 1 );
 				
-					if( artistCount.hasOwnProperty( d.all_artists ) ) {
-						
-						artistCount[d.all_artists]++;
-						
-					} else {
-
-						artistCount[d.all_artists] = 0;
-						
-					}
-					
-					dataset.push(d);	
-				}
-				
-			} );
-			
-			
-			// determine importance
-			
-			dataset.forEach( function(d) {
-				
-				d.weight = artistCount[d.all_artists];
-				
-			} )
-			
-			
-		} else if (loadDataset === JOHNSTON) {
-			
-			console.log(data.length);
-			
-			data.forEach( function(d) {
-				
-				for( var attribute in d ) {
-					
-					if( attribute.indexOf("date") != -1  && d[attribute] !== null) {
-					
-						d[attribute + "_orig"] = d[attribute];
-						
-						if(d[attribute].replace) {
-							d[attribute] = d[attribute].replace(/BST/, "GMT");						
-						}
-						d[attribute] = new Date( d[attribute] );
-						
-					} else if( d[attribute] == +d[attribute] ) {
-						
-						d[attribute] = +d[attribute];
-						
-					}
-					
-				}
-				
-				d.title = d.simple_name || "unknown";
-				d.date = d.production_date_from || new Date();
-				
-				if( d.date instanceof Date ) {
-					
-					d.id = d.inventory;
-					d.from = d.date;
-					
-					if( d.production_date_to instanceof Date && d.from.valueOf() <= d.production_date_to.valueOf() ) {
-					
-						d.to = new Date( d.date.valueOf() );
-						d.to.setFullYear( d.date.getFullYear() + 1 );		
-						
-					} else {
-						
-						d.to = d.production_date_to || new Date();
-						
-					}
-					
-					if( !isNaN( d.from.valueOf() ) && !isNaN( d.to.valueOf() )) {
+					if ( !isNaN(d.from.valueOf()) ){// && d.artist != "Turner, Joseph Mallord William" ) {
 						dataset.push(d);
 					}
-					
-				}
-				
-				
-			} );
-			
-			// Calculate weight by uniqueness of terms
-			terms = Array();
-			
-			dataset.forEach( function(d) {
-				
-				if( !terms[d.title] ) {
-				
-					terms[d.title] = 1;
-					
-				} else {
-				
-					terms[d.title]++;
-					
 				}
 				
 			} );
 			
-			var minWeight = undefined, maxWeight = undefined;
+			console.log( dataset.length + " instances" );			
+			//make();
 			
-			for(var i in terms) {
+		} else {
 			
-				if( minWeight === undefined || minWeight > terms[i] ) {
-					
-					minWeight = terms[i];
-					
-				}
-				
-				if( maxWeight === undefined || maxWeight < terms[i] ) {
-					
-					maxWeight = terms[i];
-					
-				}
-			
-			}
-			
-			var weightScale = d3.scale.linear()
-				.domain( [minWeight, maxWeight] )
-				.range( [1, 0]);
-				
-			dataset.forEach( function(d) {
-				
-				d.title = d.title;
-				d.weight = weightScale( terms[d.title] );
-				
-			} );
-			
-			
+			console.error(error);
+		
 		}
-		
-		make();
-	
-	} else {
-	
-		console.error(error);
-		
-	}
-	
-});	
-	
+	});
+			
+}	
 
 function make() {
 
@@ -293,11 +283,10 @@ function make() {
 			dimension: "from"
 		});
 		
-		cf.addFilter({title: "Medium", dimension: "medium"});
+		//cf.addFilter({title: "Medium", dimension: "medium"});
 		
 		cf.addFilter({
-			title: "Artist",
-			dimension: function(d) { return d.contributors[0].fc; }
+			dimension: "artist"
 		});
 		
 	}	else if (loadDataset === BRITTEN) {
