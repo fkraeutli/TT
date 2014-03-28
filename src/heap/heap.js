@@ -44,7 +44,7 @@ TT.heap = function() {
 		grid: {
 			
 			availableWidth: null,
-			maxRow: 1,
+			maxRow: 0,
 			numCols: null,
 			initialised: false,
 			range: null,
@@ -60,7 +60,7 @@ TT.heap = function() {
 				// Update zoom extent here
 				
 				zoom: d3.scale.linear()
-					.domain( [0.9, 240] ) 
+					.domain( [0.5, 240] ) 
 					.range( [0, 1] )
 				
 			}
@@ -70,12 +70,19 @@ TT.heap = function() {
 		styles: {
 			
 			events: {
-				diameter: 2
+				diameter: 1
 			},
 			
 			images: {
-				factor: 2
+				factor: 1
 			}
+		},
+		
+		thresholds: {
+			
+			display: 2000, // amount of events
+			images: 30 // zoom factor
+			
 		},
 		
 		view: {
@@ -138,14 +145,8 @@ TT.heap = function() {
 	};
 			
 	// Init scales used for panning and zooming
-	var x = d3.scale.linear()
-		.domain([0, p.view.width])
-		.range([0, p.view.width ]);
+	var x, y;
 	
-	var y = d3.scale.linear()
-		.domain([0, p.view.height])
-		.range([0, p.view.height]);
-		
 	// Private functions
 	
 	function doZoom() {
@@ -174,8 +175,6 @@ TT.heap = function() {
 				.attr("cy", attr.event.circle.cy)
 				.attr("r", attr.event.circle.r)
 				.style("fill", attr.event.circle.fill);
-			
-			updateEventsImages(events);
 				
 		}
 		
@@ -199,7 +198,7 @@ TT.heap = function() {
 		
 			if (p.grid.initialised) return false;
 					
-			function initGrid() {
+			function makeGrid() {
 				
 				p.grid.availableWidth = p.scales.dateToPx(p.view.to) - p.scales.dateToPx(p.view.from);
 				p.grid.numCols = Math.floor( p.grid.availableWidth / p.styles.events.diameter );
@@ -212,7 +211,6 @@ TT.heap = function() {
 				for( var i = 0; i < p.grid.numCols; i++ ) {
 					
 					p.grid.table[i] = Array();
-					p.grid.table[i][0] = Array();
 					
 				}
 				
@@ -230,19 +228,13 @@ TT.heap = function() {
 					
 					// Generate array for candidate column selection
 					d[nmsp].candidateCols = d3.range( d[nmsp].initCol, d[nmsp].minCol - 1, -1 ).concat( d3.range( d[nmsp].initCol + 1, d[nmsp].maxCol + 1 ) );
-					if(d[nmsp].candidateCols.length === 0) {
-						
-						console.log(d[nmsp]);
-						
-					}
-
-			
+				
 					// Add item to row smallest row
 					var minRow = p.grid.maxRow;
 					
-					for( var i = 0; i < d[nmsp].candidateCols.length; i++ ) {
+					for( var i = 0; i < d[nmsp].candidateCols.length; i++ ) {	
 						
-						if ( p.grid.table[ d[nmsp].candidateCols[i] ].length < minRow) {
+						if ( p.grid.table[ d[nmsp].candidateCols[i] ].length  < minRow) {
 							d[nmsp].col = d[nmsp].candidateCols[i];
 							minRow = p.grid.table[ d[nmsp].candidateCols[i] ].length;
 						}
@@ -251,7 +243,7 @@ TT.heap = function() {
 					d[nmsp].row = minRow;
 					
 					// Add to grid
-					p.grid.table[ d[nmsp].col ][ d[nmsp].row ] = Array(d);
+					p.grid.table[ d[nmsp].col ][ d[nmsp].row ] = d;
 					
 					if (minRow == p.grid.maxRow) {
 						p.grid.maxRow++;
@@ -261,18 +253,8 @@ TT.heap = function() {
 				
 				
 			}
-			
-			function extendGrid(col, to) {		
-			
-				for(var i = p.grid.table[ col ].length; i <= to; i++) {
-				
-					p.grid.table[ col ][ i ] = Array();
-					
-				}
-			}
-		
 			// Initialise heap grid
-			initGrid();	
+			makeGrid();	
 			
 			// Translate columns and rows to x,y coordinates
 			p.data.forEach( function(d) {
@@ -292,14 +274,12 @@ TT.heap = function() {
 			events.select("circle.eventCircle")
 				.attr("r", attr.event.circle.r)
 				.style("fill", attr.event.circle.fill);
-				
-			updateEventsImages(events);
-			
+						
 		}		
 		
 		function updateEventsImages(events) {
 			
-			if(p.zoom.factor > 10) {
+			if(p.zoom.factor > p.thresholds.images) {
 				
 				events.filter(function(d) { return !d.hasImage && d.thumbnailUrl; }).append("image")
 					.attr("xlink:href", function(d) {
@@ -326,8 +306,16 @@ TT.heap = function() {
 	
 		updateDataValues();
 		
+		// Draw events
+		var eventData = p.data.filter(filterEvents);
+		
+		// Draw no events if too many would be visible
+		if(eventData.length > p.thresholds.display) {
+			eventData = [];
+		}
+		
 		var events = p.elements.events.selectAll("g.heap_event")
-			.data( p.data.filter(filterEvents), function(d) {return d.id;} );
+			.data( eventData, function(d) {return d.id;} );
 		
 		// Add new events
 		var eventsEnter = events.enter()
@@ -351,6 +339,40 @@ TT.heap = function() {
 		
 		// Remove events
 		events.exit().remove();
+		
+		// Add or update images
+		updateEventsImages(events);
+		
+		// Draw outline
+		p.elements.outline.attr("d", function() {
+
+			var path = [],
+				i = -1,
+				n = p.grid.table.length,
+				d;
+				
+			// Generate path part per value				
+			while (++i < n) {
+				
+				d = p.grid.table[i];
+				
+				if( d.length > 0) {
+					path.push( "L", x( d[ d.length-1 ][nmsp].x ), ",", y( d[ d.length-1 ][nmsp].y ) );	
+					path.unshift( "L", x( d[ 0 ][nmsp].x ), ",", y( d[ 0 ][nmsp].y ) );	
+				}
+				
+			}
+			path.unshift( "M", path[1], ",", path[3] );
+			path.push("Z");
+			
+			return path.join("");
+			
+		})
+		.attr("display", function() {
+			
+			return eventData.length > 0 ? "none" : "";
+			
+		});
 	
 	}
 	
@@ -393,6 +415,11 @@ TT.heap = function() {
 			
 			function initEvents() {
 			
+				p.elements.outline = p.svg.insert("g")
+					.attr("class", "heap_outline")
+					.attr("id", "hs" + id + "_outline")
+					.append("path");
+					
 				p.elements.events = p.svg.insert("g")
 					.attr("class", "heap_events")
 					.attr("id", "hs" + id + "_events");
@@ -400,6 +427,17 @@ TT.heap = function() {
 			}
 				
 			function initScales() {
+			
+			
+				x = d3.scale.linear()
+					.domain([0, p.view.width])
+					.range([0, p.view.width ]);
+				
+				y = d3.scale.linear()
+					.domain([0, p.view.height])
+					.range([0, p.view.height]);
+					
+
 			
 				p.scales.dateToPx = d3.scale.linear()
 					.domain( [ p.view.from.valueOf(), p.view.to.valueOf() ] )
@@ -441,6 +479,8 @@ TT.heap = function() {
 
 		p.view.width = +p.svg.attr("width");
 		p.view.height = +p.svg.attr("height");
+		
+		console.log(p.view);
 		
 		updateMinMax();
 		initHeap();
@@ -513,6 +553,7 @@ TT.heap = function() {
 			p.styles.events[name] = value;
 		}
 		
+		p.grid.initialised = false;
 		update();
 		
 		return me;

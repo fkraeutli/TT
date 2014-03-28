@@ -217,7 +217,7 @@ if ( loadDataset !== TATEART ) {
 			} );
 			
 			console.log( dataset.length + " instances" );			
-			//make();
+			make();
 			
 		} else {
 			
@@ -229,6 +229,7 @@ if ( loadDataset !== TATEART ) {
 }	
 
 function make() {
+
 
 	cf = TT.crossfilter().data(dataset);
 	
@@ -348,9 +349,14 @@ function make() {
 	
 	heap = TT.heap().data(dataset);
 	
+	
+	if ( loadDataset == BRITTEN || loadDataset == TATE) {
+		heap.styles.events("diameter", 4);
+	}
+	
 	d3.select("svg#heap")
 		.attr("class", "heap")
-		.attr("width", 800)
+		.attr("width", 1280)
 		.attr("height", 600)
 		.call(heap);
 			

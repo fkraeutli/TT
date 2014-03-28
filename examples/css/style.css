@@ -184,6 +184,12 @@ svg.heap .histogram_events circle,
 svg.histogram .histogram_events circle {
   fill: #008080;
 }
+svg.timeline .heap_outline,
+svg.heap .heap_outline,
+svg.histogram .heap_outline {
+  fill: #008080;
+  opacity: 0.5;
+}
 svg.timeline .overlay,
 svg.heap .overlay,
 svg.histogram .overlay {
