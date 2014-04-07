@@ -7,6 +7,9 @@ body {
 #mainExample {
   padding: 0;
 }
+#timeline_demo {
+  overflow: hidden;
+}
 #leftCol {
   position: fixed;
   top: 20px;
@@ -129,9 +132,12 @@ svg.heap,
 svg.histogram {
   margin-right: 2em;
 }
-svg.timeline .timeline_axis path,
-svg.heap .timeline_axis path,
-svg.histogram .timeline_axis path,
+svg.timeline .axis path,
+svg.heap .axis path,
+svg.histogram .axis path,
+svg.timeline .bars_axis path,
+svg.heap .bars_axis path,
+svg.histogram .bars_axis path,
 svg.timeline .heap_axis path,
 svg.heap .heap_axis path,
 svg.histogram .heap_axis path,
@@ -140,9 +146,12 @@ svg.heap .histogram_axis path,
 svg.histogram .histogram_axis path {
   fill: none;
 }
-svg.timeline .timeline_axis line,
-svg.heap .timeline_axis line,
-svg.histogram .timeline_axis line,
+svg.timeline .axis line,
+svg.heap .axis line,
+svg.histogram .axis line,
+svg.timeline .bars_axis line,
+svg.heap .bars_axis line,
+svg.histogram .bars_axis line,
 svg.timeline .heap_axis line,
 svg.heap .heap_axis line,
 svg.histogram .heap_axis line,
@@ -151,9 +160,12 @@ svg.heap .histogram_axis line,
 svg.histogram .histogram_axis line {
   stroke: #cccccc;
 }
-svg.timeline .timeline_axis text,
-svg.heap .timeline_axis text,
-svg.histogram .timeline_axis text,
+svg.timeline .axis text,
+svg.heap .axis text,
+svg.histogram .axis text,
+svg.timeline .bars_axis text,
+svg.heap .bars_axis text,
+svg.histogram .bars_axis text,
 svg.timeline .heap_axis text,
 svg.heap .heap_axis text,
 svg.histogram .heap_axis text,
@@ -162,41 +174,41 @@ svg.heap .histogram_axis text,
 svg.histogram .histogram_axis text {
   fill: #000000;
 }
-svg.timeline .timeline_events .timeline_event .childrenIcon rect,
-svg.heap .timeline_events .timeline_event .childrenIcon rect,
-svg.histogram .timeline_events .timeline_event .childrenIcon rect {
+svg.timeline .bars_events .bars_event .childrenIcon rect,
+svg.heap .bars_events .bars_event .childrenIcon rect,
+svg.histogram .bars_events .bars_event .childrenIcon rect {
   fill: none;
   cursor: pointer;
   pointer-events: all;
 }
-svg.timeline .timeline_events .timeline_event .childrenIcon text,
-svg.heap .timeline_events .timeline_event .childrenIcon text,
-svg.histogram .timeline_events .timeline_event .childrenIcon text {
+svg.timeline .bars_events .bars_event .childrenIcon text,
+svg.heap .bars_events .bars_event .childrenIcon text,
+svg.histogram .bars_events .bars_event .childrenIcon text {
   fill: #ffffff;
 }
-svg.timeline .timeline_events .timeline_event .childrenIcon.open .closed,
-svg.heap .timeline_events .timeline_event .childrenIcon.open .closed,
-svg.histogram .timeline_events .timeline_event .childrenIcon.open .closed {
+svg.timeline .bars_events .bars_event .childrenIcon.open .closed,
+svg.heap .bars_events .bars_event .childrenIcon.open .closed,
+svg.histogram .bars_events .bars_event .childrenIcon.open .closed {
   display: none;
 }
-svg.timeline .timeline_events .timeline_event .childrenIcon.closed .open,
-svg.heap .timeline_events .timeline_event .childrenIcon.closed .open,
-svg.histogram .timeline_events .timeline_event .childrenIcon.closed .open {
+svg.timeline .bars_events .bars_event .childrenIcon.closed .open,
+svg.heap .bars_events .bars_event .childrenIcon.closed .open,
+svg.histogram .bars_events .bars_event .childrenIcon.closed .open {
   display: none;
 }
-svg.timeline .timeline_events .timeline_event .eventRect,
-svg.heap .timeline_events .timeline_event .eventRect,
-svg.histogram .timeline_events .timeline_event .eventRect {
+svg.timeline .bars_events .bars_event .eventRect,
+svg.heap .bars_events .bars_event .eventRect,
+svg.histogram .bars_events .bars_event .eventRect {
   fill: #008080;
 }
-svg.timeline .timeline_events .timeline_event .title,
-svg.heap .timeline_events .timeline_event .title,
-svg.histogram .timeline_events .timeline_event .title {
+svg.timeline .bars_events .bars_event .title,
+svg.heap .bars_events .bars_event .title,
+svg.histogram .bars_events .bars_event .title {
   fill: #ffffff;
 }
-svg.timeline .timeline_events .timeline_event .title[text-anchor=end],
-svg.heap .timeline_events .timeline_event .title[text-anchor=end],
-svg.histogram .timeline_events .timeline_event .title[text-anchor=end] {
+svg.timeline .bars_events .bars_event .title[text-anchor=end],
+svg.heap .bars_events .bars_event .title[text-anchor=end],
+svg.histogram .bars_events .bars_event .title[text-anchor=end] {
   fill: #000000;
 }
 svg.timeline .heap_events circle,
@@ -219,18 +231,18 @@ svg.histogram .overlay {
   fill: none;
   pointer-events: all;
 }
-svg.timeline .timeline_axis line,
-svg.heap .timeline_axis line,
-svg.histogram .timeline_axis line,
+svg.timeline .bars_axis line,
+svg.heap .bars_axis line,
+svg.histogram .bars_axis line,
 svg.timeline .heap_axis line,
 svg.heap .heap_axis line,
 svg.histogram .heap_axis line,
 svg.timeline .histogram_axis line,
 svg.heap .histogram_axis line,
 svg.histogram .histogram_axis line,
-svg.timeline .timeline_axis path,
-svg.heap .timeline_axis path,
-svg.histogram .timeline_axis path,
+svg.timeline .bars_axis path,
+svg.heap .bars_axis path,
+svg.histogram .bars_axis path,
 svg.timeline .heap_axis path,
 svg.heap .heap_axis path,
 svg.histogram .heap_axis path,
@@ -241,9 +253,9 @@ svg.histogram .histogram_axis path {
   fill: none;
   stroke-width: 1px;
 }
-svg.timeline .timeline_axis path,
-svg.heap .timeline_axis path,
-svg.histogram .timeline_axis path,
+svg.timeline .bars_axis path,
+svg.heap .bars_axis path,
+svg.histogram .bars_axis path,
 svg.timeline .heap_axis path,
 svg.heap .heap_axis path,
 svg.histogram .heap_axis path,

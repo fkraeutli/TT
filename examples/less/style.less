@@ -23,6 +23,10 @@ body {
 	padding: 0;
 }
 
+#timeline_demo {
+	overflow: hidden;
+}
+
 #leftCol {
 	position: fixed;
 	top:20px;
@@ -196,7 +200,7 @@ svg.timeline, svg.heap, svg.histogram {
 
 	margin-right: 2em;
 	
-	.timeline_axis, .heap_axis, .histogram_axis {
+	.axis, .bars_axis, .heap_axis, .histogram_axis {
 		path {
 			fill:none;
 		}
@@ -208,9 +212,9 @@ svg.timeline, svg.heap, svg.histogram {
 		}
 	}
 	
-	.timeline_events {
+	.bars_events {
 	
-		.timeline_event {
+		.bars_event {
 			
 			.childrenIcon {
 				rect {
@@ -264,7 +268,7 @@ svg.timeline, svg.heap, svg.histogram {
 	}
 	
 	
-	.timeline_axis, .heap_axis, .histogram_axis {
+	.bars_axis, .heap_axis, .histogram_axis {
 		
 		line, path {
 			stroke: @colAxisStroke;
