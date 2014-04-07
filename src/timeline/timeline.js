@@ -61,9 +61,13 @@ TT.timeline = function() {
 			tickFormat: function (d) {
 
 				if( Math.round( (p.axis.scale().domain()[1].getFullYear() - p.axis.scale().domain()[0].getFullYear()) / p.axis.ticks()) >= 1 ) { // If there is not more than one tick per year represented
+
 					return p.format.year(d);
+					
 				} else {
+				
 					return p.format.date(d);
+					
 				}
 
 			}
@@ -102,7 +106,7 @@ TT.timeline = function() {
 					
 				p.elements.axis = p.svg.append("g")
 					.attr("class", "timeline_axis axis")
-					.attr("id","hs" + id + "_axis")
+					.attr("id", nmsp + "_axis")
 					.call(p.axis)
 					.attr("transform", "translate(0," + ( p.view.height - p.view.padding / 2 ) + ")");
 					
