@@ -357,8 +357,12 @@ TT.heap = function() {
 				d = p.grid.table[i];
 				
 				if( d.length > 0) {
-					path.push( "L", x( d[ d.length-1 ][nmsp].x ), ",", y( d[ d.length-1 ][nmsp].y ) );	
-					path.unshift( "L", x( d[ 0 ][nmsp].x ), ",", y( d[ 0 ][nmsp].y ) ); 
+					
+					path.push( "S", x( d[ d.length-1 ][nmsp].x - p.styles.events.diameter/2 ), ",", y( d[ d.length-1 ][nmsp].y ), " ", x( d[ d.length-1 ][nmsp].x ), ",", y( d[ d.length-1 ][nmsp].y ) );	
+					path.unshift( "S", x( d[ 0 ][nmsp].x + p.styles.events.diameter/2 ), ",", y( d[ 0 ][nmsp].y ) , " " , x( d[ 0 ][nmsp].x ), ",", y( d[ 0 ][nmsp].y ) ); 
+					
+					//path.push( "L", x( d[ d.length-1 ][nmsp].x ), ",", y( d[ d.length-1 ][nmsp].y ) );	
+					//path.unshift( "L", x( d[ 0 ][nmsp].x ), ",", y( d[ 0 ][nmsp].y ) ); 
 				}
 				
 			}
