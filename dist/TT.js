@@ -2171,17 +2171,14 @@ TT.heap = function() {
 	
 		function updateAxis() {
 		
-			p.scales.axis.range( [0, p.view.width] );
-		
+			p.scales.axis.domain( [ p.scales.pxToDate( x.domain()[0] ), p.scales.pxToDate( x.domain()[1] ) ] )
+					.range( [0, p.view.width] );
+					
 			p.axis.tickSize(p.view.height - p.view.padding);
 
 			p.elements.axis.call( p.axis )
 				.attr("transform", "translate(0," + ( p.view.height - p.view.padding / 2 ) + ")");
 			
-			/*
-			p.scales.axis.domain( [ p.scales.pxToDate( x.domain()[0] ), p.scales.pxToDate( x.domain()[1] ) ] )
-					.range( [0, p.view.width] );
-			*/
 		}		
 	
 		function updateScales() {

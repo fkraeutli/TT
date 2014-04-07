@@ -9,6 +9,10 @@ body {
 }
 #timeline_demo {
   overflow: hidden;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+}
+#timeline_demo svg {
+  overflow: hidden;
 }
 #leftCol {
   position: fixed;
