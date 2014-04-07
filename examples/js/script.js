@@ -381,33 +381,47 @@ function make() {
 		.attr("width", 800)
 		.attr("height", 900)
 		.call(timeline);
-			
-	// Make slider
-	$j( "#slider_threshold" ).rangeSlider( {
-		 
-		bounds: { min: 0.001, max: 0.999 },
-		defaultValues: {
-			min: timeline.threshold("display"),	
-			max: timeline.threshold("collapse")
-		},
-		formatter:function(val){
-	        var value = Math.round(val * 100) / 100,
-				decimal = value - Math.round(val);
-			return decimal == 0 ? value.toString() + ".0" : value.toString();
-		},
-		step: 0.01
-		
-	} ).on("valuesChanging", function(e, data){
-	
-		timeline.threshold({
-			display: data.values.min,
-      		collapse: data.values.max
-		});
-	});
 	
 	cf.addSubscriber(function(data) {
+	
 		timeline.data(data);
+	
 	})
+	
+	TT.observer.make(timeline);
+
+	timeline.addSubscriber(function(displayData) {
+		
+		var shown = displayData.length;
+		var hidden =  timeline.data().length - displayData.length;
+		
+		var message = "";
+		
+		if( hidden > 0) {
+			message = shown + " artists in view (" + hidden + " more currently hidden)";
+			$j("#leftCol").find(".status").show();
+		} else {			
+			message = shown + " artists in view";
+			$j("#leftCol").find(".status").hide();
+		}
+		
+		$j("#leftCol").find(".status").html(message);
+
+	})
+	
+	$j("#resetLink").click( function(e) {
+	
+		e.preventDefault();
+
+		cf.charts().forEach( function(chart) { 
+			chart.reset();
+		});
+		
+		timeline.zoom().translate([0,0]).scale(1);
+		cf.forcePublish();
+		
+	})
+	
 	cf.forcePublish()	
 }
 

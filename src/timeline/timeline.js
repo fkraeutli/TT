@@ -32,6 +32,8 @@ TT.timeline = function() {
 		
 		data: [],
 		
+		displayData: [],
+		
 		elements: {},
 		
 		format: {
@@ -50,10 +52,6 @@ TT.timeline = function() {
 				weight: d3.scale.linear()
 					.domain( [0, 1] )
 					.range( [0, 1] ),
-					
-				works: d3.scale.linear()
-					.domain([0, 1])
-					.range([0, 1]),
 				
 				// Update zoom extent here
 				
@@ -79,8 +77,9 @@ TT.timeline = function() {
 		
 		thresholds: {
 			
-			collapse: 0.6,
-			display: 0.2	
+			collapse: 0.5,
+			display: 0.1,
+			showAll: 10 // Show all events below if total number is below this	
 			
 		},
 		
@@ -95,14 +94,13 @@ TT.timeline = function() {
 			
 			ys: [0]
 			
-		},
-		
-		zoom: {
-			factor: 1	
 		}
 		
 		
 	};
+	
+	// REMOVE
+	test_timeline_p = p;
 	
 	var attr = {
 		
@@ -126,12 +124,12 @@ TT.timeline = function() {
 				},
 			
 				height: function (d) {
-						return Math.min(d[nmsp].height * p.zoom.factor, d[nmsp].height) + "px";	
+						return Math.min(d[nmsp].height * zoom.scale(), d[nmsp].height) + "px";	
 				},
 				
 				width: function (d) {
 				
-					return (d[nmsp].width * p.zoom.factor) + "px";
+					return (d[nmsp].width * zoom.scale()) + "px";
 					
 				}
 			},
@@ -139,7 +137,7 @@ TT.timeline = function() {
 			text: {
 			
 				anchor: function (d) {		
-					return p.zoom.factor >= p.thresholds.collapse && d[nmsp].width * p.zoom.factor > d.title.length * p.styles.events.fontSize ? "start" : "end";	
+					return zoom.scale() >= p.thresholds.collapse && d[nmsp].width * zoom.scale() > d.title.length * p.styles.events.fontSize ? "start" : "end";	
 				},
 				
 				display: function (d) {
@@ -149,7 +147,7 @@ TT.timeline = function() {
 				fontSize: p.styles.events.fontSize + "px",
 				
 				x: function (d) {
-					return (d[nmsp].width * p.zoom.factor > d.title.length * p.styles.events.fontSize) ? (x(d[nmsp].x) < 0 && x(d[nmsp].x) + d[nmsp].width * p.zoom.factor > 0 ? p.styles.events.padding + -1*x(d[nmsp].x) : p.styles.events.padding) : -p.styles.events.padding;
+					return (d[nmsp].width * zoom.scale() > d.title.length * p.styles.events.fontSize) ? (x(d[nmsp].x) < 0 && x(d[nmsp].x) + d[nmsp].width * zoom.scale() > 0 ? p.styles.events.padding + -1*x(d[nmsp].x) : p.styles.events.padding) : -p.styles.events.padding;
 				},
 				
 				y: p.styles.events.height * 0.75
@@ -174,8 +172,6 @@ TT.timeline = function() {
 	// Private functions
 	
 	function doZoom() {
-		
-		p.zoom.factor = d3.event.scale;
 		
 		var events = p.elements.events.selectAll("g.timeline_event");
 		var ax = p.svg.select(".timeline_axis");
@@ -223,7 +219,7 @@ TT.timeline = function() {
 			*/
 		
 			return d[nmsp].renderLevel >= p.thresholds.display  &&
-				x(d[nmsp].x) + d[nmsp].width * p.zoom.factor >= 0 &&
+				x(d[nmsp].x) + d[nmsp].width * zoom.scale() >= 0 &&
 				x(d[nmsp].x) <= p.view.width &&
 				d[nmsp].y + y(0) > -p.styles.events.height && 
 				d[nmsp].y + y(0) < p.view.height;
@@ -235,7 +231,7 @@ TT.timeline = function() {
 			function computeRenderLevel(data, attribute) {
 				
 				if(data.weight) {
-					return Math.pow( p.scales.minMax.works(data.weight), 0.02 / p.scales.minMax.zoom(p.zoom.factor) ) + p.scales.minMax.zoom(p.zoom.factor); 
+					return Math.pow( p.scales.minMax.weight(data.weight), 0.01 / p.scales.minMax.zoom(zoom.scale()) ) + p.scales.minMax.zoom(zoom.scale()); 
 				} else {
 					return 0;
 				}
@@ -248,9 +244,9 @@ TT.timeline = function() {
 					
 			});
 			
-			// If only one item is visible or all have the same level they should automatically get displayed
+			// If only a defined number of items are visible or all have the same level they should automatically get displayed
 			
-			if( p.data.length == 1 || d3.min( p.data, function(d) {return d[nmsp].renderLevel;} ) == d3.max( p.data, function(d) {return d[nmsp].renderLevel;} ) ) {
+			if( p.data.length <= p.thresholds.showAll || d3.min( p.data, function(d) {return d[nmsp].renderLevel;} ) == d3.max( p.data, function(d) {return d[nmsp].renderLevel;} ) ) {
 			
 				p.data.forEach( function(d) {
 					d[nmsp].renderLevel = 1;		
@@ -262,7 +258,7 @@ TT.timeline = function() {
 			
 			p.data.forEach(function(d) {	
 			
-				if( d[nmsp].renderLevel > p.thresholds.display ) {
+				if( d[nmsp].renderLevel >= p.thresholds.display ) {
 				
 					d[nmsp].x = p.scales.dateToPx(d.from.valueOf());
 					d[nmsp].width = ( p.scales.dateToPx(d.to.valueOf()) - p.scales.dateToPx(d.from.valueOf()) );
@@ -286,23 +282,7 @@ TT.timeline = function() {
 					
 				} 
 				
-				/*
-				else {
-				
-					d[nmsp].x = p.scales.dateToPx(d.from.valueOf());
-					d[nmsp].width = (p.scales.dateToPx(d.to.valueOf()) - p.scales.dateToPx(d.from.valueOf()));
-								
-					d[nmsp].height = 1;
-					d[nmsp].margin = 1;
-					
-					if(count === 0) {
-						d[nmsp].y = p.view.padding;
-					} else {
-						d[nmsp].y = p.view.ys[count - 1] + d[nmsp].margin;
-					}
-					
-				}
-				*/
+
 			});
 		}
 		
@@ -326,9 +306,11 @@ TT.timeline = function() {
 		
 		updateDataValues();
 		
+		p.displayData = p.data.filter( filterEvents );
+		
 		var events = p.elements.events.selectAll("g.timeline_event")
-			.data(p.data.filter(filterEvents), function(d) { return d.id; });
-			
+			.data( p.displayData, function(d) { return d.id; } );
+						
 		// Update events
 		events.attr("transform", attr.event.transform);
 		
@@ -343,7 +325,16 @@ TT.timeline = function() {
 				})
 			.attr("class", "timeline_event")
 			.attr("transform", attr.event.transform)
-			.on("click", function(d) { console.log(d); });
+			.on("click", function(d) { 
+				console.log(d); 
+			})
+			.on("dblclick", function(d) {
+				
+				if(d.url) {
+					window.open( d.url );
+				}
+				
+			});
 	
 		// Add event appearance
 		createEventsAppearance(eventsEnter);
@@ -351,13 +342,23 @@ TT.timeline = function() {
 		// Remove events
 		events.exit().remove();
 		
-		
+		publishUpdate();
 	}
 	
 	function updateMinMax() {
 		
 		// Updates the scales used for semantic zooming
-		p.scales.minMax.works.domain([ d3.min( p.data, function(d) {return d.weight ? d.weight : 0;} ), Math.min(300, d3.max( p.data, function(d) {return d.weight ? d.weight : 0;} )) ]);
+		p.scales.minMax.weight.domain([ d3.min( p.data, function(d) {return d.weight ? d.weight : 0;} ), Math.min(300, d3.max( p.data, function(d) {return d.weight ? d.weight : 0;} )) ]);
+		
+	}
+
+	function publishUpdate() {
+		
+		if(me.hasOwnProperty("publish")) {	
+			
+			me.publish( p.displayData );
+
+		}
 		
 	}
 
@@ -418,7 +419,7 @@ TT.timeline = function() {
 					.attr("height", p.view.height)
 					.attr("class","overlay");
 					
-				p.svg.select(".timeline_events").call( zoom.on("zoom", doZoom) );
+				p.svg.select(".timeline_events").call( zoom.on("zoom", doZoom) ).on("dblclick.zoom", null);
 				
 			}
 			
@@ -453,7 +454,6 @@ TT.timeline = function() {
 		
 		initialised = true;
 		
-		updateMinMax();
 		update();
 		
 	};
@@ -474,7 +474,16 @@ TT.timeline = function() {
 		
 		return me;
 	};
+
+	me.displayData = function() {
+		
+		return p.displayData;
+
+	};
 	
+	me.update = function() {
+		update();
+	};
 	
 	// Linking accessors
 	me.x = function(_) {
@@ -487,6 +496,13 @@ TT.timeline = function() {
 	me.y = function(_) {
 		if( !arguments.length ) return y;
 		y = _;
+		
+		return me;
+	};
+	
+	me.zoom = function(_) {
+		if( !arguments.length ) return zoom;
+		zoom = _;
 		
 		return me;
 	};

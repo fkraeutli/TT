@@ -17,23 +17,49 @@ body {
 	font-size: 12px;
 	margin: 0;
 	padding: 0;
-	overflow: hidden;
 }
 
 #mainExample {
-	padding: 1em;
-	margin: auto;
+	padding: 0;
 }
 
 #leftCol {
-	float: left;
+	position: fixed;
+	top:20px;
+	left:20px;
 	width:800px;
 	margin-right: 20px;
+	
+	.status {
+		background: #efefef;
+		padding: .5em;
+		text-align: center;
+	}
 }
 
 #rightCol {
-	float: left;
+	margin-left: 840px;
+	margin-top: 20px;
 	width:400px;
+	
+	div.reset{
+		
+		width:100%;
+		margin-bottom: 1em;
+		
+		a {
+			cursor: pointer;
+			font-weight: normal;
+			padding: .5em;
+			background: @colBarBackground;
+			color: black;
+			text-decoration: none;
+			text-align: center;
+			display: block;
+		}
+	}
+			
+
 }
 
 #crossfilter {
