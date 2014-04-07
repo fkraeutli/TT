@@ -326,6 +326,11 @@ TT.heap = function() {
 			.attr("class", "heap_event")
 			.attr("transform", attr.event.transform)
 			.on("click", function(d) { console.log(d); })
+			.on("dblclick", function(d) { 
+				if( d.url) {
+					window.open( d.url );
+				}
+			})
 			.each(function(d) { d.hasImage = false; } );
 			
 		// Add event appearance

@@ -1,6 +1,6 @@
 /*
 
-Generates Timeline view on array of data
+Generates Bars view on array of data
 
 data format: {
 
@@ -15,15 +15,15 @@ data format: {
 
 */
 
-TT.timeline = function() {
+TT.bars = function() {
 	
-	if(!TT.timeline.id) TT.timeline.id = 0;
+	if(!TT.bars.id) TT.bars.id = 0;
 	
 	var	initialised = false,
-		id = TT.timeline.id++,
+		id = TT.bars.id++,
 		nmsp = "tl_" + id,
 		me = {},
-		timeline = this,
+		bars = this,
 		zoom;
 		
 	var p = {
@@ -100,7 +100,7 @@ TT.timeline = function() {
 	};
 	
 	// REMOVE
-	test_timeline_p = p;
+	test_bars_p = p;
 	
 	var attr = {
 		
@@ -173,8 +173,8 @@ TT.timeline = function() {
 	
 	function doZoom() {
 		
-		var events = p.elements.events.selectAll("g.timeline_event");
-		var ax = p.svg.select(".timeline_axis");
+		var events = p.elements.events.selectAll("g.bars_event");
+		var ax = p.svg.select(".bars_axis");
 		
 		p.scales.axis.domain( [ p.scales.pxToDate( x.domain()[0] ), p.scales.pxToDate( x.domain()[1] ) ] );
 		
@@ -308,7 +308,7 @@ TT.timeline = function() {
 		
 		p.displayData = p.data.filter( filterEvents );
 		
-		var events = p.elements.events.selectAll("g.timeline_event")
+		var events = p.elements.events.selectAll("g.bars_event")
 			.data( p.displayData, function(d) { return d.id; } );
 						
 		// Update events
@@ -323,7 +323,7 @@ TT.timeline = function() {
 				.attr("id", function(d) {
 					return "tl" + id + "_event_" + d.id;
 				})
-			.attr("class", "timeline_event")
+			.attr("class", "bars_event")
 			.attr("transform", attr.event.transform)
 			.on("click", function(d) { 
 				console.log(d); 
@@ -365,7 +365,7 @@ TT.timeline = function() {
 	// Initialiser
 	me.apply = function () {
 		
-		function initTimeline() {
+		function initBars() {
 			
 			function initAxis() {
 			
@@ -380,7 +380,7 @@ TT.timeline = function() {
 					.orient("top");
 					
 				p.elements.axis = p.svg.append("g")
-					.attr("class", "timeline_axis")
+					.attr("class", "bars_axis")
 					.attr("id","tl" + id + "_axis")
 					.call(p.axis)
 					.attr("transform", "translate(0," + ( p.view.height - p.view.padding / 2 ) + ")");
@@ -390,7 +390,7 @@ TT.timeline = function() {
 			function initEvents() {
 			
 				p.elements.events = p.svg.insert("g")
-					.attr("class", "timeline_events")
+					.attr("class", "bars_events")
 					.attr("id", "tl" + id + "_events");
 					
 			}
@@ -414,12 +414,12 @@ TT.timeline = function() {
 					.y(y)
 					.scaleExtent( p.scales.minMax.zoom.domain() );
 									
-				p.svg.select(".timeline_events").insert("rect",":first-child")
+				p.svg.select(".bars_events").insert("rect",":first-child")
 					.attr("width", p.view.width)
 					.attr("height", p.view.height)
 					.attr("class","overlay");
 					
-				p.svg.select(".timeline_events").call( zoom.on("zoom", doZoom) ).on("dblclick.zoom", null);
+				p.svg.select(".bars_events").call( zoom.on("zoom", doZoom) ).on("dblclick.zoom", null);
 				
 			}
 			
@@ -450,7 +450,7 @@ TT.timeline = function() {
 			
 		}
 		
-		initTimeline();
+		initBars();
 		
 		initialised = true;
 		

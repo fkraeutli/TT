@@ -10,7 +10,7 @@ loadDataset = TATE ;
 
 var currentYear = new Date().getFullYear(),
 	dataset = [],
-	timeline,
+	bars,
 	urls = ["data/works.js", "http://otis.local:8888/Tate/allartists.js", "http://otis.local:8888/Tate/allartworks.js", "http://otis.local:8888/ltm/data/Johnston-Data.json"];
 	
 $j = jQuery.noConflict();
@@ -374,7 +374,7 @@ function make() {
 		
 	TT.observer.make(cf);		
 
-	timeline = TT.timeline().data(dataset);
+	timeline = TT.bars().data(dataset);
 	
 	d3.select("svg#timeline")
 		.attr("class", "timeline")
