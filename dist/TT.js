@@ -1168,7 +1168,7 @@ TT.heap = function() {
 				
 				if( d.length > 0) {
 					path.push( "L", x( d[ d.length-1 ][nmsp].x ), ",", y( d[ d.length-1 ][nmsp].y ) );	
-					path.unshift( "L", x( d[ 0 ][nmsp].x ), ",", y( d[ 0 ][nmsp].y ) );	
+					path.unshift( "L", x( d[ 0 ][nmsp].x ), ",", y( d[ 0 ][nmsp].y ) ); 
 				}
 				
 			}

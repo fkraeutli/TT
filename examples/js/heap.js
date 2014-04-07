@@ -11,7 +11,7 @@ loadDataset = TATEART;
 var currentYear = new Date().getFullYear(),
 	dataset = [],
 	heap,
-	urls = ["data/works.js", "http://otis.local:8888/Tate/allartists.js", "http://otis.local:8888/Tate/artwork_data.csv", "http://otis.local:8888/ltm/data/Johnston-Data.json"];
+	urls = ["data/works.js", "../../Tate/allartists.js", "../../Tate/artwork_data.csv", "../../ltm/data/Johnston-Data.json"];
 	
 $j = jQuery.noConflict();
 
@@ -356,8 +356,8 @@ function make() {
 	
 	d3.select("svg#heap")
 		.attr("class", "heap")
-		.attr("width", 1280)
-		.attr("height", 600)
+		.attr("width", $j("body").width())
+		.attr("height", $j("body").height())
 		.call(heap);
 			
 	

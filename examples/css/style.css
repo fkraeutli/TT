@@ -2,8 +2,11 @@ body {
   font-family: "Franklin Gothic Book", "Franklin Gothic", Verdana, sans-serif;
   font-size: 12px;
   margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+#mainExample {
   padding: 1em;
-  width: 1220px;
   margin: auto;
 }
 #leftCol {
