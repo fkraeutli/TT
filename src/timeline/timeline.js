@@ -157,8 +157,6 @@ TT.timeline = function() {
 		p.view.width = +p.svg.attr("width");
 		p.view.height = +p.svg.attr("height");
 		
-		console.log(p.view);
-		
 		initTimeline();
 		
 		initialised = true;
@@ -192,6 +190,13 @@ TT.timeline = function() {
 				.range( [ p.view.from.valueOf(), p.view.to.valueOf() ] );
 		}
 		
+		function updateSVG() {
+					
+			p.svg.attr("width", p.view.width);
+			p.svg.attr("height", p.view.height);
+		
+		}
+		
 		function updateZoom() {
 															
 			p.svg.select(".overlay")
@@ -199,10 +204,8 @@ TT.timeline = function() {
 				.attr("height", p.view.height);
 				
 		}
-		
-		p.svg.attr("width", p.view.width);
-		p.svg.attr("height", p.view.height);
-		
+
+		updateSVG();		
 		updateScales();
 		updateAxis();
 		updateZoom();
