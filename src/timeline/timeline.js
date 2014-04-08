@@ -164,7 +164,7 @@ TT.timeline = function() {
 					.attr("height", p.view.height)
 					.attr("class","overlay");
 					
-				p.svg.select(".overlay").call( zoom.on("zoom", doZoom) );
+				p.svg.select(".overlay").call( zoom.on("zoom", doZoom) ).on( "dblclick.zoom", null);
 				
 			}
 							
