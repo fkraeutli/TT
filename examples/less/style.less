@@ -16,20 +16,50 @@ body {
 	font-family: "Franklin Gothic Book", "Franklin Gothic", Verdana, sans-serif;
 	font-size: 12px;
 	margin: 0;
-	padding: 1em;
-	width:1220px;
-	margin: auto;
+	padding: 0;
+}
+
+#mainExample {
+	padding: 0;
 }
 
 #leftCol {
-	float: left;
+	position: fixed;
+	top:20px;
+	left:20px;
 	width:800px;
 	margin-right: 20px;
+	
+	.status {
+		background: #efefef;
+		padding: .5em;
+		text-align: center;
+	}
 }
 
 #rightCol {
-	float: left;
+	margin-left: 840px;
+	margin-top: 20px;
 	width:400px;
+	
+	div.reset{
+		
+		width:100%;
+		margin-bottom: 1em;
+		
+		a {
+			cursor: pointer;
+			font-weight: normal;
+			padding: .5em;
+			background: @colBarBackground;
+			color: black;
+			text-decoration: none;
+			text-align: center;
+			display: block;
+		}
+	}
+			
+
 }
 
 #crossfilter {
@@ -162,11 +192,11 @@ body {
 	
 }
 
-svg.timeline {
+svg.timeline, svg.heap, svg.histogram {
 
 	margin-right: 2em;
 	
-	.timeline_axis {
+	.timeline_axis, .heap_axis, .histogram_axis {
 		path {
 			fill:none;
 		}
@@ -217,13 +247,24 @@ svg.timeline {
 		}
 	}
 	
+	.heap_events, .histogram_events {
+		circle {
+			fill: @eventBarColor;
+		}
+	}
+	
+	.heap_outline {
+		fill: @eventBarColor;
+		opacity: 0.5;
+	}
+	
 	.overlay {
 		fill:none;
 		pointer-events: all;
 	}
 	
 	
-	.timeline_axis {
+	.timeline_axis, .heap_axis, .histogram_axis {
 		
 		line, path {
 			stroke: @colAxisStroke;

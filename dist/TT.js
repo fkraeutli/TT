@@ -808,7 +808,600 @@ var  TT = {
 String.prototype.ucfirst = function() {
     return this.charAt(0).toUpperCase() + this.slice(1);
 };
-;TT.observer = {
+;/*
+
+Generates heap view on array of data
+
+data format: {
+
+	id: "",
+	from: Date(),
+	to: Date()
+
+}
+
+
+*/
+
+TT.heap = function() {
+	
+	if(!TT.heap.id) TT.heap.id = 0;
+	
+	var	initialised = false,
+		id = TT.heap.id++,
+		me = {},
+		heap = this,
+		nmsp = "hp_" + id,
+		zoom;
+	
+	var p = {
+		
+		axis: {},
+		
+		data: [],
+		
+		elements: {
+			
+		},
+		
+		format: {
+			
+			year: d3.time.format("%Y"),
+			date: d3.time.format("%d %b %Y")
+			
+		},
+		
+		grid: {
+			
+			availableWidth: null,
+			maxRow: 0,
+			numCols: null,
+			initialised: false,
+			range: null,
+			resolution: null,
+			table: []
+			
+		},
+		
+		scales: {
+			
+			minMax: {
+				
+				// Update zoom extent here
+				
+				zoom: d3.scale.linear()
+					.domain( [0.5, 240] ) 
+					.range( [0, 1] )
+				
+			}
+			
+		},
+		
+		styles: {
+			
+			events: {
+				diameter: 1
+			},
+			
+			images: {
+				factor: 1
+			}
+		},
+		
+		thresholds: {
+			
+			display: 2000, // amount of events
+			images: 30 // zoom factor
+			
+		},
+		
+		view: {
+			
+			from: new Date( 1900 , 0, 1 ),
+			to: new Date( 2000 , 0, 1 ),
+			
+			width: 800,
+			height: 600,
+			
+			padding: 40
+			
+		},
+		zoom: {
+			factor: 1
+		}	
+	};
+	
+	// REMOVE
+	test_heap_p  = p;
+	
+	var attr = {
+		
+		axis: {
+		
+			tickFormat: function (d) {
+				if( Math.round( (p.axis.scale().domain()[1].getFullYear() - p.axis.scale().domain()[0].getFullYear()) / p.axis.ticks()) >= 1 ) { // If there is not more than one tick per year represented
+					return p.format.year(d);
+				} else {
+					return p.format.date(d);
+				}
+			}
+			
+		},
+		
+		event: {
+			
+			circle: {
+				
+				cx: -p.styles.events.diameter / 2,
+				
+				cy: -p.styles.events.diameter / 2,
+				
+				fill: function (d) {
+					return d.color || null;	
+				},
+			
+				r: function() { return Math.min(10, p.zoom.factor) * p.styles.events.diameter / 2; }
+				
+			},
+			
+			transform: function (d)  {
+			
+				return "translate(" + x(d[nmsp].x) + "," + y(d[nmsp].y) + ")";
+				
+			}
+			
+		}
+
+	};
+			
+	// Init scales used for panning and zooming
+	var x, y;
+	
+	// Private functions
+	
+	function doZoom() {
+		
+		if(d3.event)
+			p.zoom.factor = d3.event.scale;
+		
+		var ax = p.svg.select(".heap_axis");
+		
+		p.scales.axis.domain( [ p.scales.pxToDate( x.domain()[0] ), p.scales.pxToDate( x.domain()[1] ) ] );
+		
+		update();
+		
+		ax.call(p.axis);
+		
+	}
+	
+	function update() {		
+	
+		function createEventsAppearance(events) {
+			
+			// Circle
+			events.append("circle")
+				.attr("class", "eventCircle")
+				.attr("cx", attr.event.circle.cx)
+				.attr("cy", attr.event.circle.cy)
+				.attr("r", attr.event.circle.r)
+				.style("fill", attr.event.circle.fill);
+				
+		}
+		
+		function filterEvents(d) { 
+		
+			/*
+			
+			Remove data
+			- If the item is completely outside of the viewable area
+			
+			*/
+		
+			return x(d[nmsp].x)  >= 0 &&
+				x(d[nmsp].x) <= p.view.width &&
+				y(d[nmsp].y) > -p.styles.events.diameter && 
+				y(d[nmsp].y) < p.view.height;
+				
+		}
+		
+		function updateDataValues() {
+		
+			if (p.grid.initialised) return false;
+					
+			function makeGrid() {
+				
+				p.grid.availableWidth = p.scales.dateToPx(p.view.to) - p.scales.dateToPx(p.view.from);
+				p.grid.numCols = Math.floor( p.grid.availableWidth / p.styles.events.diameter );
+					
+				p.grid.range = p.view.to - p.view.from;
+				p.grid.resolution = p.grid.range / p.grid.numCols;
+				
+				p.grid.table = [];
+				
+				for( var i = 0; i < p.grid.numCols; i++ ) {
+					
+					p.grid.table[i] = Array();
+					
+				}
+				
+				p.grid.maxRow = 0;
+						
+				// Set initial parameters
+				p.data.forEach( function(d) {
+					
+					// Select initial column and row
+					d[nmsp].col = d[nmsp].initCol = Math.min( Math.floor( ( (d.from.valueOf() + ( d.to.valueOf() - d.from.valueOf() ) / 2) - p.view.from.valueOf() ) / p.grid.resolution ), p.grid.numCols - 1);		
+
+					// Define tolerance columns based on from/to dates;
+					d[nmsp].minCol = Math.max( Math.floor( ( d.from.valueOf() - p.view.from.valueOf() ) / p.grid.resolution ), 0); // Lowest possible column or zero
+					d[nmsp].maxCol = Math.min( Math.ceil( ( d.to.valueOf() - p.view.from.valueOf() ) / p.grid.resolution ), p.grid.numCols - 1); // Highest possible column or maxiumum
+					
+					// Generate array for candidate column selection
+					d[nmsp].candidateCols = d3.range( d[nmsp].initCol, d[nmsp].minCol - 1, -1 ).concat( d3.range( d[nmsp].initCol + 1, d[nmsp].maxCol + 1 ) );
+				
+					// Add item to row smallest row
+					var minRow = p.grid.maxRow;
+					
+					for( var i = 0; i < d[nmsp].candidateCols.length; i++ ) {	
+						
+						if ( p.grid.table[ d[nmsp].candidateCols[i] ].length  < minRow) {
+							d[nmsp].col = d[nmsp].candidateCols[i];
+							minRow = p.grid.table[ d[nmsp].candidateCols[i] ].length;
+						}
+						
+					}
+					d[nmsp].row = minRow;
+					
+					// Add to grid
+					p.grid.table[ d[nmsp].col ][ d[nmsp].row ] = d;
+					
+					if (minRow == p.grid.maxRow) {
+						p.grid.maxRow++;
+					}
+
+				} );
+				
+				
+			}
+			// Initialise heap grid
+			makeGrid();	
+			
+			// Translate columns and rows to x,y coordinates
+			p.data.forEach( function(d) {
+				
+				d[nmsp].x = p.scales.dateToPx( d[nmsp].col * p.grid.resolution + p.view.from.valueOf() );
+				
+				var displace = p.grid.table[ d[nmsp].col ].length * p.styles.events.diameter / 2  + p.view.height / 2 ;
+				d[nmsp].y = -d[nmsp].row * p.styles.events.diameter + displace - displace % p.styles.events.diameter;
+				
+			});
+			
+			p.grid.initialised = true;
+		}
+		
+		function updateEventsAppearance(events) {
+		
+			events.select("circle.eventCircle")
+				.attr("r", attr.event.circle.r)
+				.style("fill", attr.event.circle.fill);
+						
+		}		
+		
+		function updateEventsImages(events) {
+			
+			if(p.zoom.factor > p.thresholds.images) {
+				
+				events.filter(function(d) { return !d.hasImage && d.thumbnailUrl; }).append("image")
+					.attr("xlink:href", function(d) {
+						d.hasImage = true;
+						return d.thumbnailUrl;
+					});
+					
+				events.selectAll("image")
+					.attr("x", -p.zoom.factor / 2 * p.styles.images.factor)
+					.attr("y", -p.zoom.factor / 2 * p.styles.images.factor)
+					.attr("width", p.zoom.factor * p.styles.images.factor + "px")
+					.attr("height", p.zoom.factor * p.styles.images.factor + "px");
+				
+			} else {
+			
+				events.selectAll("image").remove();
+				events.each( function(d) { d.hasImage = false; } );
+				
+			}
+			
+		}
+		
+		if ( !initialised ) return false;
+	
+		updateDataValues();
+		
+		// Draw events
+		var eventData = p.data.filter(filterEvents);
+		
+		// Draw no events if too many would be visible
+		if(eventData.length > p.thresholds.display) {
+			eventData = [];
+		}
+		
+		var events = p.elements.events.selectAll("g.heap_event")
+			.data( eventData, function(d) {return d.id;} );
+		
+		// Add new events
+		var eventsEnter = events.enter()
+			.append("g")
+			.attr("id", function(d) {
+					return "hs" + id + "_event_" + d.id;
+				})
+			.attr("class", "heap_event")
+			.attr("transform", attr.event.transform)
+			.on("click", function(d) { console.log(d); })
+			.each(function(d) { d.hasImage = false; } );
+			
+		// Add event appearance
+		createEventsAppearance( eventsEnter );
+		
+		// Update events
+		events.attr("transform", attr.event.transform);
+		
+		// Update event appearance
+		updateEventsAppearance(events);
+		
+		// Remove events
+		events.exit().remove();
+		
+		// Add or update images
+		updateEventsImages(events);
+		
+		// Draw outline
+		p.elements.outline.attr("d", function() {
+
+			var path = [],
+				i = -1,
+				n = p.grid.table.length,
+				d;
+				
+			// Generate path part per value				
+			while (++i < n) {
+				
+				d = p.grid.table[i];
+				
+				if( d.length > 0) {
+					
+					path.push( "S", x( d[ d.length-1 ][nmsp].x - p.styles.events.diameter/2 ), ",", y( d[ d.length-1 ][nmsp].y ), " ", x( d[ d.length-1 ][nmsp].x ), ",", y( d[ d.length-1 ][nmsp].y ) );	
+					path.unshift( "S", x( d[ 0 ][nmsp].x + p.styles.events.diameter/2 ), ",", y( d[ 0 ][nmsp].y ) , " " , x( d[ 0 ][nmsp].x ), ",", y( d[ 0 ][nmsp].y ) ); 
+					
+					//path.push( "L", x( d[ d.length-1 ][nmsp].x ), ",", y( d[ d.length-1 ][nmsp].y ) );	
+					//path.unshift( "L", x( d[ 0 ][nmsp].x ), ",", y( d[ 0 ][nmsp].y ) ); 
+				}
+				
+			}
+			path.unshift( "M", path[1], ",", path[3] );
+			path.push("Z");
+			
+			return path.join("");
+			
+		})
+		.attr("display", function() {
+			
+			return eventData.length > 0 ? "none" : "";
+			
+		});
+	
+	}
+	
+	function updateMinMax() {
+		
+		if(p.data) {
+			var minFrom = d3.min( p.data, function(d) { return d.from; } ),
+				maxTo = d3.max( p.data, function(d) { return d.to; } );
+					
+			p.view.from = minFrom;//new Date( minFrom.valueOf() - 0.2 * (maxTo.valueOf() - minFrom.valueOf()) );
+			p.view.to = maxTo;//new Date( maxTo.valueOf() + 0.2 * (maxTo.valueOf() - minFrom.valueOf()) );
+		}
+	}
+
+
+	// Initialiser
+	me.apply = function () {
+		
+		function initHeap() {
+			
+			function initAxis() {
+			
+				p.scales.axis = d3.time.scale()
+					.domain( [ p.scales.pxToDate( x.domain()[0] ), p.scales.pxToDate( x.domain()[1] ) ] )
+					.range( [0, p.view.width] );
+				
+				p.axis = d3.svg.axis()
+					.scale(p.scales.axis)
+					.tickSize(p.view.height - p.view.padding)
+					.tickFormat(attr.axis.tickFormat)
+					.orient("top");
+					
+				p.elements.axis = p.svg.append("g")
+					.attr("class", "heap_axis")
+					.attr("id","hs" + id + "_axis")
+					.call(p.axis)
+					.attr("transform", "translate(0," + ( p.view.height - p.view.padding / 2 ) + ")");
+					
+			}
+			
+			function initEvents() {
+			
+				p.elements.outline = p.svg.insert("g")
+					.attr("class", "heap_outline")
+					.attr("id", "hs" + id + "_outline")
+					.append("path");
+					
+				p.elements.events = p.svg.insert("g")
+					.attr("class", "heap_events")
+					.attr("id", "hs" + id + "_events");
+					
+			}
+				
+			function initScales() {
+			
+			
+				x = d3.scale.linear()
+					.domain([0, p.view.width])
+					.range([0, p.view.width ]);
+				
+				y = d3.scale.linear()
+					.domain([0, p.view.height])
+					.range([0, p.view.height]);
+					
+
+			
+				p.scales.dateToPx = d3.scale.linear()
+					.domain( [ p.view.from.valueOf(), p.view.to.valueOf() ] )
+					.range( [ p.view.padding, p.view.width - p.view.padding ] );
+					
+				p.scales.pxToDate = d3.scale.linear()
+					.domain( [ p.view.padding, p.view.width - p.view.padding ] )
+					.range( [ p.view.from.valueOf(), p.view.to.valueOf() ] );
+					
+			}	
+			
+			function initZoom() {						
+				
+				zoom = d3.behavior.zoom()
+					.x(x)
+					.y(y)
+					.scaleExtent( p.scales.minMax.zoom.domain() );
+									
+				p.svg.select(".heap_events").insert("rect",":first-child")
+					.attr("width", p.view.width)
+					.attr("height", p.view.height)
+					.attr("class","overlay");
+					
+				p.svg.select(".heap_events").call( zoom.on("zoom", doZoom) );
+				
+			}
+			
+							
+			initScales();
+			initEvents();
+			initAxis();
+			initZoom();	
+			
+		}
+		
+		// Update parameters
+		
+		p.svg = arguments[0];
+
+		p.view.width = +p.svg.attr("width");
+		p.view.height = +p.svg.attr("height");
+		
+		console.log(p.view);
+		
+		updateMinMax();
+		initHeap();
+		
+		initialised = true;
+		
+		update();
+		
+	};
+
+	// Accessors
+	me.data = function(_) {
+		if( !arguments.length ) return p.data;
+		p.data = _;
+		
+		p.data.forEach( function(d) {
+			if( !d.hasOwnProperty(nmsp) ) {
+				d[nmsp] = {};
+			}
+		});
+		
+		p.grid.initialised = false;
+		
+		updateMinMax();
+		
+		if(initialised) {
+			update();
+		}
+		
+		return me;
+	};
+	
+	me.update = function() {
+		doZoom();
+	};
+	
+	// Linking accessors	
+	me.x = function(_) {
+		if( !arguments.length ) return x;
+		x = _;
+		
+		return me;
+	};
+		
+	me.y = function(_) {
+		if( !arguments.length ) return y;
+		y = _;
+		
+		return me;
+	};
+	
+	me.styles = {};
+	
+	me.styles.events = function(name, value) {
+		
+		if (arguments.length < 2) {
+		
+			if(typeof name === "string") {
+				return p.styles.events[name];
+			} else if (typeof name === "object") {
+			
+				for(var i in name) {				
+					p.styles.events[i] = name[i];
+				}
+				
+			}
+		
+		} else {
+			
+			p.styles.events[name] = value;
+		}
+		
+		p.grid.initialised = false;
+		update();
+		
+		return me;
+		
+	};
+
+	me.threshold = function(name, value) {
+		
+		if (arguments.length < 2) {
+		
+			if(typeof name === "string") {
+				return p.thresholds[name];
+			} else if (typeof name === "object") {
+			
+				for(var i in name) {				
+					p.thresholds[i] = name[i];
+				}
+				
+			}
+		
+		} else {
+			
+			p.thresholds[name] = value;
+		}
+		
+		update();
+		
+		return me;
+		
+	};
+	
+	return me;
+	
+};;TT.observer = {
 
 	addSubscriber: function(callback) {
 		this.subscribers[this.subscribers.length] = callback;
@@ -862,16 +1455,18 @@ TT.timeline = function() {
 	
 	var	initialised = false,
 		id = TT.timeline.id++,
+		nmsp = "tl_" + id,
 		me = {},
 		timeline = this,
 		zoom;
 		
-	//var 
-	p = {
+	var p = {
 		
 		axis: {},
 		
 		data: [],
+		
+		displayData: [],
 		
 		elements: {},
 		
@@ -891,10 +1486,6 @@ TT.timeline = function() {
 				weight: d3.scale.linear()
 					.domain( [0, 1] )
 					.range( [0, 1] ),
-					
-				works: d3.scale.linear()
-					.domain([0, 1])
-					.range([0, 1]),
 				
 				// Update zoom extent here
 				
@@ -920,8 +1511,9 @@ TT.timeline = function() {
 		
 		thresholds: {
 			
-			collapse: 0.6,
-			display: 0.2	
+			collapse: 0.5,
+			display: 0.1,
+			showAll: 10 // Show all events below if total number is below this	
 			
 		},
 		
@@ -936,14 +1528,13 @@ TT.timeline = function() {
 			
 			ys: [0]
 			
-		},
-		
-		zoom: {
-			factor: 1	
 		}
 		
 		
 	};
+	
+	// REMOVE
+	test_timeline_p = p;
 	
 	var attr = {
 		
@@ -967,12 +1558,12 @@ TT.timeline = function() {
 				},
 			
 				height: function (d) {
-						return Math.min(d.height * p.zoom.factor, d.height) + "px";	
+						return Math.min(d[nmsp].height * zoom.scale(), d[nmsp].height) + "px";	
 				},
 				
 				width: function (d) {
 				
-					return (d.width * p.zoom.factor) + "px";
+					return (d[nmsp].width * zoom.scale()) + "px";
 					
 				}
 			},
@@ -980,24 +1571,24 @@ TT.timeline = function() {
 			text: {
 			
 				anchor: function (d) {		
-					return p.zoom.factor >= p.thresholds.collapse && d.width * p.zoom.factor > d.title.length * p.styles.events.fontSize ? "start" : "end";	
+					return zoom.scale() >= p.thresholds.collapse && d[nmsp].width * zoom.scale() > d.title.length * p.styles.events.fontSize ? "start" : "end";	
 				},
 				
 				display: function (d) {
-					return d.renderLevel > p.thresholds.collapse ? "block" : "none";	
+					return d[nmsp].renderLevel > p.thresholds.collapse ? "block" : "none";	
 				},
 				
 				fontSize: p.styles.events.fontSize + "px",
 				
 				x: function (d) {
-					return (d.width * p.zoom.factor > d.title.length * p.styles.events.fontSize) ? (x(d.x) < 0 && x(d.x) + d.width * p.zoom.factor > 0 ? p.styles.events.padding + -1*x(d.x) : p.styles.events.padding) : -p.styles.events.padding;
+					return (d[nmsp].width * zoom.scale() > d.title.length * p.styles.events.fontSize) ? (x(d[nmsp].x) < 0 && x(d[nmsp].x) + d[nmsp].width * zoom.scale() > 0 ? p.styles.events.padding + -1*x(d[nmsp].x) : p.styles.events.padding) : -p.styles.events.padding;
 				},
 				
 				y: p.styles.events.height * 0.75
 			},
 			
 			transform: function (d)  {
-				return "translate(" + x(d.x) + "," + (d.y + y(0)) + ")";
+				return "translate(" + x(d[nmsp].x) + "," + (d[nmsp].y + y(0)) + ")";
 			}
 		},
 
@@ -1015,8 +1606,6 @@ TT.timeline = function() {
 	// Private functions
 	
 	function doZoom() {
-		
-		p.zoom.factor = d3.event.scale;
 		
 		var events = p.elements.events.selectAll("g.timeline_event");
 		var ax = p.svg.select(".timeline_axis");
@@ -1063,11 +1652,11 @@ TT.timeline = function() {
 			
 			*/
 		
-			return d.renderLevel >= p.thresholds.display  &&
-				x(d.x) + d.width * p.zoom.factor >= 0 &&
-				x(d.x) <= p.view.width &&
-				d.y + y(0) > -p.styles.events.height && 
-				d.y + y(0) < p.view.height;
+			return d[nmsp].renderLevel >= p.thresholds.display  &&
+				x(d[nmsp].x) + d[nmsp].width * zoom.scale() >= 0 &&
+				x(d[nmsp].x) <= p.view.width &&
+				d[nmsp].y + y(0) > -p.styles.events.height && 
+				d[nmsp].y + y(0) < p.view.height;
 				
 		}
 				
@@ -1076,7 +1665,7 @@ TT.timeline = function() {
 			function computeRenderLevel(data, attribute) {
 				
 				if(data.weight) {
-					return Math.pow( p.scales.minMax.works(data.weight), 0.02 / p.scales.minMax.zoom(p.zoom.factor) ) + p.scales.minMax.zoom(p.zoom.factor); 
+					return Math.pow( p.scales.minMax.weight(data.weight), 0.01 / p.scales.minMax.zoom(zoom.scale()) ) + p.scales.minMax.zoom(zoom.scale()); 
 				} else {
 					return 0;
 				}
@@ -1085,16 +1674,16 @@ TT.timeline = function() {
 
 			p.data.forEach(function(d) {
 				
-				d.renderLevel = computeRenderLevel(d);
+				d[nmsp].renderLevel = computeRenderLevel(d);
 					
 			});
 			
-			// If only one item is visible or all have the same level they should automatically get displayed
+			// If only a defined number of items are visible or all have the same level they should automatically get displayed
 			
-			if( p.data.length == 1 || d3.min( p.data, function(d) {return d.renderLevel;} ) == d3.max( p.data, function(d) {return d.renderLevel;} ) ) {
+			if( p.data.length <= p.thresholds.showAll || d3.min( p.data, function(d) {return d[nmsp].renderLevel;} ) == d3.max( p.data, function(d) {return d[nmsp].renderLevel;} ) ) {
 			
 				p.data.forEach( function(d) {
-					d.renderLevel = 1;		
+					d[nmsp].renderLevel = 1;		
 				} );
 			
 			}				
@@ -1103,47 +1692,31 @@ TT.timeline = function() {
 			
 			p.data.forEach(function(d) {	
 			
-				if( d.renderLevel > p.thresholds.display ) {
+				if( d[nmsp].renderLevel >= p.thresholds.display ) {
 				
-					d.x = p.scales.dateToPx(d.from.valueOf());
-					d.width = ( p.scales.dateToPx(d.to.valueOf()) - p.scales.dateToPx(d.from.valueOf()) );
+					d[nmsp].x = p.scales.dateToPx(d.from.valueOf());
+					d[nmsp].width = ( p.scales.dateToPx(d.to.valueOf()) - p.scales.dateToPx(d.from.valueOf()) );
 					
-					d.height = d.renderLevel < p.thresholds.collapse ? p.styles.events.collapsedHeight : p.styles.events.height;
-					d.margin = d.renderLevel < p.thresholds.collapse ? p.styles.events.collapsedMargin : p.styles.events.margin;
+					d[nmsp].height = d[nmsp].renderLevel < p.thresholds.collapse ? p.styles.events.collapsedHeight : p.styles.events.height;
+					d[nmsp].margin = d[nmsp].renderLevel < p.thresholds.collapse ? p.styles.events.collapsedMargin : p.styles.events.margin;
 					
 					if(count === 0) {
 					
-						d.y = p.view.padding;
+						d[nmsp].y = p.view.padding;
 						
 					} else {
 					
-						d.y = p.view.ys[count - 1] + d.margin;
+						d[nmsp].y = p.view.ys[count - 1] + d[nmsp].margin;
 						
 					}
 					
-					p.view.ys[count] = d.y + d.height;
+					p.view.ys[count] = d[nmsp].y + d[nmsp].height;
 					
 					count++;
 					
 				} 
 				
-				/*
-				else {
-				
-					d.x = p.scales.dateToPx(d.from.valueOf());
-					d.width = (p.scales.dateToPx(d.to.valueOf()) - p.scales.dateToPx(d.from.valueOf()));
-								
-					d.height = 1;
-					d.margin = 1;
-					
-					if(count === 0) {
-						d.y = p.view.padding;
-					} else {
-						d.y = p.view.ys[count - 1] + d.margin;
-					}
-					
-				}
-				*/
+
 			});
 		}
 		
@@ -1167,11 +1740,11 @@ TT.timeline = function() {
 		
 		updateDataValues();
 		
-		test_pdata = p.data; // REMOVE THIS, only for testing expose p.data to global namespace
+		p.displayData = p.data.filter( filterEvents );
 		
 		var events = p.elements.events.selectAll("g.timeline_event")
-			.data(p.data.filter(filterEvents), function(d) { return d.id; });
-			
+			.data( p.displayData, function(d) { return d.id; } );
+						
 		// Update events
 		events.attr("transform", attr.event.transform);
 		
@@ -1186,7 +1759,16 @@ TT.timeline = function() {
 				})
 			.attr("class", "timeline_event")
 			.attr("transform", attr.event.transform)
-			.on("click", function(d) { console.log(d); });
+			.on("click", function(d) { 
+				console.log(d); 
+			})
+			.on("dblclick", function(d) {
+				
+				if(d.url) {
+					window.open( d.url );
+				}
+				
+			});
 	
 		// Add event appearance
 		createEventsAppearance(eventsEnter);
@@ -1194,13 +1776,23 @@ TT.timeline = function() {
 		// Remove events
 		events.exit().remove();
 		
-		
+		publishUpdate();
 	}
 	
 	function updateMinMax() {
 		
 		// Updates the scales used for semantic zooming
-		p.scales.minMax.works.domain([ d3.min( p.data, function(d) {return d.weight ? d.weight : 0;} ), Math.min(300, d3.max( p.data, function(d) {return d.weight ? d.weight : 0;} )) ]);
+		p.scales.minMax.weight.domain([ d3.min( p.data, function(d) {return d.weight ? d.weight : 0;} ), Math.min(300, d3.max( p.data, function(d) {return d.weight ? d.weight : 0;} )) ]);
+		
+	}
+
+	function publishUpdate() {
+		
+		if(me.hasOwnProperty("publish")) {	
+			
+			me.publish( p.displayData );
+
+		}
 		
 	}
 
@@ -1261,7 +1853,7 @@ TT.timeline = function() {
 					.attr("height", p.view.height)
 					.attr("class","overlay");
 					
-				p.svg.select(".timeline_events").call( zoom.on("zoom", doZoom) );
+				p.svg.select(".timeline_events").call( zoom.on("zoom", doZoom) ).on("dblclick.zoom", null);
 				
 			}
 			
@@ -1296,7 +1888,6 @@ TT.timeline = function() {
 		
 		initialised = true;
 		
-		updateMinMax();
 		update();
 		
 	};
@@ -1305,9 +1896,47 @@ TT.timeline = function() {
 	me.data = function(_) {
 		if( !arguments.length ) return p.data;
 		p.data = _;
+				
+		p.data.forEach( function(d) {
+			if( !d.hasOwnProperty(nmsp) ) {
+				d[nmsp] = {};
+			}
+		});
 		
 		updateMinMax();
 		update();
+		
+		return me;
+	};
+
+	me.displayData = function() {
+		
+		return p.displayData;
+
+	};
+	
+	me.update = function() {
+		update();
+	};
+	
+	// Linking accessors
+	me.x = function(_) {
+		if( !arguments.length ) return x;
+		x = _;
+		
+		return me;
+	};
+		
+	me.y = function(_) {
+		if( !arguments.length ) return y;
+		y = _;
+		
+		return me;
+	};
+	
+	me.zoom = function(_) {
+		if( !arguments.length ) return zoom;
+		zoom = _;
 		
 		return me;
 	};

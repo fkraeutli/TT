@@ -155,10 +155,10 @@ d3.json(urls[loadDataset], function(error, data) {
 					
 						d[attribute + "_orig"] = d[attribute];
 						
-						if(d[attribute] instanceof String) {
+						if(d[attribute].replace) {
 							d[attribute] = d[attribute].replace(/BST/, "GMT");						
 						}
-						d[attribute] = new Date(d[attribute]);
+						d[attribute] = new Date( d[attribute] );
 						
 					} else if( d[attribute] == +d[attribute] ) {
 						
@@ -187,7 +187,9 @@ d3.json(urls[loadDataset], function(error, data) {
 						
 					}
 					
-					dataset.push(d);
+					if( !isNaN( d.from.valueOf() ) && !isNaN( d.to.valueOf() )) {
+						dataset.push(d);
+					}
 					
 				}
 				
@@ -256,14 +258,6 @@ d3.json(urls[loadDataset], function(error, data) {
 
 function make() {
 
-	timeline = TT.timeline().data(dataset);
-	
-	d3.select("svg#timeline")
-		.attr("class", "timeline")
-		.attr("width", 800)
-		.attr("height", 900)
-		.call(timeline);
-			
 	cf = TT.crossfilter().data(dataset);
 	
 	if(loadDataset === TATE) {
@@ -273,13 +267,13 @@ function make() {
 			dimension: "from", 
 			group: d3.time.year 
 		});
-			
-		cf.addFilter({
-			title: "Year died",
-			dimension: "to",
-			group: d3.time.year 
-		});
 		
+		cf.addFilter({
+			title: "Age",
+			dimension: function(d) {
+				return d.to.getFullYear() - d.from.getFullYear();
+			}
+		});
 		
 		cf.addFilter({
 			title: "Number of works (log)",
@@ -309,7 +303,7 @@ function make() {
 			} 
 		} )
 	
-	} else if (loadDataset = TATEART) {
+	} else if (loadDataset === TATEART) {
 		
 		cf.addFilter({
 			title: "Year",
@@ -378,69 +372,57 @@ function make() {
 	d3.select("#crossfilter")
 		.call(cf);	
 		
-	TT.observer.make(cf);
+	TT.observer.make(cf);		
+
+	timeline = TT.timeline().data(dataset);
+	
+	d3.select("svg#timeline")
+		.attr("class", "timeline")
+		.attr("width", 800)
+		.attr("height", 900)
+		.call(timeline);
 	
 	cf.addSubscriber(function(data) {
+	
 		timeline.data(data);
+	
 	})
 	
-	cf.forcePublish()
+	TT.observer.make(timeline);
+
+	timeline.addSubscriber(function(displayData) {
 		
-	// Make slider
-	$j( "#slider_threshold" ).rangeSlider( {
-		 
-		bounds: { min: 0.001, max: 0.999 },
-		defaultValues: {
-			min: timeline.threshold("display"),	
-			max: timeline.threshold("collapse")
-		},
-		formatter:function(val){
-	        var value = Math.round(val * 100) / 100,
-				decimal = value - Math.round(val);
-			return decimal == 0 ? value.toString() + ".0" : value.toString();
-		},
-		step: 0.01
+		var shown = displayData.length;
+		var hidden =  timeline.data().length - displayData.length;
 		
-	} ).on("valuesChanging", function(e, data){
+		var message = "";
+		
+		if( hidden > 0) {
+			message = shown + " artists in view (" + hidden + " more currently hidden)";
+			$j("#leftCol").find(".status").show();
+		} else {			
+			message = shown + " artists in view";
+			$j("#leftCol").find(".status").hide();
+		}
+		
+		$j("#leftCol").find(".status").html(message);
+
+	})
 	
-		timeline.threshold({
-			display: data.values.min,
-      		collapse: data.values.max
+	$j("#resetLink").click( function(e) {
+	
+		e.preventDefault();
+
+		cf.charts().forEach( function(chart) { 
+			chart.reset();
 		});
-	});
+		
+		timeline.zoom().translate([0,0]).scale(1);
+		cf.forcePublish();
+		
+	})
 	
-	
-	/*
-{
-		range: true,
-		min: 0,
-		max: 1,
-		step: 0.01,
-		values: [ timeline.threshold("display"), timeline.threshold("collapse") ],
-		slide: function( event, ui ) {
-			timeline.threshold({
-				display: ui.values[0],
-	      		collapse: ui.values[1]
-	      	});
-		}
-	}
-*/
-	
-	/*
-	$j( "#slider_height" ).slider({
-		min: 0,
-		max: 20,
-		step: 0.1,
-		value:timeline.styles.events("height"),
-		slide: function( event, ui ) {
-			timeline.styles.events({
-				height: ui.value,
-				fontSize: ui.value - 2
-	      	});
-		}
-	});
-	*/
-	
+	cf.forcePublish()	
 }
 
 
