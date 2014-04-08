@@ -1457,7 +1457,7 @@ TT.layout.heap = function() {
 					return d.color || null;	
 				},
 			
-				r: function() { return Math.min(10, zoom.scale()) * p.styles.events.diameter / 2; }
+				r: function() { return Math.min( 10, zoom.scale()) * p.styles.events.diameter / 2; }
 				
 			},
 			
@@ -2098,13 +2098,16 @@ TT.layout.heap = function() {
 					
 				// REMOVE
 				test_timeline_zoom = zoom;
+				
+				p.elements.children = p.svg.insert("g")
+					.attr("class", "timeline_children")
+					.attr("id", nmsp + "_children")
+					.call( zoom.on("zoom", doZoom) ).on( "dblclick.zoom", null);
 														
-				p.svg.insert("rect",":first-child")
+				p.elements.children.insert("rect",":first-child")
 					.attr("width", p.view.width)
 					.attr("height", p.view.height)
 					.attr("class","overlay");
-					
-				p.svg.select(".overlay").call( zoom.on("zoom", doZoom) ).on( "dblclick.zoom", null);
 				
 			}
 							
@@ -2187,7 +2190,7 @@ TT.layout.heap = function() {
 	// Children
 	me.add = function( layout ) {
 		
-		var g = p.svg.insert("g", ":first-child")
+		var g = p.elements.children.append("g")
 			.attr( "id", layout.identifier() );
 		
 		layout.svg( g )

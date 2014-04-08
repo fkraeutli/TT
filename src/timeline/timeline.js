@@ -158,13 +158,16 @@ TT.timeline = function() {
 					
 				// REMOVE
 				test_timeline_zoom = zoom;
+				
+				p.elements.children = p.svg.insert("g")
+					.attr("class", "timeline_children")
+					.attr("id", nmsp + "_children")
+					.call( zoom.on("zoom", doZoom) ).on( "dblclick.zoom", null);
 														
-				p.svg.insert("rect",":first-child")
+				p.elements.children.insert("rect",":first-child")
 					.attr("width", p.view.width)
 					.attr("height", p.view.height)
 					.attr("class","overlay");
-					
-				p.svg.select(".overlay").call( zoom.on("zoom", doZoom) ).on( "dblclick.zoom", null);
 				
 			}
 							
@@ -247,7 +250,7 @@ TT.timeline = function() {
 	// Children
 	me.add = function( layout ) {
 		
-		var g = p.svg.insert("g", ":first-child")
+		var g = p.elements.children.append("g")
 			.attr( "id", layout.identifier() );
 		
 		layout.svg( g )

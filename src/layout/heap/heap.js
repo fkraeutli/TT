@@ -86,7 +86,7 @@ TT.layout.heap = function() {
 					return d.color || null;	
 				},
 			
-				r: function() { return Math.min(10, zoom.scale()) * p.styles.events.diameter / 2; }
+				r: function() { return Math.min( 10, zoom.scale()) * p.styles.events.diameter / 2; }
 				
 			},
 			
