@@ -96,7 +96,7 @@ TT.timeline = function() {
 		
 		p.children.forEach( function(child) {
 			child.update();
-		});
+		} );
 		
 	}
 
@@ -129,19 +129,23 @@ TT.timeline = function() {
 			
 				x = d3.scale.linear()
 					.domain([0, p.view.width])
-					.range([0, p.view.width ]);
+					.range([0, p.view.width]);
 				
 				y = d3.scale.linear()
-					.domain([0, p.view.height])
-					.range([0, p.view.height]);		
+					.domain([0, 1])
+					.range([0, 1]);		
+			
+				// REMOVE
+				test_timeline_x = x;
+				test_timeline_y = y;
 			
 				p.scales.dateToPx = d3.scale.linear()
 					.domain( [ p.view.from.valueOf(), p.view.to.valueOf() ] )
 					.range( [ p.view.padding, p.view.width - p.view.padding ] );
 					
 				p.scales.pxToDate = d3.scale.linear()
-					.domain( [ p.view.padding, p.view.width - p.view.padding ] )
-					.range( [ p.view.from.valueOf(), p.view.to.valueOf() ] );
+					.domain( p.scales.dateToPx.range() )
+					.range( p.scales.dateToPx.domain() );
 					
 			}	
 			
@@ -151,6 +155,9 @@ TT.timeline = function() {
 					.x(x)
 					.y(y)
 					.scaleExtent( p.scales.minMax.zoom.domain() );			
+					
+				// REMOVE
+				test_timeline_zoom = zoom;
 														
 				p.svg.insert("rect",":first-child")
 					.attr("width", p.view.width)
@@ -171,8 +178,8 @@ TT.timeline = function() {
 		
 		p.svg = arguments[0];
 
-		p.view.width = +p.svg.attr("width");
-		p.view.height = +p.svg.attr("height");
+		p.view.width = +p.svg.attr("width") || p.view.width;
+		p.view.height = +p.svg.attr("height") || p.view.width;
 		
 		initTimeline();
 		
@@ -196,15 +203,18 @@ TT.timeline = function() {
 	
 		function updateScales() {
 		
-			x.range([0, p.view.width ]);
+			// update domain (new width times scale)
+			var diff = p.view.width - x.range()[1];
+			x.range([ 0, p.view.width ])
+				.domain( [ x.domain()[0], x.domain()[1] + diff ] );
 			
-			y.range([0, p.view.height ]);		
+			//y.range([0, p.view.height ]);		
 
 			p.scales.dateToPx.domain( [ p.view.from.valueOf(), p.view.to.valueOf() ] )
 				.range( [ p.view.padding, p.view.width - p.view.padding ] );
 				
-			p.scales.pxToDate.domain( [ p.view.padding, p.view.width - p.view.padding ] )
-				.range( [ p.view.from.valueOf(), p.view.to.valueOf() ] );
+			p.scales.pxToDate.domain( p.scales.dateToPx.range() )
+				.range( p.scales.dateToPx.domain() );
 		}
 		
 		function updateSVG() {
@@ -227,7 +237,10 @@ TT.timeline = function() {
 		updateAxis();
 		updateZoom();
 		
-		update();
+			
+		p.children.forEach( function(child) {
+			child.refresh();
+		} );
 		
 	};
 	

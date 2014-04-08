@@ -489,6 +489,15 @@ TT.layout.heap = function() {
 		
 	};
 	
+	me.refresh = function() {
+		
+		p.grid.initialised = false;
+		update();
+		
+		return me;
+		
+	};
+	
 	me.view = function(_) {
 		
 		if( !arguments.length ) return p.view;
