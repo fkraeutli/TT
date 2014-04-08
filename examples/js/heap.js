@@ -193,7 +193,7 @@ if ( loadDataset !== TATEART ) {
 	});
 	
 } else if (loadDataset === TATEART) {
-						
+
 	d3.csv(urls[loadDataset], function(error, data) {
 	
 		if( !error ) {
@@ -347,7 +347,7 @@ function make() {
 		
 	TT.observer.make(cf);
 	
-	heap = TT.heap().data(dataset);
+	heap = TT.layout.heap().data(dataset);
 	
 	
 	if ( loadDataset == BRITTEN || loadDataset == TATE) {

@@ -15,12 +15,12 @@ data format: {
 
 */
 
-TT.bars = function() {
+TT.layout.bars = function() {
 	
-	if(!TT.bars.id) TT.bars.id = 0;
+	if(!TT.layout.bars.id) TT.layout.bars.id = 0;
 	
 	var	initialised = false,
-		id = TT.bars.id++,
+		id = TT.layout.bars.id++,
 		nmsp = "tl_" + id,
 		me = {},
 		bars = this,

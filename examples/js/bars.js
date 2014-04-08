@@ -374,7 +374,7 @@ function make() {
 		
 	TT.observer.make(cf);		
 
-	timeline = TT.bars().data(dataset);
+	timeline = TT.layout.bars().data(dataset);
 	
 	d3.select("svg#timeline")
 		.attr("class", "timeline")

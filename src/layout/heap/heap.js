@@ -13,34 +13,27 @@ data format: {
 
 */
 
-TT.heap = function() {
+TT.layout.heap = function() {
 	
-	if(!TT.heap.id) TT.heap.id = 0;
+	if(!TT.layout.heap.id) TT.layout.heap.id = 0;
 	
 	var	initialised = false,
-		id = TT.heap.id++,
+		id = TT.layout.heap.id++,
 		me = {},
 		heap = this,
 		nmsp = "hp_" + id,
+		x,
+		y,
 		zoom;
 	
 	var p = {
-		
-		axis: {},
 		
 		data: [],
 		
 		elements: {
 			
 		},
-		
-		format: {
-			
-			year: d3.time.format("%Y"),
-			date: d3.time.format("%d %b %Y")
-			
-		},
-		
+				
 		grid: {
 			
 			availableWidth: null,
@@ -53,19 +46,7 @@ TT.heap = function() {
 			
 		},
 		
-		scales: {
-			
-			minMax: {
-				
-				// Update zoom extent here
-				
-				zoom: d3.scale.linear()
-					.domain( [0.5, 240] ) 
-					.range( [0, 1] )
-				
-			}
-			
-		},
+		parent: false,
 		
 		styles: {
 			
@@ -85,38 +66,13 @@ TT.heap = function() {
 			
 		},
 		
-		view: {
-			
-			from: new Date( 1900 , 0, 1 ),
-			to: new Date( 2000 , 0, 1 ),
-			
-			width: 800,
-			height: 600,
-			
-			padding: 40
-			
-		},
-		zoom: {
-			factor: 1
-		}	
+		view: {}
 	};
 	
 	// REMOVE
 	test_heap_p  = p;
 	
 	var attr = {
-		
-		axis: {
-		
-			tickFormat: function (d) {
-				if( Math.round( (p.axis.scale().domain()[1].getFullYear() - p.axis.scale().domain()[0].getFullYear()) / p.axis.ticks()) >= 1 ) { // If there is not more than one tick per year represented
-					return p.format.year(d);
-				} else {
-					return p.format.date(d);
-				}
-			}
-			
-		},
 		
 		event: {
 			
@@ -130,7 +86,7 @@ TT.heap = function() {
 					return d.color || null;	
 				},
 			
-				r: function() { return Math.min(10, p.zoom.factor) * p.styles.events.diameter / 2; }
+				r: function() { return Math.min(10, zoom.scale()) * p.styles.events.diameter / 2; }
 				
 			},
 			
@@ -142,35 +98,15 @@ TT.heap = function() {
 			
 		}
 
-	};
-			
-	// Init scales used for panning and zooming
-	var x, y;
-	
-	// Private functions
-	
-	function doZoom() {
+	};		
 		
-		if(d3.event)
-			p.zoom.factor = d3.event.scale;
-		
-		var ax = p.svg.select(".heap_axis");
-		
-		p.scales.axis.domain( [ p.scales.pxToDate( x.domain()[0] ), p.scales.pxToDate( x.domain()[1] ) ] );
-		
-		update();
-		
-		ax.call(p.axis);
-		
-	}
-	
 	function update() {		
 	
 		function createEventsAppearance(events) {
 			
 			// Circle
 			events.append("circle")
-				.attr("class", "eventCircle")
+				.attr("class", "event_circle")
 				.attr("cx", attr.event.circle.cx)
 				.attr("cy", attr.event.circle.cy)
 				.attr("r", attr.event.circle.r)
@@ -179,7 +115,7 @@ TT.heap = function() {
 		}
 		
 		function filterEvents(d) { 
-		
+
 			/*
 			
 			Remove data
@@ -200,7 +136,7 @@ TT.heap = function() {
 					
 			function makeGrid() {
 				
-				p.grid.availableWidth = p.scales.dateToPx(p.view.to) - p.scales.dateToPx(p.view.from);
+				p.grid.availableWidth = p.scales.dateToPx( p.view.to ) - p.scales.dateToPx( p.view.from );
 				p.grid.numCols = Math.floor( p.grid.availableWidth / p.styles.events.diameter );
 					
 				p.grid.range = p.view.to - p.view.from;
@@ -279,7 +215,7 @@ TT.heap = function() {
 		
 		function updateEventsImages(events) {
 			
-			if(p.zoom.factor > p.thresholds.images) {
+			if(zoom.scale() > p.thresholds.images) {
 				
 				events.filter(function(d) { return !d.hasImage && d.thumbnailUrl; }).append("image")
 					.attr("xlink:href", function(d) {
@@ -288,10 +224,10 @@ TT.heap = function() {
 					});
 					
 				events.selectAll("image")
-					.attr("x", -p.zoom.factor / 2 * p.styles.images.factor)
-					.attr("y", -p.zoom.factor / 2 * p.styles.images.factor)
-					.attr("width", p.zoom.factor * p.styles.images.factor + "px")
-					.attr("height", p.zoom.factor * p.styles.images.factor + "px");
+					.attr("x", -zoom.scale() / 2 * p.styles.images.factor)
+					.attr("y", -zoom.scale() / 2 * p.styles.images.factor)
+					.attr("width", zoom.scale() * p.styles.images.factor + "px")
+					.attr("height", zoom.scale() * p.styles.images.factor + "px");
 				
 			} else {
 			
@@ -384,44 +320,12 @@ TT.heap = function() {
 		});
 	
 	}
-	
-	function updateMinMax() {
-		
-		if(p.data) {
-			var minFrom = d3.min( p.data, function(d) { return d.from; } ),
-				maxTo = d3.max( p.data, function(d) { return d.to; } );
-					
-			p.view.from = minFrom;//new Date( minFrom.valueOf() - 0.2 * (maxTo.valueOf() - minFrom.valueOf()) );
-			p.view.to = maxTo;//new Date( maxTo.valueOf() + 0.2 * (maxTo.valueOf() - minFrom.valueOf()) );
-		}
-	}
-
 
 	// Initialiser
 	me.apply = function () {
 		
 		function initHeap() {
-			
-			function initAxis() {
-			
-				p.scales.axis = d3.time.scale()
-					.domain( [ p.scales.pxToDate( x.domain()[0] ), p.scales.pxToDate( x.domain()[1] ) ] )
-					.range( [0, p.view.width] );
-				
-				p.axis = d3.svg.axis()
-					.scale(p.scales.axis)
-					.tickSize(p.view.height - p.view.padding)
-					.tickFormat(attr.axis.tickFormat)
-					.orient("top");
-					
-				p.elements.axis = p.svg.append("g")
-					.attr("class", "heap_axis")
-					.attr("id","hs" + id + "_axis")
-					.call(p.axis)
-					.attr("transform", "translate(0," + ( p.view.height - p.view.padding / 2 ) + ")");
-					
-			}
-			
+						
 			function initEvents() {
 			
 				p.elements.outline = p.svg.insert("g")
@@ -435,63 +339,10 @@ TT.heap = function() {
 					
 			}
 				
-			function initScales() {
-			
-			
-				x = d3.scale.linear()
-					.domain([0, p.view.width])
-					.range([0, p.view.width ]);
-				
-				y = d3.scale.linear()
-					.domain([0, p.view.height])
-					.range([0, p.view.height]);
-					
-
-			
-				p.scales.dateToPx = d3.scale.linear()
-					.domain( [ p.view.from.valueOf(), p.view.to.valueOf() ] )
-					.range( [ p.view.padding, p.view.width - p.view.padding ] );
-					
-				p.scales.pxToDate = d3.scale.linear()
-					.domain( [ p.view.padding, p.view.width - p.view.padding ] )
-					.range( [ p.view.from.valueOf(), p.view.to.valueOf() ] );
-					
-			}	
-			
-			function initZoom() {						
-				
-				zoom = d3.behavior.zoom()
-					.x(x)
-					.y(y)
-					.scaleExtent( p.scales.minMax.zoom.domain() );
-									
-				p.svg.select(".heap_events").insert("rect",":first-child")
-					.attr("width", p.view.width)
-					.attr("height", p.view.height)
-					.attr("class","overlay");
-					
-				p.svg.select(".heap_events").call( zoom.on("zoom", doZoom) );
-				
-			}
-			
-							
-			initScales();
 			initEvents();
-			initAxis();
-			initZoom();	
 			
 		}
 		
-		// Update parameters
-		
-		p.svg = arguments[0];
-
-		p.view.width = +p.svg.attr("width");
-		p.view.height = +p.svg.attr("height");
-		
-		console.log(p.view);
-		
-		updateMinMax();
 		initHeap();
 		
 		initialised = true;
@@ -513,32 +364,50 @@ TT.heap = function() {
 		
 		p.grid.initialised = false;
 		
-		updateMinMax();
-		
 		if(initialised) {
+		
+			var minFrom = d3.min( p.data, function(d) { return d.from; } );
+			var maxTo = d3.max( p.data, function(d) { return d.to; } );
+			
+			if( minFrom < p.view.from ) {
+				
+				parent.from( minFrom);
+				
+			}
+			
+			if (maxTo > p.view.to ) {
+			
+				parent.to( maxTo );
+				
+			}
+		
 			update();
 		}
 		
 		return me;
 	};
 	
-	me.update = function() {
-		doZoom();
+	me.identifier = function() {
+
+		return nmsp;
+		
 	};
 	
-	// Linking accessors	
-	me.x = function(_) {
-		if( !arguments.length ) return x;
-		x = _;
+	me.initialise = function() {
+		
+		p.svg.call(me);
 		
 		return me;
+		
 	};
+	
+	me.scales = function(_) {
 		
-	me.y = function(_) {
-		if( !arguments.length ) return y;
-		y = _;
+		if( !arguments.length ) return p.scales;
+		p.scales = _;
 		
 		return me;
+		
 	};
 	
 	me.styles = {};
@@ -568,7 +437,25 @@ TT.heap = function() {
 		return me;
 		
 	};
-
+	
+	me.svg = function(_) {
+		
+		if( !arguments.length ) return p.svg;
+		p.svg = _;
+		
+		return me;
+		
+	};
+	
+	me.parent = function(_) {
+		
+		if( !arguments.length ) return p.parent;
+		p.parent = _;
+		
+		return me;
+		
+	};
+	
 	me.threshold = function(name, value) {
 		
 		if (arguments.length < 2) {
@@ -589,6 +476,50 @@ TT.heap = function() {
 		}
 		
 		update();
+		
+		return me;
+		
+	};
+	
+	me.update = function() {
+
+		update();
+		
+		return me;
+		
+	};
+	
+	me.view = function(_) {
+		
+		if( !arguments.length ) return p.view;
+		p.view = _;
+		
+		return me;
+		
+	};
+	
+	me.x = function(_) {
+		
+		if( !arguments.length ) return x;
+		x = _;
+		
+		return me;
+		
+	};
+	
+	me.y = function(_) {
+		
+		if( !arguments.length ) return y;
+		y = _;
+		
+		return me;
+		
+	};
+	
+	me.zoom = function(_) {
+		
+		if( !arguments.length ) return zoom;
+		zoom = _;
 		
 		return me;
 		

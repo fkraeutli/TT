@@ -15,6 +15,8 @@ TT.timeline = function() {
 		
 		axis: {},
 		
+		children: [],
+		
 		elements: {},
 
 		format: {
@@ -37,6 +39,8 @@ TT.timeline = function() {
 			}
 			
 		},
+		
+		svg: false,
 
 		view: {
 			
@@ -84,8 +88,17 @@ TT.timeline = function() {
 	
 		p.elements.axis.call(p.axis);
 		
+		update();
+		
 	}
-
+	
+	function update() {
+		
+		p.children.forEach( function(child) {
+			child.update();
+		});
+		
+	}
 
 	// Initialiser
 	me.apply = function () {
@@ -104,7 +117,7 @@ TT.timeline = function() {
 					.tickFormat(attr.axis.tickFormat)
 					.orient("top");
 					
-				p.elements.axis = p.svg.append("g")
+				p.elements.axis = p.svg.insert("g", ":first-child")
 					.attr("class", "timeline_axis axis")
 					.attr("id", nmsp + "_axis")
 					.call(p.axis)
@@ -214,6 +227,49 @@ TT.timeline = function() {
 		updateAxis();
 		updateZoom();
 		
+		update();
+		
+	};
+	
+	// Children
+	me.add = function( layout ) {
+		
+		var g = p.svg.insert("g", ":first-child")
+			.attr( "id", layout.identifier() );
+		
+		layout.svg( g )
+			.view( p.view )
+			.scales( p.scales )
+			.x( x )
+			.y( y )
+			.zoom( zoom )
+			.parent( me );
+			
+		if( layout.data().length ) {
+			
+			var minFrom = d3.min( layout.data(), function(d) { return d.from; } );
+			var maxTo = d3.max( layout.data(), function(d) { return d.to; } );
+			
+			if( minFrom < p.view.from ) {
+				
+				me.from( minFrom);
+				
+			}
+			
+			if (maxTo > p.view.to ) {
+			
+				me.to( maxTo );
+				
+			}
+			
+		}
+			
+		layout.initialise();
+			
+		p.children.push( layout );
+		
+		update();
+		
 	};
 	
 	// Accessors
@@ -233,6 +289,18 @@ TT.timeline = function() {
 		
 	};
 	
+	me.from = function(_) {
+		
+		if( !arguments.length ) return p.view.from;
+		
+		p.view.from = _;		
+		
+		me.refresh();
+		
+		return me;
+		
+	};
+	
 	me.height = function(_) {
 		
 		if( !arguments.length ) return p.view.height;
@@ -244,12 +312,30 @@ TT.timeline = function() {
 		return me;
 		
 	};
+
+	me.view = function() {
+		
+		return p.view;
+		
+	};
 	
 	me.width = function(_) {
 		
 		if( !arguments.length ) return p.view.width;
 		
 		p.view.width = _;
+		
+		me.refresh();
+		
+		return me;
+		
+	};
+	
+	me.to = function(_) {
+		
+		if( !arguments.length ) return p.view.to;
+		
+		p.view.to = _;		
 		
 		me.refresh();
 		
