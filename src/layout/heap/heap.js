@@ -263,10 +263,18 @@ TT.layout.heap = function() {
 				})
 			.attr("class", "heap_event")
 			.attr("transform", attr.event.transform)
-			.on("click", function(d) { console.log(d); })
+			.on("click", function(d) { 
+				if( me.hasOwnProperty("publish") ) {	
+		
+					me.publish( {data: d, event: d3.event} );
+					
+				}
+			})
 			.on("dblclick", function(d) { 
-				if( d.url) {
-					window.open( d.url );
+				if( me.hasOwnProperty("publish") ) {	
+		
+					me.publish( {data: d, event: d3.event} );
+					
 				}
 			})
 			.each(function(d) { d.hasImage = false; } );

@@ -345,7 +345,7 @@ function make() {
 		cf.addFilter({
 			title: "Production date",
 			dimension: "from", 
-			group: d3.time.year 
+			group: d3.time.year
 		});
 		
 
