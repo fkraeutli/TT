@@ -71,10 +71,8 @@ function make() {
 
 function makeHeap() {
 
-	heapNoTurner = TT.layout.heap().data( dataset.filter( function(d) { return d.artist != "Turner, Joseph Mallord William"; }) );
-	heapTurner = TT.layout.heap().data( dataset.filter( function(d) { return d.artist == "Turner, Joseph Mallord William"; }) );
+	heap = TT.layout.heap().data( dataset );
 	
-	timeline.add( heapNoTurner );
-	timeline.add( heapTurner );
+	timeline.add( heap );
 	
 }

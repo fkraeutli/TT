@@ -1437,6 +1437,8 @@ TT.layout.heap = function() {
 			
 		},
 		
+		translate: [0, 0],
+		
 		view: {}
 	};
 	
@@ -1463,7 +1465,7 @@ TT.layout.heap = function() {
 			
 			transform: function (d)  {
 			
-				return "translate(" + x(d[nmsp].x) + "," + y(d[nmsp].y) + ")";
+				return "translate(" + _x(d[nmsp].x) + "," + _y(d[nmsp].y) + ")";
 				
 			}
 			
@@ -1494,10 +1496,10 @@ TT.layout.heap = function() {
 			
 			*/
 		
-			return x(d[nmsp].x)  >= 0 &&
-				x(d[nmsp].x) <= p.view.width &&
-				y(d[nmsp].y) > -p.styles.events.diameter && 
-				y(d[nmsp].y) < p.view.height;
+			return _x(d[nmsp].x)  >= 0 &&
+				_x(d[nmsp].x) <= p.view.width &&
+				_y(d[nmsp].y) > -p.styles.events.diameter && 
+				_y(d[nmsp].y) < p.view.height;
 				
 		}
 		
@@ -1670,8 +1672,8 @@ TT.layout.heap = function() {
 				
 				if( d.length > 0) {
 					
-					path.push( "S", x( d[ d.length-1 ][nmsp].x - p.styles.events.diameter/2 ), ",", y( d[ d.length-1 ][nmsp].y ), " ", x( d[ d.length-1 ][nmsp].x ), ",", y( d[ d.length-1 ][nmsp].y ) );	
-					path.unshift( "S", x( d[ 0 ][nmsp].x + p.styles.events.diameter/2 ), ",", y( d[ 0 ][nmsp].y ) , " " , x( d[ 0 ][nmsp].x ), ",", y( d[ 0 ][nmsp].y ) ); 
+					path.push( "S", _x( d[ d.length-1 ][nmsp].x - p.styles.events.diameter/2 ), ",", _y( d[ d.length-1 ][nmsp].y ), " ", _x( d[ d.length-1 ][nmsp].x ), ",", _y( d[ d.length-1 ][nmsp].y ) );	
+					path.unshift( "S", _x( d[ 0 ][nmsp].x + p.styles.events.diameter/2 ), ",", _y( d[ 0 ][nmsp].y ) , " " , _x( d[ 0 ][nmsp].x ), ",", _y( d[ 0 ][nmsp].y ) ); 
 					
 					//path.push( "L", x( d[ d.length-1 ][nmsp].x ), ",", y( d[ d.length-1 ][nmsp].y ) );	
 					//path.unshift( "L", x( d[ 0 ][nmsp].x ), ",", y( d[ 0 ][nmsp].y ) ); 
@@ -1690,6 +1692,18 @@ TT.layout.heap = function() {
 			
 		});
 	
+	}
+	
+	function _x( value ) {
+		
+		return x(value) + zoom.scale() * p.translate[0];
+		
+	}
+	
+	function _y( value ) {
+		
+		return y(value) + zoom.scale() * p.translate[1];
+		
 	}
 
 	// Initialiser
