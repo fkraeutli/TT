@@ -1,9 +1,7 @@
-BRITTEN 	= 0;
-TATE 		= 1;
-TATEART		= 2;
-JOHNSTON 	= 3;
+TATEART = 0;
 
 loadDataset = TATEART;
+loadFormat = "csv";
 
 $j = jQuery.noConflict();
 
@@ -11,7 +9,9 @@ var dataset = [],
 	heap,
 	timeline,
 	fields,
-	urls = ["data/works.js", "../../Tate/allartists.js", "../../Tate/allartworks.js", "../../ltm/data/Johnston-Data.json"];
+	ui,
+	urlsJSON = ["../../Tate/allartworks.js"];
+	urlsCSV = ["../../Tate/artwork_data.csv"];
 
 
 $j(make);
@@ -34,70 +34,71 @@ function make() {
 	
 	
 	if (loadDataset === TATEART) {
-		
-		d3.json(urls[loadDataset], function(error, data) {
-		
-			if( !error ) {
-								
-				data.forEach( function(d) {
-					
-					if(d.dateRange && d.dateRange.startYear) {
-						
-						d.from = new Date( +d.dateRange.startYear, 0, 1 );
-						
-						d.to = new Date( d.from.valueOf() );
-						d.to.setFullYear( d.from.getFullYear() + 1 );
-					
-						if ( !isNaN(d.from.valueOf()) ){
-							dataset.push(d);
-						}
-					}
-					
-				} );
-				
-				console.log( dataset.length + " instances" );			
-
-				makeHeap();
-				
-			} else {
-				
-				console.error(error);
+	
+		if( loadFormat == "json") {
 			
-			}
-		});
-		
-		/*				
-		d3.csv(urls[loadDataset], function(error, data) {
-		
-			if( !error ) {
-								
-				data.forEach( function(d) {
-					
-					if(d.year) {
-						
-						d.from = new Date( +d.year, 0, 1 );
-						
-						d.to = new Date( d.from.valueOf() );
-						d.to.setFullYear( d.from.getFullYear() + 1 );
-					
-						if ( !isNaN(d.from.valueOf()) ){
-							dataset.push(d);
-						}
-					}
-					
-				} );
-				
-				console.log( dataset.length + " instances" );			
-
-				makeHeap();
-				
-			} else {
-				
-				console.error(error);
+			d3.json(urlsJSON[loadDataset], function(error, data) {
 			
-			}
-		});
-		*/
+				if( !error ) {
+									
+					data.forEach( function(d) {
+						
+						if(d.dateRange && d.dateRange.startYear) {
+							
+							d.from = new Date( +d.dateRange.startYear, 0, 1 );
+							
+							d.to = new Date( d.from.valueOf() );
+							d.to.setFullYear( d.from.getFullYear() + 1 );
+						
+							if ( !isNaN(d.from.valueOf()) ){
+								dataset.push(d);
+							}
+						}
+						
+					} );
+					
+					console.log( dataset.length + " instances" );			
+	
+					makeHeap();
+					
+				} else {
+					
+					console.error(error);
+				
+				}
+			});
+		} else {			
+			d3.csv(urlsCSV[loadDataset], function(error, data) {
+			
+				if( !error ) {
+									
+					data.forEach( function(d) {
+						
+						if(d.year) {
+							
+							d.from = new Date( +d.year, 0, 1 );
+							
+							d.to = new Date( d.from.valueOf() );
+							d.to.setFullYear( d.from.getFullYear() + 1 );
+						
+							if ( !isNaN(d.from.valueOf()) ){
+								dataset.push(d);
+							}
+						}
+						
+					} );
+					
+					console.log( dataset.length + " instances" );			
+	
+					makeHeap();
+					
+				} else {
+					
+					console.error(error);
+				
+				}
+			});
+		}
 				
 	}	
 }
@@ -109,80 +110,104 @@ function makeHeap() {
 	
 	timeline.add( heap );
 	
-	ui = TT.ui.panel().heap(heap).fields(fields).initialise();
-	
-	fields = [
-		
-		{
-			title: "Classification",
-			accessor: function(d) {
-				return d.classification;
-			}
+	if (loadFormat == "json") {
+		fields = [
 			
-		},
-		
-		{
-			title: "Contributors",
-			accessor: function(d) {
-			
-				return d.contributors;
-				
-			}
-		},
-		
-		{
-			title: "Medium",
-			accessor: function(d) {
-			
-				return d.medium;
-				
-			}
-		},
-		
-		{
-			title: "Movements",
-			accessor: function(d) {
-				
-				return d.movements;	
-				
-			}
-		}
-		/*
-,
-		
-		{
-			title: "Subjects",
-			accessor: function(d) {
-			
-				if(!d.subjects) return [];		
-			
-				var allSubjects = Array();
-				
-				var getSubjects = function( obj ) {
-				
-					allSubjects.push( obj );
-					
-					if( obj.children && obj.children.length) {
-						
-						obj.children.forEach( function(child) {
-							
-							getSubjects(child);
-
-						} );
-						
-					}
-				
+			{
+				title: "Classification",
+				accessor: function(d) {
+					return d.classification;
 				}
 				
-				getSubjects(d.subjects);
+			},
+			
+			{
+				title: "Contributors",
+				accessor: function(d) {
 				
-				return allSubjects;
+					return d.contributors;
+					
+				}
+			},
+			
+			{
+				title: "Medium",
+				accessor: function(d) {
+				
+					return d.medium;
+					
+				}
+			},
+			
+			{
+				title: "Movements",
+				accessor: function(d) {
+					
+					return d.movements;	
+					
+				}
 			}
-
-		}
-*/		
+			/*
+	,
+			
+			{
+				title: "Subjects",
+				accessor: function(d) {
+				
+					if(!d.subjects) return [];		
+				
+					var allSubjects = Array();
+					
+					var getSubjects = function( obj ) {
+					
+						allSubjects.push( obj );
+						
+						if( obj.children && obj.children.length) {
+							
+							obj.children.forEach( function(child) {
+								
+								getSubjects(child);
+	
+							} );
+							
+						}
+					
+					}
+					
+					getSubjects(d.subjects);
+					
+					return allSubjects;
+				}
+	
+			}
+	*/		
+			
+		];
+	} else {
 		
-	];
+		fields = [
+			{
+			
+				title: "Artist",
+				accessor: function(d) {
+					return d.artist;
+				}
+				
+			},
+			{
+			
+				title: "Medium",
+				accessor: function(d) {
+					return d.medium;
+				}
+				
+			}
+		];
+		
+	}
+	
+	ui = TT.ui.panel().heap(heap).fields(fields).initialise();
+	
 	
 	
 		

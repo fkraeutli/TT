@@ -228,144 +228,28 @@ if ( loadDataset !== TATEART ) {
 			
 }	
 
-function make() {
-
-
-	cf = TT.crossfilter().data(dataset);
+function make() {	
 	
-	if(loadDataset === TATE) {
-	
-		cf.addFilter({
-			title: "Year born",
-			dimension: "from", 
-			group: d3.time.year 
-		});
-		
-		cf.addFilter({
-			title: "Age",
-			dimension: function(d) {
-				return d.to.getFullYear() - d.from.getFullYear();
-			}
-		});
-		
-		
-		cf.addFilter({
-			title: "Number of works (log)",
-			dimension: function(d) {
-			
-				return Math.log(d.totalWorks);
-				return d.totalWorks < 500 ? d.totalWorks : 500;
-				
-			}
-		});
-
-		cf.addFilter({
-			dimension: function(d) {
-				return d.gender || "unknown";
-			},
-			title: "Gender"
-		});
-		
-		cf.addFilter( { 
-			title: "Movement", 
-			dimension: function(d) {
-				if(d.movements.length) { 
-					return d.movements[0].name;
-				} else {
-					return "unknown";
-				}; 
-			} 
-		} )
-	
-	} else if (loadDataset === TATEART) {
-		
-		cf.addFilter({
-			title: "Year",
-			dimension: "from"
-		});
-		
-		//cf.addFilter({title: "Medium", dimension: "medium"});
-		
-		cf.addFilter({
-			dimension: "artist"
-		});
-		
-	}	else if (loadDataset === BRITTEN) {
-		
-		cf.addFilter({
-			title: "Started Composition",
-			dimension: "from", 
-			group: d3.time.year 
-		});
-			
-		cf.addFilter({
-			title: "Finished Composition",
-			dimension: "to",
-			group: d3.time.year
-		});
-			
-		cf.addFilter({
-		
-			title: "Duration of composition",
-			dimension: function(d) {
-				return d.to - d.from
-			},
-			group: function(d) { return Math.floor(d / 100) * 100;}
-		
-		})
-	} else if(loadDataset === JOHNSTON) {
-	
-		cf.addFilter({
-			title: "Production date",
-			dimension: "from", 
-			group: d3.time.year 
-		});
-		
-
-		cf.addFilter({
-			title: "Acquisition date",
-			dimension: function(d) {
-				return d.acquired_date_from || new Date();;
-			}, 
-			group: d3.time.year 
-		});
-
-		
-		cf.addFilter({
-			dimension: "weight", 
-			group: function(d) { return Math.floor(d / 10) * 10;}
-		});
-		
-		cf.addFilter( { 
-			title: "Production Role", 
-			dimension: function(d) {if(d.production_role) {return d.production_role.split(";")[0]} else {return "unknown"}; } 
-		})
-	}
-
-	d3.select("#crossfilter")
-		.call(cf);	
-		
-	TT.observer.make(cf);
-	
-	heap = TT.layout.heap().data(dataset);
-	
-	
-	if ( loadDataset == BRITTEN || loadDataset == TATE) {
-		heap.styles.events("diameter", 4);
-	}
+	timeline = TT.timeline()
+		.domain( [ new Date(1800,0,1), new Date(2014,0,1) ] );
 	
 	d3.select("svg#heap")
-		.attr("class", "heap")
-		.attr("width", $j("body").width())
-		.attr("height", $j("body").height())
-		.call(heap);
-			
-	
-	cf.addSubscriber(function(data) {
-		heap.data(data);
+		.attr("class", "timeline")
+		.attr("width", $j(window).width() )
+		.attr("height", $j(window).height() )
+		.call(timeline);
+
+	$j(window).resize(function() {
+		timeline.width( $j(window).width() )
+			.height( $j(window).height() );
 	})
-			
-	cf.forcePublish()	
+	
+	heap = TT.layout.heap().data( dataset );
+	
+	timeline.add( heap );
+	
+	ui = TT.ui.panel().heap(heap).fields(fields).initialise();
+
 }
 
 
@@ -485,7 +369,13 @@ function sortByAttribute(attribute) {
 		
 	} )
 	
-	heap.data(dataset);
+
+	heap = TT.layout.heap().data( dataset );
+	
+	timeline.add( heap );
+	
+	ui = TT.ui.panel().heap(heap).fields(fields).initialise();
+
 	//cf.forcePublish();
 
 }
