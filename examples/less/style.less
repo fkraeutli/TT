@@ -220,160 +220,181 @@ a, a:visited {
 	
 }
 
-.ui_panel {
+.ui_panel_container {
 	
-	display: none;
-	top:0;
-	left:0;
 	position: absolute;
-	width: 25%;
-	height: 40%;
-	background: white;
-	border-radius: 1em;
-	box-shadow: 0px 3px 20px rgba(0,0,0,.2);
-	overflow: hidden;
-	overflow-y: auto;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
 	
-	ul {
-	
-		margin: 0;
-		padding: 0;
-	
-		li {
+	.ui_panel {
 		
-			position: relative;
-			list-style: none;
-			margin: 0;
-			padding: 1em;
-			border-bottom: 1px solid #eee;
-			
-			label {
-				width: 7em;
-				display: inline-block;
-				font-weight: bold;
-			}
-			
-			.description {
-				font-size: .8em;
-			}
-			
-		}
-		
-		
-	}	
-	
-	ul.select {
-		
-		li:after {
-			.icon();
-			.pseudoElement();
-			position: absolute;
-			right: 1em;
-			top: 50%;
-			width: 4px;
-			height: 8px;
-		}
-		
-	}
-	
-	select.select {
-		margin: auto;
-		display: block;
-		width: 90%;
-	}
-	
-	ul.operations {
-	
+		display: none;
+		top:0;
+		left:0;
+		position: absolute;
+		width: 25%;
+		height: 40%;
+		background: white;
+		border-radius: 1em;
+		box-shadow: 0px 3px 20px rgba(0,0,0,.2);
 		overflow: hidden;
-		background-color: #efefef;
+		overflow-y: auto;
+		pointer-events: all;
 		
-		li {
+		ul {
+		
+			margin: 0;
+			padding: 0;
+		
+			li {
 			
-			border: none;
-			width: 25%;
-			float: left;
+				position: relative;
+				list-style: none;
+				margin: 0;
+				padding: 1em;
+				border-bottom: 1px solid #eee;
+				
+				label {
+					width: 7em;
+					display: inline-block;
+					font-weight: bold;
+				}
+				
+				.description {
+					font-size: .8em;
+				}
+				
+			}
+			
+			
+		}	
+		
+		ul.select {
+			
+			li:after {
+				.icon();
+				.pseudoElement();
+				position: absolute;
+				right: 1em;
+				top: 50%;
+				width: 4px;
+				height: 8px;
+			}
+			
+		}
+		
+		select.select {
+			margin: auto;
+			display: block;
+			width: 90%;
+		}
+		
+		ul.operations {
+		
+			overflow: hidden;
+			background-color: #efefef;
+			
+			li {
+				
+				border: none;
+				width: 25%;
+				float: left;
+				text-align: center;
+			}
+			
+		}
+		
+		div.header {
+	
+			padding: 1em;
+			background-size: 100%;
+			background-repeat: no-repeat;
+			min-height: 40%;
+		
+			h1, h2, h3 {
+			
+				line-height: 1.8em;
+				margin-top: 0;
+				font-weight: normal;
+				color: white;
+				text-shadow:
+					-1px -1px 1em rgba( 0 , 0, 0, .2),  
+					1px -1px 1em rgba( 0 , 0, 0, .2),
+					-1px 1px 1em rgba( 0 , 0, 0, .2),
+					1px 1px 1em rgba( 0 , 0, 0, .2);
+	
+			}
+			
+			
+			
+		}
+		
+		.instructions {
+			clear: both;
+			padding: 0 1em;
 			text-align: center;
 		}
 		
-	}
-	
-	div.header {
-
-		padding: 1em;
-		background-size: 100%;
-		background-repeat: no-repeat;
-		min-height: 40%;
-	
-		h1, h2, h3 {
+		.pointer {
+			display: none;
+			position: absolute;
+			top:50%;
+			width: 0px;
+			height: 0px;
+			border-style: solid;
+		}	
 		
-			line-height: 1.8em;
-			margin-top: 0;
-			font-weight: normal;
-			color: white;
-			text-shadow:
-				-1px -1px 1em rgba( 0 , 0, 0, .2),  
-				1px -1px 1em rgba( 0 , 0, 0, .2),
-				-1px 1px 1em rgba( 0 , 0, 0, .2),
-				1px 1px 1em rgba( 0 , 0, 0, .2);
-
+		.pointerRight {
+			border-color: transparent #ffffff transparent transparent;
+			border-width: 10px 10px 10px 0;
+			left: -10px;
 		}
 		
+		.pointerLeft {
+			right: -10px;
+			border-color: transparent transparent transparent #ffffff;
+			border-width: 10px 0 10px 10px;
+		}
+	}
+	
+	.ui_panel.pointerLeft {
 		
+		.pointerLeft {
+			display: block;
+		}
+		
+		.pointerRight {
+			display: none;
+		}
 		
 	}
 	
-	.instructions {
-		clear: both;
-		padding: 0 1em;
-		text-align: center;
+	.ui_panel.pointerRight {
+		
+		.pointerLeft {
+			display: none;
+		}
+		
+		.pointerRight {
+			display: block;
+		}
+		
 	}
-	
-	.pointer {
-		display: none;
+
+	.ui_panel_overlay {
 		position: absolute;
-		top:50%;
-		width: 0px;
-		height: 0px;
-		border-style: solid;
-	}	
-	
-	.pointerRight {
-		border-color: transparent #ffffff transparent transparent;
-		border-width: 10px 10px 10px 0;
-		left: -10px;
-	}
-	
-	.pointerLeft {
-		right: -10px;
-		border-color: transparent transparent transparent #ffffff;
-		border-width: 10px 0 10px 10px;
-	}
-}
-
-.ui_panel.pointerLeft {
-	
-	.pointerLeft {
+		top: 0;
+		left: 0;
 		display: block;
+		width: 100%;
+		height: 100%;
+		pointer-events: all;
 	}
-	
-	.pointerRight {
-		display: none;
-	}
-	
-}
 
-.ui_panel.pointerRight {
-	
-	.pointerLeft {
-		display: none;
-	}
-	
-	.pointerRight {
-		display: block;
-	}
-	
 }
-
 svg.timeline, svg.heap, svg.histogram {
 
 	margin-right: 2em;

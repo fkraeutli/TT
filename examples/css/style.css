@@ -135,7 +135,15 @@ a:visited {
 #slider_threshold .ui-rangeSlider-label .ui-rangeSlider-label-value {
   display: none;
 }
-.ui_panel {
+.ui_panel_container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.ui_panel_container .ui_panel {
   display: none;
   top: 0;
   left: 0;
@@ -147,27 +155,28 @@ a:visited {
   box-shadow: 0px 3px 20px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   overflow-y: auto;
+  pointer-events: all;
 }
-.ui_panel ul {
+.ui_panel_container .ui_panel ul {
   margin: 0;
   padding: 0;
 }
-.ui_panel ul li {
+.ui_panel_container .ui_panel ul li {
   position: relative;
   list-style: none;
   margin: 0;
   padding: 1em;
   border-bottom: 1px solid #eee;
 }
-.ui_panel ul li label {
+.ui_panel_container .ui_panel ul li label {
   width: 7em;
   display: inline-block;
   font-weight: bold;
 }
-.ui_panel ul li .description {
+.ui_panel_container .ui_panel ul li .description {
   font-size: .8em;
 }
-.ui_panel ul.select li:after {
+.ui_panel_container .ui_panel ul.select li:after {
   background-image: url(images/sprite.png);
   content: ".";
   display: block;
@@ -178,42 +187,42 @@ a:visited {
   width: 4px;
   height: 8px;
 }
-.ui_panel select.select {
+.ui_panel_container .ui_panel select.select {
   margin: auto;
   display: block;
   width: 90%;
 }
-.ui_panel ul.operations {
+.ui_panel_container .ui_panel ul.operations {
   overflow: hidden;
   background-color: #efefef;
 }
-.ui_panel ul.operations li {
+.ui_panel_container .ui_panel ul.operations li {
   border: none;
   width: 25%;
   float: left;
   text-align: center;
 }
-.ui_panel div.header {
+.ui_panel_container .ui_panel div.header {
   padding: 1em;
   background-size: 100%;
   background-repeat: no-repeat;
   min-height: 40%;
 }
-.ui_panel div.header h1,
-.ui_panel div.header h2,
-.ui_panel div.header h3 {
+.ui_panel_container .ui_panel div.header h1,
+.ui_panel_container .ui_panel div.header h2,
+.ui_panel_container .ui_panel div.header h3 {
   line-height: 1.8em;
   margin-top: 0;
   font-weight: normal;
   color: white;
   text-shadow: -1px -1px 1em rgba(0, 0, 0, 0.2), 1px -1px 1em rgba(0, 0, 0, 0.2), -1px 1px 1em rgba(0, 0, 0, 0.2), 1px 1px 1em rgba(0, 0, 0, 0.2);
 }
-.ui_panel .instructions {
+.ui_panel_container .ui_panel .instructions {
   clear: both;
   padding: 0 1em;
   text-align: center;
 }
-.ui_panel .pointer {
+.ui_panel_container .ui_panel .pointer {
   display: none;
   position: absolute;
   top: 50%;
@@ -221,27 +230,36 @@ a:visited {
   height: 0px;
   border-style: solid;
 }
-.ui_panel .pointerRight {
+.ui_panel_container .ui_panel .pointerRight {
   border-color: transparent #ffffff transparent transparent;
   border-width: 10px 10px 10px 0;
   left: -10px;
 }
-.ui_panel .pointerLeft {
+.ui_panel_container .ui_panel .pointerLeft {
   right: -10px;
   border-color: transparent transparent transparent #ffffff;
   border-width: 10px 0 10px 10px;
 }
-.ui_panel.pointerLeft .pointerLeft {
+.ui_panel_container .ui_panel.pointerLeft .pointerLeft {
   display: block;
 }
-.ui_panel.pointerLeft .pointerRight {
+.ui_panel_container .ui_panel.pointerLeft .pointerRight {
   display: none;
 }
-.ui_panel.pointerRight .pointerLeft {
+.ui_panel_container .ui_panel.pointerRight .pointerLeft {
   display: none;
 }
-.ui_panel.pointerRight .pointerRight {
+.ui_panel_container .ui_panel.pointerRight .pointerRight {
   display: block;
+}
+.ui_panel_container .ui_panel_overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: all;
 }
 svg.timeline,
 svg.heap,

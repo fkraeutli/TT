@@ -2414,18 +2414,6 @@ TT.layout.heap = function() {
 			
 		}
 		
-		function clearPanel() {
-			
-			p.elements.panel.selectAll("*").remove();
-			
-		}
-	
-		function hidePanel() {
-			
-			p.elements.panel.style("display", "none");
-
-		}
-		
 		function loadContent( data ) {
 		
 			function addHeader() {
@@ -2511,9 +2499,13 @@ TT.layout.heap = function() {
 						title: "Duplicate",
 						description: "Create a new heap with the items matching " + data.title + " \"" +  data.selected + "\""
 					}, 
-					{
+					/*{
 						title: "Separate",
-						description: "Separate all items matching " + data.title + " \"" +  data.selected + "\""
+						description: "Separate all items matching " + data.title + " \"" +  data.selected + "\" from their current heap"
+					},*/
+					{
+						title: "Remove",
+						description: "Remove all items matching " + data.title + " \"" +  data.selected + "\""
 					}
 				];
 				
@@ -2559,42 +2551,58 @@ TT.layout.heap = function() {
 			addSelect();
 			
 		}
-		
-		function showPanel( params ) {
-			
-			p.elements.panel.style("display", "block");	
-			p.elements.panel.datum( params.data );
-			
-			if( params.event.pageY > p.elements.panel.height / 2) {
-	
-				p.elements.panel.style("top", ( params.event.pageY - p.elements.panel.height / 2 - p.styles.panel.pointer.height / 2 ) + "px" );
-	
-			} else {
-			
-				p.elements.panel.style("top", (p.styles.panel.pointer.height / 2 ) + "px" );
-				
-			}
-			
-			if( params.event.pageX > p.elements.panel.width + p.styles.panel.pointer.width ) {
-				
-				p.elements.panel.style("left", ( params.event.pageX - p.elements.panel.width - p.styles.panel.pointer.width) + "px")
-					.classed("pointerLeft", true)
-					.classed("pointerRight", false);
-				
-			} else {
-				
-				p.elements.panel.style("left", ( params.event.pageX + p.styles.panel.pointer.width) + "px")
-					.classed("pointerLeft", false)
-					.classed("pointerRight", true);
-				
-			}
-			
-
-		}
 			
 		showPanel( params );
 		loadContent ( params.data );
 		
+	}
+	
+	function clearPanel() {
+		
+		p.elements.panel.selectAll("*").remove();
+		
+	}
+
+	function hidePanel() {
+		
+		p.elements.panel.style("display", "none");
+
+		p.elements.panel.overlay.style("display", "none");
+		
+	}
+	
+	function showPanel( params ) {
+		
+		p.elements.panel.style("display", "block");	
+		p.elements.panel.datum( params.data );
+		
+		p.elements.panel.overlay.style("display", "block");
+		
+		if( params.event.pageY > p.elements.panel.height / 2) {
+
+			p.elements.panel.style("top", ( params.event.pageY - p.elements.panel.height / 2 - p.styles.panel.pointer.height / 2 ) + "px" );
+
+		} else {
+		
+			p.elements.panel.style("top", (p.styles.panel.pointer.height / 2 ) + "px" );
+			
+		}
+		
+		if( params.event.pageX > p.elements.panel.width + p.styles.panel.pointer.width ) {
+			
+			p.elements.panel.style("left", ( params.event.pageX - p.elements.panel.width - p.styles.panel.pointer.width) + "px")
+				.classed("pointerLeft", true)
+				.classed("pointerRight", false);
+			
+		} else {
+			
+			p.elements.panel.style("left", ( params.event.pageX + p.styles.panel.pointer.width) + "px")
+				.classed("pointerLeft", false)
+				.classed("pointerRight", true);
+			
+		}
+		
+
 	}
 	
 	function process( params ) {
@@ -2672,9 +2680,20 @@ TT.layout.heap = function() {
 		
 		function initPanel() {
 			
-			p.elements.panel = d3.select("body").append("div")
+			var container = d3.select("body").append("div")
+				.attr("class", "ui_panel_container");
+				
+			// Add overlay (for closing the panel)
+			container.append("div")
+				.attr("class", "ui_panel_overlay")
+				.style("display", "none")
+				.on("click", hidePanel);
+				
+			p.elements.panel = container.append("div")
 				.attr("class", "ui_panel")
 				.attr("id", "ui_panel_" + id);
+				
+			p.elements.panel.overlay = container.select(".ui_panel_overlay");
 				
 			// Make panel visible before determining width & height
 			p.elements.panel.style("display", "block");	
@@ -2690,6 +2709,7 @@ TT.layout.heap = function() {
 				.attr("class", "pointer pointerLeft");
 			p.elements.panel.append("div")
 				.attr("class", "pointer pointerRight");
+				
 					
 		}
 		
