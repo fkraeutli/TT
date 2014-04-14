@@ -162,7 +162,22 @@ TT.timeline = function() {
 				p.elements.children = p.svg.insert("g")
 					.attr("class", "timeline_children")
 					.attr("id", nmsp + "_children")
-					.call( zoom.on("zoom", doZoom) ).on( "dblclick.zoom", null);
+					.call( zoom.on("zoom", doZoom) )
+						.on( "dblclick.zoom", null)
+						.on( "dblclick", function(d) {
+							if( me.hasOwnProperty("publish") ) {	
+		
+								me.publish( {data: d, event: d3.event} );
+					
+							}
+						})
+						.on( "click", function(d) {
+							if( me.hasOwnProperty("publish") ) {	
+		
+								me.publish( {data: d, event: d3.event} );
+					
+							}
+						});
 														
 				p.elements.children.insert("rect",":first-child")
 					.attr("width", p.view.width)

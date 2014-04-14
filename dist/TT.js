@@ -1580,7 +1580,7 @@ TT.layout.heap = function() {
 		
 		function updateEventsAppearance(events) {
 		
-			events.select("circle.eventCircle")
+			events.select("circle.event_circle")
 				.attr("r", attr.event.circle.r)
 				.style("fill", attr.event.circle.fill);
 						
@@ -2124,7 +2124,22 @@ TT.layout.heap = function() {
 				p.elements.children = p.svg.insert("g")
 					.attr("class", "timeline_children")
 					.attr("id", nmsp + "_children")
-					.call( zoom.on("zoom", doZoom) ).on( "dblclick.zoom", null);
+					.call( zoom.on("zoom", doZoom) )
+						.on( "dblclick.zoom", null)
+						.on( "dblclick", function(d) {
+							if( me.hasOwnProperty("publish") ) {	
+		
+								me.publish( {data: d, event: d3.event} );
+					
+							}
+						})
+						.on( "click", function(d) {
+							if( me.hasOwnProperty("publish") ) {	
+		
+								me.publish( {data: d, event: d3.event} );
+					
+							}
+						});
 														
 				p.elements.children.insert("rect",":first-child")
 					.attr("width", p.view.width)
@@ -2362,19 +2377,243 @@ TT.layout.heap = function() {
 				
 		parent: false,
 		
+		record: {
+			
+			title: function(d) { return d.title; },
+			subtitle: function(d) { return d.subtitle; },
+			image: function(d) { return d.image; }
+			
+		},
+		
 		styles: {
+			
+			panel: {
+				
+				height: 0.6, // 60%
+				width: 0.25, // 25%
+				
+				pointer: {
+					width: 10,
+					height: 20
+				}
+			}
 
 		},
 		
 		view: {}
 	};
 	
+	// REMOVE
+	test_ui_p = p;
+	
+	function panel( params ) {
+		
+		if( !params.event || !params.data ) {
+		
+			return false;
+			
+		}
+		
+		function clearPanel() {
+			
+			p.elements.panel.selectAll("*").remove();
+			
+		}
+	
+		function hidePanel() {
+			
+			p.elements.panel.style("display", "none");
+
+		}
+		
+		function loadContent( data ) {
+		
+			function addHeader() {
+						
+				// Add header
+				var header = p.elements.panel.append("div")
+					.attr("class", "header")
+					.style("background-image", "url(" + p.record.image.call( p.record.image, data ) + ")" );
+					
+				header.append("h2")
+					.html( p.record.title.call( p.record.title, data ) );
+				header.append("h3")
+					.html( p.record.subtitle.call( p.record.subtitle, data ) );		
+				
+			}
+			
+			function addList() {
+							
+				// Add list
+				p.elements.panel.append("ul").attr("class", "select").selectAll("li").data( p.fields )
+					.enter()
+					.append("li")
+					.html( function(d) {
+						return "<label>" + d.title + "</label>" + d.accessor( data ); 
+					} )
+					.on( "click", function(d) {
+						d.selected = d.accessor( data );
+						loadField( d );
+					});
+				
+			}
+			
+			clearPanel();
+			
+			addHeader();
+			addList();
+		}	
+		
+		function loadField(data) {
+			
+			function addHeader () {
+			
+				
+				var header = p.elements.panel.append("ul")
+					.attr("class", "header");
+					
+				header.selectAll("li")
+					.data([
+						"<a class=\"back\" href=\"#\">Back</a>",
+						"<label>" + data.title + "</label>" + data.selected
+					])
+					.enter()
+					.append("li")
+					.html( function(d) { return d; });
+					
+				header.select("a.back")
+					.on("click", function() {
+						loadContent( p.elements.panel.datum() );
+					});
+			
+			}
+			
+			function addInstructions() {
+				
+				p.elements.panel.append("div")
+					.attr("class", "instructions")
+				.selectAll("p")
+					.data( ["or", "select a different " + data.title] )
+					.enter()
+					.append("p")
+					.html( function(d) {return d;} );
+				
+			}
+			
+			function addOperations() {
+				
+				var operations = p.elements.panel.append("ul")
+					.attr("class", "operations");
+					
+				var buttons = [
+					{
+						title: "Colour",
+						description: "Colour all the items matching " + data.title + " \"" +  data.selected + "\""
+					}, 
+					{
+						title: "Duplicate",
+						description: "Create a new heap with the items matching " + data.title + " \"" +  data.selected + "\""
+					}, 
+					{
+						title: "Separate",
+						description: "Separate all items matching " + data.title + " \"" +  data.selected + "\""
+					}
+				];
+				
+				operations.selectAll("li").data(buttons)
+					.enter()
+					.append("li")
+					.html( function(d) { 
+						
+						return "<a class=\"button\" href=\"#\">" + d.title + "</a><p class=\"description\">" + d.description + "</p>";
+						
+					});
+					
+				
+				
+			} 
+			
+			function addSelect() {
+				
+				p.elements.panel.append("ul")
+					.attr("class", "select")
+				.selectAll("li")
+					.data( data.values )
+				.enter()
+					.append("li")
+					.html(function(d) {return d;})
+					.on("click", function(d) {
+						
+						data.selected = d;
+						loadField( data );
+						console.log(d);
+						console.log(data);
+						
+						
+					});
+				
+			}
+			
+			clearPanel();
+			addHeader();
+			addOperations();
+			addInstructions();
+			addSelect();
+			
+			console.log( data );
+		}
+		
+		function showPanel( params ) {
+			
+			p.elements.panel.style("display", "block");	
+			p.elements.panel.datum( params.data );
+			
+			if( params.event.pageY > p.elements.panel.height / 2) {
+	
+				p.elements.panel.style("top", ( params.event.pageY - p.elements.panel.height / 2 - p.styles.panel.pointer.height / 2 ) + "px" );
+	
+			} else {
+			
+				p.elements.panel.style("top", (p.styles.panel.pointer.height / 2 ) + "px" );
+				
+			}
+			
+			if( params.event.pageX > p.elements.panel.width + p.styles.panel.pointer.width ) {
+				
+				p.elements.panel.style("left", ( params.event.pageX - p.elements.panel.width - p.styles.panel.pointer.width) + "px")
+					.classed("pointerLeft", true)
+					.classed("pointerRight", false);
+				
+			} else {
+				
+				p.elements.panel.style("left", ( params.event.pageX + p.styles.panel.pointer.width) + "px")
+					.classed("pointerLeft", false)
+					.classed("pointerRight", true);
+				
+			}
+			
+
+		}
+			
+		showPanel( params );
+		loadContent ( params.data );
+		
+	}
 	
 	function process( params ) {
 		
-		if ( params.event.type == "dblclick" && params.data.url ) {
+		switch( params.event.type ) {
 			
-			window.open( params.data.url );
+			case "click":
+				console.log( params.data );
+				panel( params );
+				break;
+				
+			case "dblclick":
+				if ( params.data && params.data.url ) {
+					window.open( params.data.url );
+				}
+				break;
 			
 		}
 		
@@ -2428,11 +2667,38 @@ TT.layout.heap = function() {
 						
 					});
 				} );
+				
+				field.values.sort();
+				
 			} );
 			
 		}
 		
+		function initPanel() {
+			
+			p.elements.panel = d3.select("body").append("div")
+				.attr("class", "ui_panel")
+				.attr("id", "ui_panel_" + id);
+				
+			// Make panel visible before determining width & height
+			p.elements.panel.style("display", "block");	
+				
+			p.elements.panel.width = parseInt( p.elements.panel.style("width") ) ;
+			p.elements.panel.height = parseInt( p.elements.panel.style("height") );
+			
+			p.elements.panel.style("display", "none");
+				
+				
+			// Add pointers
+			p.elements.panel.append("div")
+				.attr("class", "pointer pointerLeft");
+			p.elements.panel.append("div")
+				.attr("class", "pointer pointerRight");
+					
+		}
+		
 		initFields();
+		initPanel();
 		
 		initialised = true;
 		
@@ -2449,6 +2715,11 @@ TT.layout.heap = function() {
 		TT.observer.make( heap );
 		heap.addSubscriber( process );
 		p.data = heap.data();
+		
+		// Add heap parent as panel parent
+		p.parent = heap.parent();
+		TT.observer.make( p.parent );
+		p.parent.addSubscriber( process );
 	
 		return me;
 		
@@ -2457,6 +2728,13 @@ TT.layout.heap = function() {
 	me.fields = function(_) {
 		if( !arguments.length ) return p.fields;
 		p.fields = _;
+		
+		return me;
+	};
+	
+	me.record = function(_) {
+		if( !arguments.length ) return p.record;
+		p.record = _;
 		
 		return me;
 	};

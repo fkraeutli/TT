@@ -106,6 +106,8 @@ function make() {
 
 function makeHeap() {
 
+	//dataset.splice(500);
+
 	heap = TT.layout.heap().data( dataset );
 	
 	timeline.add( heap );
@@ -206,7 +208,23 @@ function makeHeap() {
 		
 	}
 	
-	ui = TT.ui.panel().heap(heap).fields(fields).initialise();
+	var record = {
+		
+		title: function(d) {
+			return d.title;
+		},
+		
+		subtitle: function(d) {
+			return d.artist + "<br>" + d.dateText;
+		},
+		
+		image: function(d) {
+			return d.thumbnailUrl;
+		}
+		
+	}
+	
+	ui = TT.ui.panel().heap(heap).fields(fields).record(record).initialise();
 	
 	
 	
