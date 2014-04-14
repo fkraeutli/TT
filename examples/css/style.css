@@ -157,6 +157,9 @@ a:visited {
   overflow-y: auto;
   pointer-events: all;
 }
+.ui_panel_container .ui_panel > * {
+  -webkit-transition: margin 1s linear;
+}
 .ui_panel_container .ui_panel ul {
   margin: 0;
   padding: 0;

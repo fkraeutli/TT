@@ -2505,7 +2505,22 @@ TT.layout.heap = function() {
 					},*/
 					{
 						title: "Remove",
-						description: "Remove all items matching " + data.title + " \"" +  data.selected + "\""
+						description: "Remove all items matching " + data.title + " \"" +  data.selected + "\"",
+						action: function() {
+							
+							if( p.heap ) {
+								
+								p.heap.data( p.heap.data().filter( function(d) { return data.accessor(d) != data.selected;} ) ); 
+
+								// Repopulate field values
+								p.data = p.heap.data();
+								populateFields();
+								
+								hidePanel();
+								
+							}
+							
+						}
 					}
 				];
 				
@@ -2516,6 +2531,10 @@ TT.layout.heap = function() {
 						
 						return "<a class=\"button\" href=\"#\">" + d.title + "</a><p class=\"description\">" + d.description + "</p>";
 						
+					})
+				.select("a")
+					.on("click", function(d) {
+						d.action();
 					});
 					
 				
@@ -2523,6 +2542,19 @@ TT.layout.heap = function() {
 			} 
 			
 			function addSelect() {
+				
+				function populateSelect() {					
+					
+					select.selectAll("option")
+						.data( data.values )
+					.enter()
+						.append("option")
+						.html(function(d) { return d; });
+						
+						
+					select.on("mouseover", null);
+						
+				}
 				
 				var select = p.elements.panel.append("select")
 					.attr("class", "select")
@@ -2533,15 +2565,12 @@ TT.layout.heap = function() {
 						loadField( data );				
 						
 					});
-					
-				select.selectAll("option")
-					.data( data.values )
-				.enter()
-					.append("option")
-					.html(function(d) { return d; });
-					
+			
 				select.insert("option", ":first-child")
 					.html( "Select a different " + data.title );
+					
+				setTimeout(populateSelect, 300);
+				
 			}
 			
 			clearPanel();
@@ -2559,13 +2588,16 @@ TT.layout.heap = function() {
 	
 	function clearPanel() {
 		
-		p.elements.panel.selectAll("*").remove();
+		p.elements.panel.selectAll("*")
+			.remove();
 		
 	}
 
 	function hidePanel() {
 		
-		p.elements.panel.style("display", "none");
+		p.elements.panel.transition()
+			.style("opacity", 0)
+			.style("display", "none");
 
 		p.elements.panel.overlay.style("display", "none");
 		
@@ -2573,7 +2605,10 @@ TT.layout.heap = function() {
 	
 	function showPanel( params ) {
 		
-		p.elements.panel.style("display", "block");	
+		p.elements.panel.style({
+			"display": "block",
+			"opacity": 1
+		});	
 		p.elements.panel.datum( params.data );
 		
 		p.elements.panel.overlay.style("display", "block");
@@ -2605,6 +2640,58 @@ TT.layout.heap = function() {
 
 	}
 	
+	function populateFields() {
+	
+		fields.forEach( function(field) { 
+		
+			field.values = []; 
+			
+			p.data.forEach( function(d) { 
+			
+				value = field.accessor.call(field.accessor, d); 
+				
+				if( toString.call(value) !== "[object Array]" ) {
+				
+					value = [ value ];
+					
+				}
+				
+				value.forEach( function (v) {
+					
+					if ( v instanceof Object) {
+						
+						var objectInArray = false;
+						
+						for(var i = 0; i < field.values.length; i++) {
+						
+							if( field.values[i] instanceof Object && field.values[i].id === v.id ) {
+								objectInArray = true;
+								break;
+							}
+							
+						}
+						
+						if (!objectInArray) {
+							
+							field.values.push(v);
+							
+						}
+						
+					} else if ( field.values.indexOf( v ) === -1 ) {
+						
+							field.values.push(v);
+							
+					}
+					
+				});
+			} );
+			
+			field.values.sort();
+			
+		} );
+		
+	}
+	
 	function process( params ) {
 		
 		switch( params.event.type ) {
@@ -2625,59 +2712,7 @@ TT.layout.heap = function() {
 	
 	// Initialiser
 	me.initialise = function() {
-		
-		function initFields() {
-		
-			fields.forEach( function(field) { 
-			
-				field.values = []; 
 				
-				p.data.forEach( function(d) { 
-				
-					value = field.accessor.call(field.accessor, d); 
-					
-					if( toString.call(value) !== "[object Array]" ) {
-					
-						value = [ value ];
-						
-					}
-					
-					value.forEach( function (v) {
-						
-						if ( v instanceof Object) {
-							
-							var objectInArray = false;
-							
-							for(var i = 0; i < field.values.length; i++) {
-							
-								if( field.values[i] instanceof Object && field.values[i].id === v.id ) {
-									objectInArray = true;
-									break;
-								}
-								
-							}
-							
-							if (!objectInArray) {
-								
-								field.values.push(v);
-								
-							}
-							
-						} else if ( field.values.indexOf( v ) === -1 ) {
-							
-								field.values.push(v);
-								
-						}
-						
-					});
-				} );
-				
-				field.values.sort();
-				
-			} );
-			
-		}
-		
 		function initPanel() {
 			
 			var container = d3.select("body").append("div")
@@ -2713,7 +2748,7 @@ TT.layout.heap = function() {
 					
 		}
 		
-		initFields();
+		populateFields();
 		initPanel();
 		
 		initialised = true;
@@ -2726,6 +2761,10 @@ TT.layout.heap = function() {
 	// Accessors
 	me.heap = function(_) {
 		if( !arguments.length ) return p.heap;
+		
+		var heap = _;
+		
+		p.heap = heap;
 		
 		// Link UI to a heap layout
 		TT.observer.make( heap );
