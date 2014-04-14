@@ -1590,17 +1590,21 @@ TT.layout.heap = function() {
 			
 			if(zoom.scale() > p.thresholds.images) {
 				
-				events.filter(function(d) { return !d.hasImage && d.thumbnailUrl; }).append("image")
-					.attr("xlink:href", function(d) {
-						d.hasImage = true;
-						return d.thumbnailUrl;
-					});
+				var imagesEnter = events.filter(function(d) { return !d.hasImage && d.thumbnailUrl; });
+				
+				imagesEnter.append("image")
+						.attr("xlink:href", function(d) {
+							d.hasImage = true;
+							return d.thumbnailUrl;
+						});
+				
 					
 				events.selectAll("image")
 					.attr("x", -zoom.scale() / 2 * p.styles.images.factor)
 					.attr("y", -zoom.scale() / 2 * p.styles.images.factor)
 					.attr("width", zoom.scale() * p.styles.images.factor + "px")
 					.attr("height", zoom.scale() * p.styles.images.factor + "px");
+					
 				
 			} else {
 			
@@ -1617,10 +1621,18 @@ TT.layout.heap = function() {
 		
 		// Draw events
 		var eventData = p.data.filter(filterEvents);
+		var drawOutline = false;
 		
 		// Draw no events if too many would be visible
 		if(eventData.length > p.thresholds.display) {
-			eventData = [];
+		
+			drawOutline = true;
+		
+			eventData = eventData.filter( function(d) {
+				
+				return d.color;
+				
+			});
 		}
 		
 		var events = p.elements.events.selectAll("g.heap_event")
@@ -1696,7 +1708,7 @@ TT.layout.heap = function() {
 		})
 		.attr("display", function() {
 			
-			return eventData.length > 0 ? "none" : "";
+			return drawOutline ? "" : "none";
 			
 		});
 	
@@ -2452,7 +2464,7 @@ TT.layout.heap = function() {
 			addList();
 		}	
 		
-		function loadField(data) {
+		function loadField( data ) {
 			
 			function addHeader () {
 			
@@ -2493,7 +2505,12 @@ TT.layout.heap = function() {
 				var buttons = [
 					{
 						title: "Colour",
-						description: "Colour all the items matching " + data.title + " \"" +  data.selected + "\""
+						description: "Colour all the items matching " + data.title + " \"" +  data.selected + "\"",
+						action: function() {
+							
+							loadFilterByColour( data );
+							
+						}
 					}, 
 					{
 						title: "Duplicate",
@@ -2580,6 +2597,78 @@ TT.layout.heap = function() {
 			addSelect();
 			
 		}
+		
+		function loadFilterByColour( data ) {
+			
+			function addHeader () {
+			
+				
+				var header = p.elements.panel.append("ul")
+					.attr("class", "header");
+					
+				header.selectAll("li")
+					.data([
+						"<a class=\"back\" href=\"#\">Back</a>",
+						"<label>" + data.title + "</label>" + data.selected
+					])
+					.enter()
+					.append("li")
+					.html( function(d) { return d; });
+					
+				header.select("a.back")
+					.on("click", function() {
+						loadField( data );
+					});
+					
+				p.elements.panel.append("h3")
+					.html( "Colour" );
+			
+			}
+			
+			function addSwatches() {
+				
+				var colour = [d3.scale.category20(), d3.scale.category20b(), d3.scale.category20c()];
+				
+				p.elements.panel.append("ul")
+					.attr("class", "swatches")
+				.selectAll("li")
+					.data( d3.range(60) )
+				.enter()
+					.append("li")
+					.style("background-color", function(d) {
+						
+						return colour[ d%3 ](d);
+						
+					})
+					.on("click", function(index) {
+					
+							if( p.heap ) {
+							
+								p.data.forEach( function(d) { 
+									
+									if( data.accessor(d) == data.selected ) {
+									
+										d.color = colour[ index%3 ](index);
+										
+									}
+									
+								} );
+								
+								
+								p.heap.data( p.data ); 
+								
+								hidePanel();
+								
+							}			
+						
+					});
+				
+			}
+			
+			clearPanel();
+			addHeader();
+			addSwatches();
+		}
 			
 		showPanel( params );
 		loadContent ( params.data );
@@ -2595,9 +2684,7 @@ TT.layout.heap = function() {
 
 	function hidePanel() {
 		
-		p.elements.panel.transition()
-			.style("opacity", 0)
-			.style("display", "none");
+		p.elements.panel.style("display", "none");
 
 		p.elements.panel.overlay.style("display", "none");
 		
@@ -2606,8 +2693,7 @@ TT.layout.heap = function() {
 	function showPanel( params ) {
 		
 		p.elements.panel.style({
-			"display": "block",
-			"opacity": 1
+			"display": "block"
 		});	
 		p.elements.panel.datum( params.data );
 		

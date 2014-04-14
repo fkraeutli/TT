@@ -231,11 +231,13 @@ a, a:visited {
 	
 	.ui_panel {
 		
+		@panelWidth: 360px;
+		
 		display: none;
 		top:0;
 		left:0;
 		position: absolute;
-		width: 25%;
+		width: @panelWidth;
 		height: 40%;
 		background: white;
 		border-radius: 1em;
@@ -244,8 +246,9 @@ a, a:visited {
 		overflow-y: auto;
 		pointer-events: all;
 		
-		> * {
-			-webkit-transition: margin 1s linear;
+		> h3 {
+			font-weight: normal;
+			text-align: center;
 		}
 		
 		ul {
@@ -286,6 +289,25 @@ a, a:visited {
 				top: 50%;
 				width: 4px;
 				height: 8px;
+			}
+			
+		}
+		
+		ul.swatches {
+			
+			li {
+				@gap: 1px;
+				@numSwatches: 10;
+				@swatchSize: @panelWidth/@numSwatches - @gap;
+				width: @swatchSize;
+				height: @swatchSize;
+				margin: 0;
+				margin-right: @gap;
+				margin-bottom: @gap;
+				padding: 0;
+				display: block;
+				float: left;
+				
 			}
 			
 		}

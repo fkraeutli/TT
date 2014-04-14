@@ -99,7 +99,7 @@ TT.ui.panel = function() {
 			addList();
 		}	
 		
-		function loadField(data) {
+		function loadField( data ) {
 			
 			function addHeader () {
 			
@@ -140,7 +140,12 @@ TT.ui.panel = function() {
 				var buttons = [
 					{
 						title: "Colour",
-						description: "Colour all the items matching " + data.title + " \"" +  data.selected + "\""
+						description: "Colour all the items matching " + data.title + " \"" +  data.selected + "\"",
+						action: function() {
+							
+							loadFilterByColour( data );
+							
+						}
 					}, 
 					{
 						title: "Duplicate",
@@ -227,6 +232,78 @@ TT.ui.panel = function() {
 			addSelect();
 			
 		}
+		
+		function loadFilterByColour( data ) {
+			
+			function addHeader () {
+			
+				
+				var header = p.elements.panel.append("ul")
+					.attr("class", "header");
+					
+				header.selectAll("li")
+					.data([
+						"<a class=\"back\" href=\"#\">Back</a>",
+						"<label>" + data.title + "</label>" + data.selected
+					])
+					.enter()
+					.append("li")
+					.html( function(d) { return d; });
+					
+				header.select("a.back")
+					.on("click", function() {
+						loadField( data );
+					});
+					
+				p.elements.panel.append("h3")
+					.html( "Colour" );
+			
+			}
+			
+			function addSwatches() {
+				
+				var colour = [d3.scale.category20(), d3.scale.category20b(), d3.scale.category20c()];
+				
+				p.elements.panel.append("ul")
+					.attr("class", "swatches")
+				.selectAll("li")
+					.data( d3.range(60) )
+				.enter()
+					.append("li")
+					.style("background-color", function(d) {
+						
+						return colour[ d%3 ](d);
+						
+					})
+					.on("click", function(index) {
+					
+							if( p.heap ) {
+							
+								p.data.forEach( function(d) { 
+									
+									if( data.accessor(d) == data.selected ) {
+									
+										d.color = colour[ index%3 ](index);
+										
+									}
+									
+								} );
+								
+								
+								p.heap.data( p.data ); 
+								
+								hidePanel();
+								
+							}			
+						
+					});
+				
+			}
+			
+			clearPanel();
+			addHeader();
+			addSwatches();
+		}
 			
 		showPanel( params );
 		loadContent ( params.data );
@@ -242,9 +319,7 @@ TT.ui.panel = function() {
 
 	function hidePanel() {
 		
-		p.elements.panel.transition()
-			.style("opacity", 0)
-			.style("display", "none");
+		p.elements.panel.style("display", "none");
 
 		p.elements.panel.overlay.style("display", "none");
 		
@@ -253,8 +328,7 @@ TT.ui.panel = function() {
 	function showPanel( params ) {
 		
 		p.elements.panel.style({
-			"display": "block",
-			"opacity": 1
+			"display": "block"
 		});	
 		p.elements.panel.datum( params.data );
 		

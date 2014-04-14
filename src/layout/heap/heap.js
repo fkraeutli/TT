@@ -219,17 +219,21 @@ TT.layout.heap = function() {
 			
 			if(zoom.scale() > p.thresholds.images) {
 				
-				events.filter(function(d) { return !d.hasImage && d.thumbnailUrl; }).append("image")
-					.attr("xlink:href", function(d) {
-						d.hasImage = true;
-						return d.thumbnailUrl;
-					});
+				var imagesEnter = events.filter(function(d) { return !d.hasImage && d.thumbnailUrl; });
+				
+				imagesEnter.append("image")
+						.attr("xlink:href", function(d) {
+							d.hasImage = true;
+							return d.thumbnailUrl;
+						});
+				
 					
 				events.selectAll("image")
 					.attr("x", -zoom.scale() / 2 * p.styles.images.factor)
 					.attr("y", -zoom.scale() / 2 * p.styles.images.factor)
 					.attr("width", zoom.scale() * p.styles.images.factor + "px")
 					.attr("height", zoom.scale() * p.styles.images.factor + "px");
+					
 				
 			} else {
 			
@@ -246,10 +250,18 @@ TT.layout.heap = function() {
 		
 		// Draw events
 		var eventData = p.data.filter(filterEvents);
+		var drawOutline = false;
 		
 		// Draw no events if too many would be visible
 		if(eventData.length > p.thresholds.display) {
-			eventData = [];
+		
+			drawOutline = true;
+		
+			eventData = eventData.filter( function(d) {
+				
+				return d.color;
+				
+			});
 		}
 		
 		var events = p.elements.events.selectAll("g.heap_event")
@@ -325,7 +337,7 @@ TT.layout.heap = function() {
 		})
 		.attr("display", function() {
 			
-			return eventData.length > 0 ? "none" : "";
+			return drawOutline ? "" : "none";
 			
 		});
 	
