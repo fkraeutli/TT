@@ -141,7 +141,7 @@ a:visited {
   left: 0;
   position: absolute;
   width: 25%;
-  height: 60%;
+  height: 40%;
   background: white;
   border-radius: 1em;
   box-shadow: 0px 3px 20px rgba(0, 0, 0, 0.2);
@@ -177,6 +177,11 @@ a:visited {
   top: 50%;
   width: 4px;
   height: 8px;
+}
+.ui_panel select.select {
+  margin: auto;
+  display: block;
+  width: 90%;
 }
 .ui_panel ul.operations {
   overflow: hidden;

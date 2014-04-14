@@ -2492,11 +2492,8 @@ TT.layout.heap = function() {
 				
 				p.elements.panel.append("div")
 					.attr("class", "instructions")
-				.selectAll("p")
-					.data( ["or", "select a different " + data.title] )
-					.enter()
-					.append("p")
-					.html( function(d) {return d;} );
+				.append("p")
+					.html( "or" );
 				
 			}
 			
@@ -2535,23 +2532,24 @@ TT.layout.heap = function() {
 			
 			function addSelect() {
 				
-				p.elements.panel.append("ul")
+				var select = p.elements.panel.append("select")
 					.attr("class", "select")
-				.selectAll("li")
-					.data( data.values )
-				.enter()
-					.append("li")
-					.html(function(d) {return d;})
-					.on("click", function(d) {
+					.on("change", function(d) {
 						
-						data.selected = d;
-						loadField( data );
-						console.log(d);
-						console.log(data);
-						
+						var selected = this.options[this.selectedIndex].__data__ ;
+						data.selected = selected;
+						loadField( data );				
 						
 					});
-				
+					
+				select.selectAll("option")
+					.data( data.values )
+				.enter()
+					.append("option")
+					.html(function(d) { return d; });
+					
+				select.insert("option", ":first-child")
+					.html( "Select a different " + data.title );
 			}
 			
 			clearPanel();
@@ -2560,7 +2558,6 @@ TT.layout.heap = function() {
 			addInstructions();
 			addSelect();
 			
-			console.log( data );
 		}
 		
 		function showPanel( params ) {
@@ -2605,7 +2602,6 @@ TT.layout.heap = function() {
 		switch( params.event.type ) {
 			
 			case "click":
-				console.log( params.data );
 				panel( params );
 				break;
 				
