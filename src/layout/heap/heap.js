@@ -209,7 +209,7 @@ TT.layout.heap = function() {
 		
 		function updateEventsAppearance(events) {
 		
-			events.select("circle.eventCircle")
+			events.select("circle.event_circle")
 				.attr("r", attr.event.circle.r)
 				.style("fill", attr.event.circle.fill);
 						
