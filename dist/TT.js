@@ -7,9 +7,7 @@ var  TT = {
 		url: "http://www.kraeutli.com"
 	},
 	version: "0.0.1"
-};
-  
-  ;TT.crossfilter = function() {
+};;TT.crossfilter = function() {
 	
 	var FILTER_TYPE_CONTINUOUS		= "continuous",
 		FILTER_TYPE_TAGS			= "tags",
@@ -808,633 +806,9 @@ var  TT = {
 String.prototype.ucfirst = function() {
     return this.charAt(0).toUpperCase() + this.slice(1);
 };
-;/*
+;TT.layout = {};;/*
 
-Generates heap view on array of data
-
-data format: {
-
-	id: "",
-	from: Date(),
-	to: Date()
-
-}
-
-
-*/
-
-TT.heap = function() {
-	
-	if(!TT.heap.id) TT.heap.id = 0;
-	
-	var	initialised = false,
-		id = TT.heap.id++,
-		me = {},
-		heap = this,
-		nmsp = "hp_" + id,
-		zoom;
-	
-	var p = {
-		
-		axis: {},
-		
-		data: [],
-		
-		elements: {
-			
-		},
-		
-		format: {
-			
-			year: d3.time.format("%Y"),
-			date: d3.time.format("%d %b %Y")
-			
-		},
-		
-		grid: {
-			
-			availableWidth: null,
-			maxRow: 0,
-			numCols: null,
-			initialised: false,
-			range: null,
-			resolution: null,
-			table: []
-			
-		},
-		
-		scales: {
-			
-			minMax: {
-				
-				// Update zoom extent here
-				
-				zoom: d3.scale.linear()
-					.domain( [0.5, 240] ) 
-					.range( [0, 1] )
-				
-			}
-			
-		},
-		
-		styles: {
-			
-			events: {
-				diameter: 1
-			},
-			
-			images: {
-				factor: 1
-			}
-		},
-		
-		thresholds: {
-			
-			display: 2000, // amount of events
-			images: 30 // zoom factor
-			
-		},
-		
-		view: {
-			
-			from: new Date( 1900 , 0, 1 ),
-			to: new Date( 2000 , 0, 1 ),
-			
-			width: 800,
-			height: 600,
-			
-			padding: 40
-			
-		},
-		zoom: {
-			factor: 1
-		}	
-	};
-	
-	// REMOVE
-	test_heap_p  = p;
-	
-	var attr = {
-		
-		axis: {
-		
-			tickFormat: function (d) {
-				if( Math.round( (p.axis.scale().domain()[1].getFullYear() - p.axis.scale().domain()[0].getFullYear()) / p.axis.ticks()) >= 1 ) { // If there is not more than one tick per year represented
-					return p.format.year(d);
-				} else {
-					return p.format.date(d);
-				}
-			}
-			
-		},
-		
-		event: {
-			
-			circle: {
-				
-				cx: -p.styles.events.diameter / 2,
-				
-				cy: -p.styles.events.diameter / 2,
-				
-				fill: function (d) {
-					return d.color || null;	
-				},
-			
-				r: function() { return Math.min(10, p.zoom.factor) * p.styles.events.diameter / 2; }
-				
-			},
-			
-			transform: function (d)  {
-			
-				return "translate(" + x(d[nmsp].x) + "," + y(d[nmsp].y) + ")";
-				
-			}
-			
-		}
-
-	};
-			
-	// Init scales used for panning and zooming
-	var x, y;
-	
-	// Private functions
-	
-	function doZoom() {
-		
-		if(d3.event)
-			p.zoom.factor = d3.event.scale;
-		
-		var ax = p.svg.select(".heap_axis");
-		
-		p.scales.axis.domain( [ p.scales.pxToDate( x.domain()[0] ), p.scales.pxToDate( x.domain()[1] ) ] );
-		
-		update();
-		
-		ax.call(p.axis);
-		
-	}
-	
-	function update() {		
-	
-		function createEventsAppearance(events) {
-			
-			// Circle
-			events.append("circle")
-				.attr("class", "eventCircle")
-				.attr("cx", attr.event.circle.cx)
-				.attr("cy", attr.event.circle.cy)
-				.attr("r", attr.event.circle.r)
-				.style("fill", attr.event.circle.fill);
-				
-		}
-		
-		function filterEvents(d) { 
-		
-			/*
-			
-			Remove data
-			- If the item is completely outside of the viewable area
-			
-			*/
-		
-			return x(d[nmsp].x)  >= 0 &&
-				x(d[nmsp].x) <= p.view.width &&
-				y(d[nmsp].y) > -p.styles.events.diameter && 
-				y(d[nmsp].y) < p.view.height;
-				
-		}
-		
-		function updateDataValues() {
-		
-			if (p.grid.initialised) return false;
-					
-			function makeGrid() {
-				
-				p.grid.availableWidth = p.scales.dateToPx(p.view.to) - p.scales.dateToPx(p.view.from);
-				p.grid.numCols = Math.floor( p.grid.availableWidth / p.styles.events.diameter );
-					
-				p.grid.range = p.view.to - p.view.from;
-				p.grid.resolution = p.grid.range / p.grid.numCols;
-				
-				p.grid.table = [];
-				
-				for( var i = 0; i < p.grid.numCols; i++ ) {
-					
-					p.grid.table[i] = Array();
-					
-				}
-				
-				p.grid.maxRow = 0;
-						
-				// Set initial parameters
-				p.data.forEach( function(d) {
-					
-					// Select initial column and row
-					d[nmsp].col = d[nmsp].initCol = Math.min( Math.floor( ( (d.from.valueOf() + ( d.to.valueOf() - d.from.valueOf() ) / 2) - p.view.from.valueOf() ) / p.grid.resolution ), p.grid.numCols - 1);		
-
-					// Define tolerance columns based on from/to dates;
-					d[nmsp].minCol = Math.max( Math.floor( ( d.from.valueOf() - p.view.from.valueOf() ) / p.grid.resolution ), 0); // Lowest possible column or zero
-					d[nmsp].maxCol = Math.min( Math.ceil( ( d.to.valueOf() - p.view.from.valueOf() ) / p.grid.resolution ), p.grid.numCols - 1); // Highest possible column or maxiumum
-					
-					// Generate array for candidate column selection
-					d[nmsp].candidateCols = d3.range( d[nmsp].initCol, d[nmsp].minCol - 1, -1 ).concat( d3.range( d[nmsp].initCol + 1, d[nmsp].maxCol + 1 ) );
-				
-					// Add item to row smallest row
-					var minRow = p.grid.maxRow;
-					
-					for( var i = 0; i < d[nmsp].candidateCols.length; i++ ) {	
-						
-						if ( p.grid.table[ d[nmsp].candidateCols[i] ].length  < minRow) {
-							d[nmsp].col = d[nmsp].candidateCols[i];
-							minRow = p.grid.table[ d[nmsp].candidateCols[i] ].length;
-						}
-						
-					}
-					d[nmsp].row = minRow;
-					
-					// Add to grid
-					p.grid.table[ d[nmsp].col ][ d[nmsp].row ] = d;
-					
-					if (minRow == p.grid.maxRow) {
-						p.grid.maxRow++;
-					}
-
-				} );
-				
-				
-			}
-			// Initialise heap grid
-			makeGrid();	
-			
-			// Translate columns and rows to x,y coordinates
-			p.data.forEach( function(d) {
-				
-				d[nmsp].x = p.scales.dateToPx( d[nmsp].col * p.grid.resolution + p.view.from.valueOf() );
-				
-				var displace = p.grid.table[ d[nmsp].col ].length * p.styles.events.diameter / 2  + p.view.height / 2 ;
-				d[nmsp].y = -d[nmsp].row * p.styles.events.diameter + displace - displace % p.styles.events.diameter;
-				
-			});
-			
-			p.grid.initialised = true;
-		}
-		
-		function updateEventsAppearance(events) {
-		
-			events.select("circle.eventCircle")
-				.attr("r", attr.event.circle.r)
-				.style("fill", attr.event.circle.fill);
-						
-		}		
-		
-		function updateEventsImages(events) {
-			
-			if(p.zoom.factor > p.thresholds.images) {
-				
-				events.filter(function(d) { return !d.hasImage && d.thumbnailUrl; }).append("image")
-					.attr("xlink:href", function(d) {
-						d.hasImage = true;
-						return d.thumbnailUrl;
-					});
-					
-				events.selectAll("image")
-					.attr("x", -p.zoom.factor / 2 * p.styles.images.factor)
-					.attr("y", -p.zoom.factor / 2 * p.styles.images.factor)
-					.attr("width", p.zoom.factor * p.styles.images.factor + "px")
-					.attr("height", p.zoom.factor * p.styles.images.factor + "px");
-				
-			} else {
-			
-				events.selectAll("image").remove();
-				events.each( function(d) { d.hasImage = false; } );
-				
-			}
-			
-		}
-		
-		if ( !initialised ) return false;
-	
-		updateDataValues();
-		
-		// Draw events
-		var eventData = p.data.filter(filterEvents);
-		
-		// Draw no events if too many would be visible
-		if(eventData.length > p.thresholds.display) {
-			eventData = [];
-		}
-		
-		var events = p.elements.events.selectAll("g.heap_event")
-			.data( eventData, function(d) {return d.id;} );
-		
-		// Add new events
-		var eventsEnter = events.enter()
-			.append("g")
-			.attr("id", function(d) {
-					return "hs" + id + "_event_" + d.id;
-				})
-			.attr("class", "heap_event")
-			.attr("transform", attr.event.transform)
-			.on("click", function(d) { console.log(d); })
-			.each(function(d) { d.hasImage = false; } );
-			
-		// Add event appearance
-		createEventsAppearance( eventsEnter );
-		
-		// Update events
-		events.attr("transform", attr.event.transform);
-		
-		// Update event appearance
-		updateEventsAppearance(events);
-		
-		// Remove events
-		events.exit().remove();
-		
-		// Add or update images
-		updateEventsImages(events);
-		
-		// Draw outline
-		p.elements.outline.attr("d", function() {
-
-			var path = [],
-				i = -1,
-				n = p.grid.table.length,
-				d;
-				
-			// Generate path part per value				
-			while (++i < n) {
-				
-				d = p.grid.table[i];
-				
-				if( d.length > 0) {
-					
-					path.push( "S", x( d[ d.length-1 ][nmsp].x - p.styles.events.diameter/2 ), ",", y( d[ d.length-1 ][nmsp].y ), " ", x( d[ d.length-1 ][nmsp].x ), ",", y( d[ d.length-1 ][nmsp].y ) );	
-					path.unshift( "S", x( d[ 0 ][nmsp].x + p.styles.events.diameter/2 ), ",", y( d[ 0 ][nmsp].y ) , " " , x( d[ 0 ][nmsp].x ), ",", y( d[ 0 ][nmsp].y ) ); 
-					
-					//path.push( "L", x( d[ d.length-1 ][nmsp].x ), ",", y( d[ d.length-1 ][nmsp].y ) );	
-					//path.unshift( "L", x( d[ 0 ][nmsp].x ), ",", y( d[ 0 ][nmsp].y ) ); 
-				}
-				
-			}
-			path.unshift( "M", path[1], ",", path[3] );
-			path.push("Z");
-			
-			return path.join("");
-			
-		})
-		.attr("display", function() {
-			
-			return eventData.length > 0 ? "none" : "";
-			
-		});
-	
-	}
-	
-	function updateMinMax() {
-		
-		if(p.data) {
-			var minFrom = d3.min( p.data, function(d) { return d.from; } ),
-				maxTo = d3.max( p.data, function(d) { return d.to; } );
-					
-			p.view.from = minFrom;//new Date( minFrom.valueOf() - 0.2 * (maxTo.valueOf() - minFrom.valueOf()) );
-			p.view.to = maxTo;//new Date( maxTo.valueOf() + 0.2 * (maxTo.valueOf() - minFrom.valueOf()) );
-		}
-	}
-
-
-	// Initialiser
-	me.apply = function () {
-		
-		function initHeap() {
-			
-			function initAxis() {
-			
-				p.scales.axis = d3.time.scale()
-					.domain( [ p.scales.pxToDate( x.domain()[0] ), p.scales.pxToDate( x.domain()[1] ) ] )
-					.range( [0, p.view.width] );
-				
-				p.axis = d3.svg.axis()
-					.scale(p.scales.axis)
-					.tickSize(p.view.height - p.view.padding)
-					.tickFormat(attr.axis.tickFormat)
-					.orient("top");
-					
-				p.elements.axis = p.svg.append("g")
-					.attr("class", "heap_axis")
-					.attr("id","hs" + id + "_axis")
-					.call(p.axis)
-					.attr("transform", "translate(0," + ( p.view.height - p.view.padding / 2 ) + ")");
-					
-			}
-			
-			function initEvents() {
-			
-				p.elements.outline = p.svg.insert("g")
-					.attr("class", "heap_outline")
-					.attr("id", "hs" + id + "_outline")
-					.append("path");
-					
-				p.elements.events = p.svg.insert("g")
-					.attr("class", "heap_events")
-					.attr("id", "hs" + id + "_events");
-					
-			}
-				
-			function initScales() {
-			
-			
-				x = d3.scale.linear()
-					.domain([0, p.view.width])
-					.range([0, p.view.width ]);
-				
-				y = d3.scale.linear()
-					.domain([0, p.view.height])
-					.range([0, p.view.height]);
-					
-
-			
-				p.scales.dateToPx = d3.scale.linear()
-					.domain( [ p.view.from.valueOf(), p.view.to.valueOf() ] )
-					.range( [ p.view.padding, p.view.width - p.view.padding ] );
-					
-				p.scales.pxToDate = d3.scale.linear()
-					.domain( [ p.view.padding, p.view.width - p.view.padding ] )
-					.range( [ p.view.from.valueOf(), p.view.to.valueOf() ] );
-					
-			}	
-			
-			function initZoom() {						
-				
-				zoom = d3.behavior.zoom()
-					.x(x)
-					.y(y)
-					.scaleExtent( p.scales.minMax.zoom.domain() );
-									
-				p.svg.select(".heap_events").insert("rect",":first-child")
-					.attr("width", p.view.width)
-					.attr("height", p.view.height)
-					.attr("class","overlay");
-					
-				p.svg.select(".heap_events").call( zoom.on("zoom", doZoom) );
-				
-			}
-			
-							
-			initScales();
-			initEvents();
-			initAxis();
-			initZoom();	
-			
-		}
-		
-		// Update parameters
-		
-		p.svg = arguments[0];
-
-		p.view.width = +p.svg.attr("width");
-		p.view.height = +p.svg.attr("height");
-		
-		console.log(p.view);
-		
-		updateMinMax();
-		initHeap();
-		
-		initialised = true;
-		
-		update();
-		
-	};
-
-	// Accessors
-	me.data = function(_) {
-		if( !arguments.length ) return p.data;
-		p.data = _;
-		
-		p.data.forEach( function(d) {
-			if( !d.hasOwnProperty(nmsp) ) {
-				d[nmsp] = {};
-			}
-		});
-		
-		p.grid.initialised = false;
-		
-		updateMinMax();
-		
-		if(initialised) {
-			update();
-		}
-		
-		return me;
-	};
-	
-	me.update = function() {
-		doZoom();
-	};
-	
-	// Linking accessors	
-	me.x = function(_) {
-		if( !arguments.length ) return x;
-		x = _;
-		
-		return me;
-	};
-		
-	me.y = function(_) {
-		if( !arguments.length ) return y;
-		y = _;
-		
-		return me;
-	};
-	
-	me.styles = {};
-	
-	me.styles.events = function(name, value) {
-		
-		if (arguments.length < 2) {
-		
-			if(typeof name === "string") {
-				return p.styles.events[name];
-			} else if (typeof name === "object") {
-			
-				for(var i in name) {				
-					p.styles.events[i] = name[i];
-				}
-				
-			}
-		
-		} else {
-			
-			p.styles.events[name] = value;
-		}
-		
-		p.grid.initialised = false;
-		update();
-		
-		return me;
-		
-	};
-
-	me.threshold = function(name, value) {
-		
-		if (arguments.length < 2) {
-		
-			if(typeof name === "string") {
-				return p.thresholds[name];
-			} else if (typeof name === "object") {
-			
-				for(var i in name) {				
-					p.thresholds[i] = name[i];
-				}
-				
-			}
-		
-		} else {
-			
-			p.thresholds[name] = value;
-		}
-		
-		update();
-		
-		return me;
-		
-	};
-	
-	return me;
-	
-};;TT.observer = {
-
-	addSubscriber: function(callback) {
-		this.subscribers[this.subscribers.length] = callback;
-	},
-
-	removeSubscriber: function(callback) {
-		for (var i = 0; i < this.subscribers.length; i++) {
-			if (this.subscribers[i] === callback) {
-				delete(this.subscribers[i]);
-			} 
-		}
-	},
-	
-	publish: function(what) {
-		for (var i = 0; i < this.subscribers.length; i++) {
-			if (typeof this.subscribers[i] === 'function') {
-
-				this.subscribers[i](what);
-			}
-		} 
-	},
-	
-	make: function(o) { // turns an object into a publisher
-		for(var i in this) {
-			o[i] = this[i];
-			o.subscribers = [];
-		}
-	}
-};
-
-;/*
-
-Generates Timeline view on array of data
+Generates Bars view on array of data
 
 data format: {
 
@@ -1449,15 +823,15 @@ data format: {
 
 */
 
-TT.timeline = function() {
+TT.layout.bars = function() {
 	
-	if(!TT.timeline.id) TT.timeline.id = 0;
+	if(!TT.layout.bars.id) TT.layout.bars.id = 0;
 	
 	var	initialised = false,
-		id = TT.timeline.id++,
+		id = TT.layout.bars.id++,
 		nmsp = "tl_" + id,
 		me = {},
-		timeline = this,
+		bars = this,
 		zoom;
 		
 	var p = {
@@ -1534,7 +908,7 @@ TT.timeline = function() {
 	};
 	
 	// REMOVE
-	test_timeline_p = p;
+	test_bars_p = p;
 	
 	var attr = {
 		
@@ -1607,8 +981,8 @@ TT.timeline = function() {
 	
 	function doZoom() {
 		
-		var events = p.elements.events.selectAll("g.timeline_event");
-		var ax = p.svg.select(".timeline_axis");
+		var events = p.elements.events.selectAll("g.bars_event");
+		var ax = p.svg.select(".bars_axis");
 		
 		p.scales.axis.domain( [ p.scales.pxToDate( x.domain()[0] ), p.scales.pxToDate( x.domain()[1] ) ] );
 		
@@ -1742,7 +1116,7 @@ TT.timeline = function() {
 		
 		p.displayData = p.data.filter( filterEvents );
 		
-		var events = p.elements.events.selectAll("g.timeline_event")
+		var events = p.elements.events.selectAll("g.bars_event")
 			.data( p.displayData, function(d) { return d.id; } );
 						
 		// Update events
@@ -1757,7 +1131,7 @@ TT.timeline = function() {
 				.attr("id", function(d) {
 					return "tl" + id + "_event_" + d.id;
 				})
-			.attr("class", "timeline_event")
+			.attr("class", "bars_event")
 			.attr("transform", attr.event.transform)
 			.on("click", function(d) { 
 				console.log(d); 
@@ -1799,7 +1173,7 @@ TT.timeline = function() {
 	// Initialiser
 	me.apply = function () {
 		
-		function initTimeline() {
+		function initBars() {
 			
 			function initAxis() {
 			
@@ -1814,7 +1188,7 @@ TT.timeline = function() {
 					.orient("top");
 					
 				p.elements.axis = p.svg.append("g")
-					.attr("class", "timeline_axis")
+					.attr("class", "bars_axis")
 					.attr("id","tl" + id + "_axis")
 					.call(p.axis)
 					.attr("transform", "translate(0," + ( p.view.height - p.view.padding / 2 ) + ")");
@@ -1824,7 +1198,7 @@ TT.timeline = function() {
 			function initEvents() {
 			
 				p.elements.events = p.svg.insert("g")
-					.attr("class", "timeline_events")
+					.attr("class", "bars_events")
 					.attr("id", "tl" + id + "_events");
 					
 			}
@@ -1848,12 +1222,12 @@ TT.timeline = function() {
 					.y(y)
 					.scaleExtent( p.scales.minMax.zoom.domain() );
 									
-				p.svg.select(".timeline_events").insert("rect",":first-child")
+				p.svg.select(".bars_events").insert("rect",":first-child")
 					.attr("width", p.view.width)
 					.attr("height", p.view.height)
 					.attr("class","overlay");
 					
-				p.svg.select(".timeline_events").call( zoom.on("zoom", doZoom) ).on("dblclick.zoom", null);
+				p.svg.select(".bars_events").call( zoom.on("zoom", doZoom) ).on("dblclick.zoom", null);
 				
 			}
 			
@@ -1884,7 +1258,7 @@ TT.timeline = function() {
 			
 		}
 		
-		initTimeline();
+		initBars();
 		
 		initialised = true;
 		
@@ -1991,6 +1365,1519 @@ TT.timeline = function() {
 		
 		return me;
 		
+	};
+	
+	return me;
+	
+};;/*
+
+Generates heap view on array of data
+
+data format: {
+
+	id: "",
+	from: Date(),
+	to: Date()
+
+}
+
+
+*/
+
+TT.layout.heap = function() {
+	
+	if(!TT.layout.heap.id) TT.layout.heap.id = 0;
+	
+	var	initialised = false,
+		id = TT.layout.heap.id++,
+		me = {},
+		heap = this,
+		nmsp = "hp_" + id,
+		x,
+		y,
+		zoom;
+	
+	var p = {
+		
+		data: [],
+		
+		elements: {
+			
+		},
+				
+		grid: {
+			
+			availableWidth: null,
+			maxRow: 0,
+			numCols: null,
+			initialised: false,
+			range: null,
+			resolution: null,
+			table: []
+			
+		},
+		
+		parent: false,
+		
+		styles: {
+			
+			events: {
+				diameter: 1
+			},
+			
+			images: {
+				factor: 1
+			}
+		},
+		
+		thresholds: {
+			
+			display: 2000, // amount of events
+			images: 30 // zoom factor
+			
+		},
+		
+		translate: [0, 0],
+		
+		view: {}
+	};
+	
+	// REMOVE
+	test_heap_p  = p;
+	
+	var attr = {
+		
+		event: {
+			
+			circle: {
+				
+				cx: -p.styles.events.diameter / 2,
+				
+				cy: -p.styles.events.diameter / 2,
+				
+				fill: function (d) {
+					return d.color || null;	
+				},
+			
+				r: function() { return Math.min( 10, zoom.scale()) * p.styles.events.diameter / 2; }
+				
+			},
+			
+			transform: function (d)  {
+			
+				return "translate(" + _x(d[nmsp].x) + "," + _y(d[nmsp].y) + ")";
+				
+			}
+			
+		}
+
+	};		
+		
+	function update() {		
+	
+		function createEventsAppearance(events) {
+			
+			// Circle
+			events.append("circle")
+				.attr("class", "event_circle")
+				.attr("cx", attr.event.circle.cx)
+				.attr("cy", attr.event.circle.cy)
+				.attr("r", attr.event.circle.r)
+				.style("fill", attr.event.circle.fill);
+				
+		}
+		
+		function filterEvents(d) { 
+
+			/*
+			
+			Remove data
+			- If the item is completely outside of the viewable area
+			
+			*/
+		
+			return _x(d[nmsp].x)  >= 0 &&
+				_x(d[nmsp].x) <= p.view.width &&
+				_y(d[nmsp].y) > -p.styles.events.diameter && 
+				_y(d[nmsp].y) < p.view.height;
+				
+		}
+		
+		function updateDataValues() {
+		
+			if (p.grid.initialised) return false;
+					
+			function makeGrid() {
+				
+				p.grid.availableWidth = p.scales.dateToPx( p.view.to ) - p.scales.dateToPx( p.view.from );
+				p.grid.numCols = Math.floor( p.grid.availableWidth / p.styles.events.diameter );
+					
+				p.grid.range = p.view.to - p.view.from;
+				p.grid.resolution = p.grid.range / p.grid.numCols;
+				
+				p.grid.table = [];
+				
+				for( var i = 0; i < p.grid.numCols; i++ ) {
+					
+					p.grid.table[i] = Array();
+					
+				}
+				
+				p.grid.maxRow = 0;
+						
+				// Set initial parameters
+				p.data.forEach( function(d) {
+					
+					// Select initial column and row
+					d[nmsp].col = d[nmsp].initCol = Math.min( Math.floor( ( (d.from.valueOf() + ( d.to.valueOf() - d.from.valueOf() ) / 2) - p.view.from.valueOf() ) / p.grid.resolution ), p.grid.numCols - 1);		
+
+					// Define tolerance columns based on from/to dates;
+					d[nmsp].minCol = Math.max( Math.floor( ( d.from.valueOf() - p.view.from.valueOf() ) / p.grid.resolution ), 0); // Lowest possible column or zero
+					d[nmsp].maxCol = Math.min( Math.ceil( ( d.to.valueOf() - p.view.from.valueOf() ) / p.grid.resolution ), p.grid.numCols - 1); // Highest possible column or maxiumum
+					
+					// Generate array for candidate column selection
+					d[nmsp].candidateCols = d3.range( d[nmsp].initCol, d[nmsp].minCol - 1, -1 ).concat( d3.range( d[nmsp].initCol + 1, d[nmsp].maxCol + 1 ) );
+				
+					// Add item to row smallest row
+					var minRow = p.grid.maxRow;
+					
+					for( var i = 0; i < d[nmsp].candidateCols.length; i++ ) {	
+						
+						if ( p.grid.table[ d[nmsp].candidateCols[i] ].length  < minRow) {
+							d[nmsp].col = d[nmsp].candidateCols[i];
+							minRow = p.grid.table[ d[nmsp].candidateCols[i] ].length;
+						}
+						
+					}
+					d[nmsp].row = minRow;
+					
+					// Add to grid
+					p.grid.table[ d[nmsp].col ][ d[nmsp].row ] = d;
+					
+					if (minRow == p.grid.maxRow) {
+						p.grid.maxRow++;
+					}
+
+				} );
+				
+				
+			}
+			// Initialise heap grid
+			makeGrid();	
+			
+			// Translate columns and rows to x,y coordinates
+			p.data.forEach( function(d) {
+				
+				d[nmsp].x = p.scales.dateToPx( d[nmsp].col * p.grid.resolution + p.view.from.valueOf() );
+				
+				var displace = p.grid.table[ d[nmsp].col ].length * p.styles.events.diameter / 2  + p.view.height / 2 ;
+				d[nmsp].y = -d[nmsp].row * p.styles.events.diameter + displace - displace % p.styles.events.diameter;
+				
+			});
+			
+			p.grid.initialised = true;
+		}
+		
+		function updateEventsAppearance(events) {
+		
+			events.select("circle.event_circle")
+				.attr("r", attr.event.circle.r)
+				.style("fill", attr.event.circle.fill);
+						
+		}		
+		
+		function updateEventsImages(events) {
+			
+			if(zoom.scale() > p.thresholds.images) {
+				
+				var imagesEnter = events.filter(function(d) { return !d.hasImage && d.thumbnailUrl; });
+				
+				imagesEnter.append("image")
+						.attr("xlink:href", function(d) {
+							d.hasImage = true;
+							return d.thumbnailUrl;
+						});
+				
+					
+				events.selectAll("image")
+					.attr("x", -zoom.scale() / 2 * p.styles.images.factor)
+					.attr("y", -zoom.scale() / 2 * p.styles.images.factor)
+					.attr("width", zoom.scale() * p.styles.images.factor + "px")
+					.attr("height", zoom.scale() * p.styles.images.factor + "px");
+					
+				
+			} else {
+			
+				events.selectAll("image").remove();
+				events.each( function(d) { d.hasImage = false; } );
+				
+			}
+			
+		}
+		
+		if ( !initialised ) return false;
+	
+		updateDataValues();
+		
+		// Draw events
+		var eventData = p.data.filter(filterEvents);
+		var drawOutline = false;
+		
+		// Draw no events if too many would be visible
+		if(eventData.length > p.thresholds.display) {
+		
+			drawOutline = true;
+		
+			eventData = eventData.filter( function(d) {
+				
+				return d.color;
+				
+			});
+		}
+		
+		var events = p.elements.events.selectAll("g.heap_event")
+			.data( eventData, function(d) {return d.id;} );
+		
+		// Add new events
+		var eventsEnter = events.enter()
+			.append("g")
+			.attr("id", function(d) {
+					return "hs" + id + "_event_" + d.id;
+				})
+			.attr("class", "heap_event")
+			.attr("transform", attr.event.transform)
+			.on("click", function(d) { 
+				if( me.hasOwnProperty("publish") ) {	
+		
+					me.publish( {data: d, event: d3.event} );
+					
+				}
+			})
+			.on("dblclick", function(d) { 
+				if( me.hasOwnProperty("publish") ) {	
+		
+					me.publish( {data: d, event: d3.event} );
+					
+				}
+			})
+			.each(function(d) { d.hasImage = false; } );
+			
+		// Add event appearance
+		createEventsAppearance( eventsEnter );
+		
+		// Update events
+		events.attr("transform", attr.event.transform);
+		
+		// Update event appearance
+		updateEventsAppearance(events);
+		
+		// Remove events
+		events.exit().remove();
+		
+		// Add or update images
+		updateEventsImages(events);
+		
+		// Draw outline
+		p.elements.outline.attr("d", function() {
+
+			var path = [],
+				i = -1,
+				n = p.grid.table.length,
+				d;
+				
+			// Generate path part per value				
+			while (++i < n) {
+				
+				d = p.grid.table[i];
+				
+				if( d.length > 0) {
+					
+					path.push( "S", _x( d[ d.length-1 ][nmsp].x - p.styles.events.diameter/2 ), ",", _y( d[ d.length-1 ][nmsp].y ), " ", _x( d[ d.length-1 ][nmsp].x ), ",", _y( d[ d.length-1 ][nmsp].y ) );	
+					path.unshift( "S", _x( d[ 0 ][nmsp].x + p.styles.events.diameter/2 ), ",", _y( d[ 0 ][nmsp].y ) , " " , _x( d[ 0 ][nmsp].x ), ",", _y( d[ 0 ][nmsp].y ) ); 
+					
+					//path.push( "L", x( d[ d.length-1 ][nmsp].x ), ",", y( d[ d.length-1 ][nmsp].y ) );	
+					//path.unshift( "L", x( d[ 0 ][nmsp].x ), ",", y( d[ 0 ][nmsp].y ) ); 
+				}
+				
+			}
+			path.unshift( "M", path[1], ",", path[3] );
+			path.push("Z");
+			
+			return path.join("");
+			
+		})
+		.attr("display", function() {
+			
+			return drawOutline ? "" : "none";
+			
+		});
+	
+	}
+	
+	function _x( value ) {
+		
+		return x(value) + zoom.scale() * p.translate[0];
+		
+	}
+	
+	function _y( value ) {
+		
+		return y(value) + zoom.scale() * p.translate[1];
+		
+	}
+
+	// Initialiser
+	me.apply = function () {
+		
+		function initHeap() {
+						
+			function initEvents() {
+			
+				p.elements.outline = p.svg.insert("g")
+					.attr("class", "heap_outline")
+					.attr("id", "hs" + id + "_outline")
+					.append("path");
+					
+				p.elements.events = p.svg.insert("g")
+					.attr("class", "heap_events")
+					.attr("id", "hs" + id + "_events");
+					
+			}
+				
+			initEvents();
+			
+		}
+		
+		initHeap();
+		
+		initialised = true;
+		
+		update();
+		
+	};
+
+	// Accessors
+	me.data = function(_) {
+		if( !arguments.length ) return p.data;
+		p.data = _;
+		
+		p.data.forEach( function(d) {
+			if( !d.hasOwnProperty(nmsp) ) {
+				d[nmsp] = {};
+			}
+		});
+		
+		p.grid.initialised = false;
+		
+		if(initialised) {
+		
+			var minFrom = d3.min( p.data, function(d) { return d.from; } );
+			var maxTo = d3.max( p.data, function(d) { return d.to; } );
+			
+			if( minFrom < p.view.from ) {
+				
+				parent.from( minFrom);
+				
+			}
+			
+			if (maxTo > p.view.to ) {
+			
+				parent.to( maxTo );
+				
+			}
+		
+			update();
+		}
+		
+		return me;
+	};
+	
+	me.identifier = function() {
+
+		return nmsp;
+		
+	};
+	
+	me.initialise = function() {
+		
+		p.svg.call(me);
+		
+		return me;
+		
+	};
+	
+	me.scales = function(_) {
+		
+		if( !arguments.length ) return p.scales;
+		p.scales = _;
+		
+		return me;
+		
+	};
+	
+	me.styles = {};
+	
+	me.styles.events = function(name, value) {
+		
+		if (arguments.length < 2) {
+		
+			if(typeof name === "string") {
+				return p.styles.events[name];
+			} else if (typeof name === "object") {
+			
+				for(var i in name) {				
+					p.styles.events[i] = name[i];
+				}
+				
+			}
+		
+		} else {
+			
+			p.styles.events[name] = value;
+		}
+		
+		p.grid.initialised = false;
+		update();
+		
+		return me;
+		
+	};
+	
+	me.svg = function(_) {
+		
+		if( !arguments.length ) return p.svg;
+		p.svg = _;
+		
+		return me;
+		
+	};
+	
+	me.parent = function(_) {
+		
+		if( !arguments.length ) return p.parent;
+		p.parent = _;
+		
+		return me;
+		
+	};
+	
+	me.threshold = function(name, value) {
+		
+		if (arguments.length < 2) {
+		
+			if(typeof name === "string") {
+				return p.thresholds[name];
+			} else if (typeof name === "object") {
+			
+				for(var i in name) {				
+					p.thresholds[i] = name[i];
+				}
+				
+			}
+		
+		} else {
+			
+			p.thresholds[name] = value;
+		}
+		
+		update();
+		
+		return me;
+		
+	};
+	
+	me.update = function() {
+
+		update();
+		
+		return me;
+		
+	};
+	
+	me.refresh = function() {
+		
+		p.grid.initialised = false;
+		update();
+		
+		return me;
+		
+	};
+	
+	me.view = function(_) {
+		
+		if( !arguments.length ) return p.view;
+		p.view = _;
+		
+		return me;
+		
+	};
+	
+	me.x = function(_) {
+		
+		if( !arguments.length ) return x;
+		x = _;
+		
+		return me;
+		
+	};
+	
+	me.y = function(_) {
+		
+		if( !arguments.length ) return y;
+		y = _;
+		
+		return me;
+		
+	};
+	
+	me.zoom = function(_) {
+		
+		if( !arguments.length ) return zoom;
+		zoom = _;
+		
+		return me;
+		
+	};
+	
+	return me;
+	
+};;TT.observer = {
+
+	addSubscriber: function(callback) {
+		this.subscribers[this.subscribers.length] = callback;
+	},
+
+	removeSubscriber: function(callback) {
+		for (var i = 0; i < this.subscribers.length; i++) {
+			if (this.subscribers[i] === callback) {
+				delete(this.subscribers[i]);
+			} 
+		}
+	},
+	
+	publish: function(what) {
+		for (var i = 0; i < this.subscribers.length; i++) {
+			if (typeof this.subscribers[i] === 'function') {
+
+				this.subscribers[i](what);
+			}
+		} 
+	},
+	
+	make: function(o) { // turns an object into a publisher
+		for(var i in this) {
+			o[i] = this[i];
+			o.subscribers = [];
+		}
+	}
+};
+
+;TT.timeline = function() {
+	
+	if(!TT.timeline.id) TT.timeline.id = 0;
+	
+	var	initialised = false,
+		id = TT.timeline.id++,
+		me = {},
+		timeline = this,
+		nmsp = "tl_" + id,
+		x,
+		y,
+		zoom;
+	
+	var p = {
+		
+		axis: {},
+		
+		children: [],
+		
+		elements: {},
+
+		format: {
+			
+			year: d3.time.format("%Y"),
+			date: d3.time.format("%d %b %Y")
+			
+		},
+		
+		scales: {
+			
+			minMax: {
+				
+				// Update zoom extent here
+				
+				zoom: d3.scale.linear()
+					.domain( [0.5, 240] ) 
+					.range( [0, 1] )
+				
+			}
+			
+		},
+		
+		svg: false,
+
+		view: {
+			
+			from: new Date( 1900 , 0, 1 ),
+			to: new Date( 2000 , 0, 1 ),
+			
+			width: 800,
+			height: 600,
+			
+			padding: 40
+			
+		}
+	};
+	
+	// REMOVE
+	test_timeline_p  = p;
+	
+	var attr = {
+		
+		axis: {
+		
+			tickFormat: function (d) {
+
+				if( Math.round( (p.axis.scale().domain()[1].getFullYear() - p.axis.scale().domain()[0].getFullYear()) / p.axis.ticks()) >= 1 ) { // If there is not more than one tick per year represented
+
+					return p.format.year(d);
+					
+				} else {
+				
+					return p.format.date(d);
+					
+				}
+
+			}
+			
+		}
+
+	};
+			
+	// Private functions
+	
+	function doZoom() {
+		
+		p.scales.axis.domain( [ p.scales.pxToDate( x.domain()[0] ), p.scales.pxToDate( x.domain()[1] ) ] );
+	
+		p.elements.axis.call(p.axis);
+		
+		update();
+		
+	}
+	
+	function update() {
+		
+		p.children.forEach( function(child) {
+			child.update();
+		} );
+		
+	}
+
+	// Initialiser
+	me.apply = function () {
+		
+		function initTimeline() {
+			
+			function initAxis() {
+			
+				p.scales.axis = d3.time.scale()
+					.domain( [ p.scales.pxToDate( x.domain()[0] ), p.scales.pxToDate( x.domain()[1] ) ] )
+					.range( [0, p.view.width] );
+				
+				p.axis = d3.svg.axis()
+					.scale(p.scales.axis)
+					.tickSize(p.view.height - p.view.padding)
+					.tickFormat(attr.axis.tickFormat)
+					.orient("top");
+					
+				p.elements.axis = p.svg.insert("g", ":first-child")
+					.attr("class", "timeline_axis axis")
+					.attr("id", nmsp + "_axis")
+					.call(p.axis)
+					.attr("transform", "translate(0," + ( p.view.height - p.view.padding / 2 ) + ")");
+					
+			}
+				
+			function initScales() {
+			
+				x = d3.scale.linear()
+					.domain([0, p.view.width])
+					.range([0, p.view.width]);
+				
+				y = d3.scale.linear()
+					.domain([0, 1])
+					.range([0, 1]);		
+			
+				// REMOVE
+				test_timeline_x = x;
+				test_timeline_y = y;
+			
+				p.scales.dateToPx = d3.scale.linear()
+					.domain( [ p.view.from.valueOf(), p.view.to.valueOf() ] )
+					.range( [ p.view.padding, p.view.width - p.view.padding ] );
+					
+				p.scales.pxToDate = d3.scale.linear()
+					.domain( p.scales.dateToPx.range() )
+					.range( p.scales.dateToPx.domain() );
+					
+			}	
+			
+			function initZoom() {						
+				
+				zoom = d3.behavior.zoom()
+					.x(x)
+					.y(y)
+					.scaleExtent( p.scales.minMax.zoom.domain() );			
+					
+				// REMOVE
+				test_timeline_zoom = zoom;
+				
+				p.elements.children = p.svg.insert("g")
+					.attr("class", "timeline_children")
+					.attr("id", nmsp + "_children")
+					.call( zoom.on("zoom", doZoom) )
+						.on( "dblclick.zoom", null)
+						.on( "dblclick", function(d) {
+							if( me.hasOwnProperty("publish") ) {	
+		
+								me.publish( {data: d, event: d3.event} );
+					
+							}
+						})
+						.on( "click", function(d) {
+							if( me.hasOwnProperty("publish") ) {	
+		
+								me.publish( {data: d, event: d3.event} );
+					
+							}
+						});
+														
+				p.elements.children.insert("rect",":first-child")
+					.attr("width", p.view.width)
+					.attr("height", p.view.height)
+					.attr("class","overlay");
+				
+			}
+							
+			initScales();
+			initAxis();
+			initZoom();	
+			
+		}
+		
+		// Update parameters
+		
+		p.svg = arguments[0];
+
+		p.view.width = +p.svg.attr("width") || p.view.width;
+		p.view.height = +p.svg.attr("height") || p.view.width;
+		
+		initTimeline();
+		
+		initialised = true;
+		
+	};
+	
+	me.refresh = function() {
+	
+		function updateAxis() {
+		
+			p.scales.axis.domain( [ p.scales.pxToDate( x.domain()[0] ), p.scales.pxToDate( x.domain()[1] ) ] )
+					.range( [0, p.view.width] );
+					
+			p.axis.tickSize(p.view.height - p.view.padding);
+
+			p.elements.axis.call( p.axis )
+				.attr("transform", "translate(0," + ( p.view.height - p.view.padding / 2 ) + ")");
+			
+		}		
+	
+		function updateScales() {
+		
+			// update domain (new width times scale)
+			var diff = p.view.width - x.range()[1];
+			x.range([ 0, p.view.width ])
+				.domain( [ x.domain()[0], x.domain()[1] + diff ] );
+			
+			//y.range([0, p.view.height ]);		
+
+			p.scales.dateToPx.domain( [ p.view.from.valueOf(), p.view.to.valueOf() ] )
+				.range( [ p.view.padding, p.view.width - p.view.padding ] );
+				
+			p.scales.pxToDate.domain( p.scales.dateToPx.range() )
+				.range( p.scales.dateToPx.domain() );
+		}
+		
+		function updateSVG() {
+					
+			p.svg.attr("width", p.view.width);
+			p.svg.attr("height", p.view.height);
+		
+		}
+		
+		function updateZoom() {
+															
+			p.svg.select(".overlay")
+				.attr("width", p.view.width)
+				.attr("height", p.view.height);
+				
+		}
+
+		updateSVG();		
+		updateScales();
+		updateAxis();
+		updateZoom();
+		
+			
+		p.children.forEach( function(child) {
+			child.refresh();
+		} );
+		
+	};
+	
+	// Children
+	me.add = function( layout ) {
+		
+		var g = p.elements.children.append("g")
+			.attr( "id", layout.identifier() );
+		
+		layout.svg( g )
+			.view( p.view )
+			.scales( p.scales )
+			.x( x )
+			.y( y )
+			.zoom( zoom )
+			.parent( me );
+			
+		if( layout.data().length ) {
+			
+			var minFrom = d3.min( layout.data(), function(d) { return d.from; } );
+			var maxTo = d3.max( layout.data(), function(d) { return d.to; } );
+			
+			if( minFrom < p.view.from ) {
+				
+				me.from( minFrom);
+				
+			}
+			
+			if (maxTo > p.view.to ) {
+			
+				me.to( maxTo );
+				
+			}
+			
+		}
+			
+		layout.initialise();
+			
+		p.children.push( layout );
+		
+		update();
+		
+	};
+	
+	// Accessors
+
+	me.domain = function(_) {
+		
+		if( !arguments.length ) return Array( p.view.from, p.view.to );
+		
+		if ( _.length === 2 &&  _[0] instanceof Date && _[1] instanceof Date && _[1] > _[0]) {
+			
+			p.view.from = _[0];
+			p.view.to = _[1];
+			
+		}
+		
+		return me;
+		
+	};
+	
+	me.from = function(_) {
+		
+		if( !arguments.length ) return p.view.from;
+		
+		p.view.from = _;		
+		
+		me.refresh();
+		
+		return me;
+		
+	};
+	
+	me.height = function(_) {
+		
+		if( !arguments.length ) return p.view.height;
+		
+		p.view.height = _;		
+		
+		me.refresh();
+		
+		return me;
+		
+	};
+
+	me.view = function() {
+		
+		return p.view;
+		
+	};
+	
+	me.width = function(_) {
+		
+		if( !arguments.length ) return p.view.width;
+		
+		p.view.width = _;
+		
+		me.refresh();
+		
+		return me;
+		
+	};
+	
+	me.to = function(_) {
+		
+		if( !arguments.length ) return p.view.to;
+		
+		p.view.to = _;		
+		
+		me.refresh();
+		
+		return me;
+		
+	};
+	
+	me.x = function(_) {
+		if( !arguments.length ) return x;
+		x = _;
+		
+		return me;
+	};
+		
+	me.y = function(_) {
+		if( !arguments.length ) return y;
+		y = _;
+		
+		return me;
+	};
+	
+	return me;
+};;TT.ui = {};;TT.ui.panel = function() {
+	
+	if(!TT.ui.panel.id) TT.ui.panel.id = 0;
+	
+	var	initialised = false,
+		id = TT.ui.panel.id++,
+		me = {},
+		nmsp = "ui_" + id,
+		x,
+		y,
+		zoom;
+		
+	var p = {
+		
+		elements: {
+			
+		},
+		
+		data: [],
+		
+		heap: false,
+		
+		fields: [],
+				
+		parent: false,
+		
+		record: {
+			
+			title: function(d) { return d.title; },
+			subtitle: function(d) { return d.subtitle; },
+			image: function(d) { return d.image; }
+			
+		},
+		
+		styles: {
+			
+			panel: {
+				
+				height: 0.6, // 60%
+				width: 0.25, // 25%
+				
+				pointer: {
+					width: 10,
+					height: 20
+				}
+			}
+
+		},
+		
+		view: {}
+	};
+	
+	// REMOVE
+	test_ui_p = p;
+	
+	function panel( params ) {
+		
+		if( !params.event || !params.data ) {
+		
+			return false;
+			
+		}
+		
+		function loadContent( data ) {
+		
+			function addHeader() {
+						
+				// Add header
+				var header = p.elements.panel.append("div")
+					.attr("class", "header")
+					.style("background-image", "url(" + p.record.image.call( p.record.image, data ) + ")" );
+					
+				header.append("h2")
+					.html( p.record.title.call( p.record.title, data ) );
+				header.append("h3")
+					.html( p.record.subtitle.call( p.record.subtitle, data ) );		
+				
+			}
+			
+			function addList() {
+							
+				// Add list
+				p.elements.panel.append("ul").attr("class", "select").selectAll("li").data( p.fields )
+					.enter()
+					.append("li")
+					.html( function(d) {
+						return "<label>" + d.title + "</label>" + d.accessor( data ); 
+					} )
+					.on( "click", function(d) {
+						d.selected = d.accessor( data );
+						loadField( d );
+					});
+				
+			}
+			
+			clearPanel();
+			
+			addHeader();
+			addList();
+		}	
+		
+		function loadField( data ) {
+			
+			function addHeader () {
+			
+				
+				var header = p.elements.panel.append("ul")
+					.attr("class", "header");
+					
+				header.selectAll("li")
+					.data([
+						"<a class=\"back\" href=\"#\">Back</a>",
+						"<label>" + data.title + "</label>" + data.selected
+					])
+					.enter()
+					.append("li")
+					.html( function(d) { return d; });
+					
+				header.select("a.back")
+					.on("click", function() {
+						loadContent( p.elements.panel.datum() );
+					});
+			
+			}
+			
+			function addInstructions() {
+				
+				p.elements.panel.append("div")
+					.attr("class", "instructions")
+				.append("p")
+					.html( "or" );
+				
+			}
+			
+			function addOperations() {
+				
+				var operations = p.elements.panel.append("ul")
+					.attr("class", "operations");
+					
+				var buttons = [
+					{
+						title: "Colour",
+						description: "Colour all the items matching " + data.title + " \"" +  data.selected + "\"",
+						action: function() {
+							
+							loadFilterByColour( data );
+							
+						}
+					}, 
+					{
+						title: "Duplicate",
+						description: "Create a new heap with the items matching " + data.title + " \"" +  data.selected + "\""
+					}, 
+					/*{
+						title: "Separate",
+						description: "Separate all items matching " + data.title + " \"" +  data.selected + "\" from their current heap"
+					},*/
+					{
+						title: "Remove",
+						description: "Remove all items matching " + data.title + " \"" +  data.selected + "\"",
+						action: function() {
+							
+							if( p.heap ) {
+								
+								p.heap.data( p.heap.data().filter( function(d) { return data.accessor(d) != data.selected;} ) ); 
+
+								// Repopulate field values
+								p.data = p.heap.data();
+								populateFields();
+								
+								hidePanel();
+								
+							}
+							
+						}
+					}
+				];
+				
+				operations.selectAll("li").data(buttons)
+					.enter()
+					.append("li")
+					.html( function(d) { 
+						
+						return "<a class=\"button\" href=\"#\">" + d.title + "</a><p class=\"description\">" + d.description + "</p>";
+						
+					})
+				.select("a")
+					.on("click", function(d) {
+						d.action();
+					});
+					
+				
+				
+			} 
+			
+			function addSelect() {
+				
+				function populateSelect() {					
+					
+					select.selectAll("option")
+						.data( data.values )
+					.enter()
+						.append("option")
+						.html(function(d) { return d; });
+						
+						
+					select.on("mouseover", null);
+						
+				}
+				
+				var select = p.elements.panel.append("select")
+					.attr("class", "select")
+					.on("change", function(d) {
+						
+						var selected = this.options[this.selectedIndex].__data__ ;
+						data.selected = selected;
+						loadField( data );				
+						
+					});
+			
+				select.insert("option", ":first-child")
+					.html( "Select a different " + data.title );
+					
+				setTimeout(populateSelect, 300);
+				
+			}
+			
+			clearPanel();
+			addHeader();
+			addOperations();
+			addInstructions();
+			addSelect();
+			
+		}
+		
+		function loadFilterByColour( data ) {
+			
+			function addHeader () {
+			
+				
+				var header = p.elements.panel.append("ul")
+					.attr("class", "header");
+					
+				header.selectAll("li")
+					.data([
+						"<a class=\"back\" href=\"#\">Back</a>",
+						"<label>" + data.title + "</label>" + data.selected
+					])
+					.enter()
+					.append("li")
+					.html( function(d) { return d; });
+					
+				header.select("a.back")
+					.on("click", function() {
+						loadField( data );
+					});
+					
+				p.elements.panel.append("h3")
+					.html( "Colour" );
+			
+			}
+			
+			function addSwatches() {
+				
+				var colour = [d3.scale.category20(), d3.scale.category20b(), d3.scale.category20c()];
+				
+				p.elements.panel.append("ul")
+					.attr("class", "swatches")
+				.selectAll("li")
+					.data( d3.range(60) )
+				.enter()
+					.append("li")
+					.style("background-color", function(d) {
+						
+						return colour[ d%3 ](d);
+						
+					})
+					.on("click", function(index) {
+					
+							if( p.heap ) {
+							
+								p.data.forEach( function(d) { 
+									
+									if( data.accessor(d) == data.selected ) {
+									
+										d.color = colour[ index%3 ](index);
+										
+									}
+									
+								} );
+								
+								
+								p.heap.data( p.data ); 
+								
+								hidePanel();
+								
+							}			
+						
+					});
+				
+			}
+			
+			clearPanel();
+			addHeader();
+			addSwatches();
+		}
+			
+		showPanel( params );
+		loadContent ( params.data );
+		
+	}
+	
+	function clearPanel() {
+		
+		p.elements.panel.selectAll("*")
+			.remove();
+		
+	}
+
+	function hidePanel() {
+		
+		p.elements.panel.style("display", "none");
+
+		p.elements.panel.overlay.style("display", "none");
+		
+	}
+	
+	function showPanel( params ) {
+		
+		p.elements.panel.style({
+			"display": "block"
+		});	
+		p.elements.panel.datum( params.data );
+		
+		p.elements.panel.overlay.style("display", "block");
+		
+		if( params.event.pageY > p.elements.panel.height / 2) {
+
+			p.elements.panel.style("top", ( params.event.pageY - p.elements.panel.height / 2 - p.styles.panel.pointer.height / 2 ) + "px" );
+
+		} else {
+		
+			p.elements.panel.style("top", (p.styles.panel.pointer.height / 2 ) + "px" );
+			
+		}
+		
+		if( params.event.pageX > p.elements.panel.width + p.styles.panel.pointer.width ) {
+			
+			p.elements.panel.style("left", ( params.event.pageX - p.elements.panel.width - p.styles.panel.pointer.width) + "px")
+				.classed("pointerLeft", true)
+				.classed("pointerRight", false);
+			
+		} else {
+			
+			p.elements.panel.style("left", ( params.event.pageX + p.styles.panel.pointer.width) + "px")
+				.classed("pointerLeft", false)
+				.classed("pointerRight", true);
+			
+		}
+		
+
+	}
+	
+	function populateFields() {
+	
+		fields.forEach( function(field) { 
+		
+			field.values = []; 
+			
+			p.data.forEach( function(d) { 
+			
+				value = field.accessor.call(field.accessor, d); 
+				
+				if( toString.call(value) !== "[object Array]" ) {
+				
+					value = [ value ];
+					
+				}
+				
+				value.forEach( function (v) {
+					
+					if ( v instanceof Object) {
+						
+						var objectInArray = false;
+						
+						for(var i = 0; i < field.values.length; i++) {
+						
+							if( field.values[i] instanceof Object && field.values[i].id === v.id ) {
+								objectInArray = true;
+								break;
+							}
+							
+						}
+						
+						if (!objectInArray) {
+							
+							field.values.push(v);
+							
+						}
+						
+					} else if ( field.values.indexOf( v ) === -1 ) {
+						
+							field.values.push(v);
+							
+					}
+					
+				});
+			} );
+			
+			field.values.sort();
+			
+		} );
+		
+	}
+	
+	function process( params ) {
+		
+		switch( params.event.type ) {
+			
+			case "click":
+				panel( params );
+				break;
+				
+			case "dblclick":
+				if ( params.data && params.data.url ) {
+					window.open( params.data.url );
+				}
+				break;
+			
+		}
+		
+	}
+	
+	// Initialiser
+	me.initialise = function() {
+				
+		function initPanel() {
+			
+			var container = d3.select("body").append("div")
+				.attr("class", "ui_panel_container");
+				
+			// Add overlay (for closing the panel)
+			container.append("div")
+				.attr("class", "ui_panel_overlay")
+				.style("display", "none")
+				.on("click", hidePanel);
+				
+			p.elements.panel = container.append("div")
+				.attr("class", "ui_panel")
+				.attr("id", "ui_panel_" + id);
+				
+			p.elements.panel.overlay = container.select(".ui_panel_overlay");
+				
+			// Make panel visible before determining width & height
+			p.elements.panel.style("display", "block");	
+				
+			p.elements.panel.width = parseInt( p.elements.panel.style("width") ) ;
+			p.elements.panel.height = parseInt( p.elements.panel.style("height") );
+			
+			p.elements.panel.style("display", "none");
+				
+				
+			// Add pointers
+			p.elements.panel.append("div")
+				.attr("class", "pointer pointerLeft");
+			p.elements.panel.append("div")
+				.attr("class", "pointer pointerRight");
+				
+					
+		}
+		
+		populateFields();
+		initPanel();
+		
+		initialised = true;
+		
+		return me;
+		
+	};
+	
+	
+	// Accessors
+	me.heap = function(_) {
+		if( !arguments.length ) return p.heap;
+		
+		var heap = _;
+		
+		p.heap = heap;
+		
+		// Link UI to a heap layout
+		TT.observer.make( heap );
+		heap.addSubscriber( process );
+		p.data = heap.data();
+		
+		// Add heap parent as panel parent
+		p.parent = heap.parent();
+		TT.observer.make( p.parent );
+		p.parent.addSubscriber( process );
+	
+		return me;
+		
+	};
+	
+	me.fields = function(_) {
+		if( !arguments.length ) return p.fields;
+		p.fields = _;
+		
+		return me;
+	};
+	
+	me.record = function(_) {
+		if( !arguments.length ) return p.record;
+		p.record = _;
+		
+		return me;
 	};
 	
 	return me;

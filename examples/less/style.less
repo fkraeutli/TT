@@ -5,12 +5,27 @@
 @colResizePath: #666;
 
 
-@axisLineColor: #ccc;
+@axisLineColor:rgba(0, 0, 0, .2);
 @axisTextColor: #000;
 @eventBarColor: teal;
 @eventTitleColor: #fff;
 @crossfilterTitleColor: #1b7c8d;
 @eventTitleOutsideColor: #000;
+
+.icon(@col: 0, @row: 0) {
+	
+	background-image: url(images/sprite.png);
+	
+	
+}
+
+.pseudoElement() {
+	
+	content:".";
+	display: block;
+	text-indent: -10000px;
+	
+}
 
 body {
 	font-family: "Franklin Gothic Book", "Franklin Gothic", Verdana, sans-serif;
@@ -19,8 +34,21 @@ body {
 	padding: 0;
 }
 
+a, a:visited {
+	color: black;
+}
+
 #mainExample {
 	padding: 0;
+}
+
+#timeline_demo {
+	overflow: hidden;
+	font-family: "Helvetica Neue", Arial, sans-serif;
+	
+	svg {
+		overflow: hidden;
+	}
 }
 
 #leftCol {
@@ -192,11 +220,213 @@ body {
 	
 }
 
+.ui_panel_container {
+	
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	
+	.ui_panel {
+		
+		@panelWidth: 360px;
+		
+		display: none;
+		top:0;
+		left:0;
+		position: absolute;
+		width: @panelWidth;
+		height: 40%;
+		min-height: 400px;
+		background: white;
+		border-radius: 1em;
+		box-shadow: 0px 3px 20px rgba(0,0,0,.2);
+		overflow: hidden;
+		overflow-y: auto;
+		pointer-events: all;
+		
+		> h3 {
+			font-weight: normal;
+			text-align: center;
+		}
+		
+		ul {
+		
+			margin: 0;
+			padding: 0;
+		
+			li {
+			
+				position: relative;
+				list-style: none;
+				margin: 0;
+				padding: 1em;
+				border-bottom: 1px solid #eee;
+				
+				label {
+					width: 7em;
+					display: inline-block;
+					font-weight: bold;
+				}
+				
+				.description {
+					font-size: .8em;
+				}
+				
+			}
+			
+			
+		}	
+		
+		ul.select {
+			
+			li:after {
+				.icon();
+				.pseudoElement();
+				position: absolute;
+				right: 1em;
+				top: 50%;
+				width: 4px;
+				height: 8px;
+			}
+			
+		}
+		
+		ul.swatches {
+			
+			li {
+				@gap: 1px;
+				@numSwatches: 10;
+				@swatchSize: @panelWidth/@numSwatches - @gap;
+				width: @swatchSize;
+				height: @swatchSize;
+				margin: 0;
+				margin-right: @gap;
+				margin-bottom: @gap;
+				padding: 0;
+				display: block;
+				float: left;
+				
+			}
+			
+		}
+		
+		select.select {
+			margin: auto;
+			display: block;
+			width: 90%;
+		}
+		
+		ul.operations {
+		
+			overflow: hidden;
+			background-color: #efefef;
+			
+			li {
+				
+				border: none;
+				width: 25%;
+				float: left;
+				text-align: center;
+			}
+			
+		}
+		
+		div.header {
+	
+			padding: 1em;
+			background-size: 100%;
+			background-repeat: no-repeat;
+			min-height: 40%;
+		
+			h1, h2, h3 {
+			
+				line-height: 1.8em;
+				margin-top: 0;
+				font-weight: normal;
+				color: white;
+				text-shadow:
+					-1px -1px 1em rgba( 0 , 0, 0, .2),  
+					1px -1px 1em rgba( 0 , 0, 0, .2),
+					-1px 1px 1em rgba( 0 , 0, 0, .2),
+					1px 1px 1em rgba( 0 , 0, 0, .2);
+	
+			}
+			
+			
+			
+		}
+		
+		.instructions {
+			clear: both;
+			padding: 0 1em;
+			text-align: center;
+		}
+		
+		.pointer {
+			display: none;
+			position: absolute;
+			top:50%;
+			width: 0px;
+			height: 0px;
+			border-style: solid;
+		}	
+		
+		.pointerRight {
+			border-color: transparent #ffffff transparent transparent;
+			border-width: 10px 10px 10px 0;
+			left: -10px;
+		}
+		
+		.pointerLeft {
+			right: -10px;
+			border-color: transparent transparent transparent #ffffff;
+			border-width: 10px 0 10px 10px;
+		}
+	}
+	
+	.ui_panel.pointerLeft {
+		
+		.pointerLeft {
+			display: block;
+		}
+		
+		.pointerRight {
+			display: none;
+		}
+		
+	}
+	
+	.ui_panel.pointerRight {
+		
+		.pointerLeft {
+			display: none;
+		}
+		
+		.pointerRight {
+			display: block;
+		}
+		
+	}
+
+	.ui_panel_overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		display: block;
+		width: 100%;
+		height: 100%;
+		pointer-events: all;
+	}
+
+}
 svg.timeline, svg.heap, svg.histogram {
 
 	margin-right: 2em;
 	
-	.timeline_axis, .heap_axis, .histogram_axis {
+	.axis, .bars_axis, .heap_axis, .histogram_axis {
 		path {
 			fill:none;
 		}
@@ -208,9 +438,9 @@ svg.timeline, svg.heap, svg.histogram {
 		}
 	}
 	
-	.timeline_events {
+	.bars_events {
 	
-		.timeline_event {
+		.bars_event {
 			
 			.childrenIcon {
 				rect {
@@ -264,7 +494,7 @@ svg.timeline, svg.heap, svg.histogram {
 	}
 	
 	
-	.timeline_axis, .heap_axis, .histogram_axis {
+	.bars_axis, .heap_axis, .histogram_axis {
 		
 		line, path {
 			stroke: @colAxisStroke;
@@ -278,6 +508,21 @@ svg.timeline, svg.heap, svg.histogram {
 		
 	}
 	
+}
+
+a.button {
+	
+	background-color: #fff;
+	border: 1px solid #ccc;
+	padding: .5em;
+	border-radius: .5em;
+	text-decoration: none;
+	
+}
+
+a.button:hover {
+	background-color: #fff;
+	border: 1px solid #efefef;
 }
 
 /*
