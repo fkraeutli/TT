@@ -49,6 +49,13 @@ function make() {
 							
 							d.to = new Date( d.from.valueOf() );
 							d.to.setFullYear( d.from.getFullYear() + 1 );
+
+							// Replace thumbnail url for local one
+							if ( d.thumbnailUrl ) {
+								
+								d.thumbnailUrl = "http://otis.local:8888/Tate/local/" + /([A-Z0-9])*_8.jpg$/.exec( d.thumbnailUrl)[0];
+								
+							}
 						
 							if ( !isNaN(d.from.valueOf()) ){
 								dataset.push(d);
@@ -81,6 +88,13 @@ function make() {
 							d.to = new Date( d.from.valueOf() );
 							d.to.setFullYear( d.from.getFullYear() + 1 );
 						
+							// Replace thumbnail url for local one
+							if ( d.thumbnailUrl ) {
+								
+								d.thumbnailUrl = "http://otis.local:8888/Tate/local/" + /([A-Z0-9])*_8.jpg$/.exec( d.thumbnailUrl )[0];
+								
+							}
+						
 							if ( !isNaN(d.from.valueOf()) ){
 								dataset.push(d);
 							}
@@ -106,7 +120,7 @@ function make() {
 
 function makeHeap() {
 
-	//dataset.splice(500);
+	//dataset.splice(5000);
 
 	heap = TT.layout.heap().data( dataset );
 	
@@ -124,10 +138,16 @@ function makeHeap() {
 			},
 			
 			{
-				title: "Contributors",
+				title: "Artist",
 				accessor: function(d) {
 				
-					return d.contributors;
+					if(d.contributors.length) {
+					
+						return d.contributors[0].fc;
+					
+					}
+					
+					return "unknown";
 					
 				}
 			},

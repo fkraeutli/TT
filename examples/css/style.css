@@ -150,6 +150,7 @@ a:visited {
   position: absolute;
   width: 360px;
   height: 40%;
+  min-height: 400px;
   background: white;
   border-radius: 1em;
   box-shadow: 0px 3px 20px rgba(0, 0, 0, 0.2);
