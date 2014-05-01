@@ -55,6 +55,8 @@ TT.ui.panel = function() {
 	
 	function panel( params ) {
 		
+		console.log( params );
+		
 		if( !params.event || !params.data ) {
 		
 			return false;
@@ -418,7 +420,9 @@ TT.ui.panel = function() {
 		switch( params.event.type ) {
 			
 			case "click":
+			
 				panel( params );
+				
 				break;
 				
 			case "dblclick":
