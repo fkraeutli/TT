@@ -1,3 +1,6 @@
+.sort {
+  display: none !important;
+}
 body {
   font-family: "Franklin Gothic Book", "Franklin Gothic", Verdana, sans-serif;
   font-size: 12px;

@@ -1736,7 +1736,32 @@ TT.layout.heap = function() {
 				p.elements.outline = p.svg.insert("g")
 					.attr("class", "heap_outline")
 					.attr("id", "hs" + id + "_outline")
-					.append("path");
+					.append("path")
+					.on("click", function(d) { 
+						if( me.hasOwnProperty("publish") ) {	
+		
+							var event = d3.event;
+		
+							// Determine Column					
+							var dateClicked = new Date( p.scales.pxToDate( event.x + x.domain()[0] ) ),
+								offset =  dateClicked.valueOf() - p.view.from.valueOf(),
+								col = Math.floor(offset / p.grid.resolution);
+							
+							// Determine Row
+							var displace = p.grid.table[ col ].length * p.styles.events.diameter / 2  + p.view.height / 2 ,
+								yClicked = event.y + y.domain()[0],
+								row = Math.floor(( displace - yClicked) / zoom.scale() * p.styles.events.diameter );
+							
+							// REMOVE THIS
+							test_heap_x = x;
+							test_heap_y = y;
+							
+							console.log(col + "," + row);
+	
+							me.publish( {data: p.grid.table[ col ][ row ], event: d3.event} );
+					
+						}
+					});
 					
 				p.elements.events = p.svg.insert("g")
 					.attr("class", "heap_events")
@@ -2420,6 +2445,8 @@ TT.layout.heap = function() {
 	
 	function panel( params ) {
 		
+		console.log( params );
+		
 		if( !params.event || !params.data ) {
 		
 			return false;
@@ -2783,7 +2810,9 @@ TT.layout.heap = function() {
 		switch( params.event.type ) {
 			
 			case "click":
+			
 				panel( params );
+				
 				break;
 				
 			case "dblclick":

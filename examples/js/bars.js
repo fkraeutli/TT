@@ -276,10 +276,10 @@ function make() {
 		});
 		
 		cf.addFilter({
-			title: "Number of works (log)",
+			title: "Number of works in the Tate Collection",
 			dimension: function(d) {
 			
-				return Math.log(d.totalWorks);
+				//return Math.log(d.totalWorks);
 				return d.totalWorks < 500 ? d.totalWorks : 500;
 				
 			}

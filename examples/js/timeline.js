@@ -50,7 +50,7 @@ function make() {
 							d.to = new Date( d.from.valueOf() );
 							d.to.setFullYear( d.from.getFullYear() + 1 );
 
-							// Replace thumbnail url for local one
+							// Replace thumbnail url for local one REMOVE THIS
 							if ( d.thumbnailUrl ) {
 								
 								d.thumbnailUrl = "http://otis.local:8888/Tate/local/" + /([A-Z0-9])*_8.jpg$/.exec( d.thumbnailUrl)[0];
@@ -88,7 +88,7 @@ function make() {
 							d.to = new Date( d.from.valueOf() );
 							d.to.setFullYear( d.from.getFullYear() + 1 );
 						
-							// Replace thumbnail url for local one
+							// Replace thumbnail url for local one REMOVE THIS
 							if ( d.thumbnailUrl ) {
 								
 								d.thumbnailUrl = "http://otis.local:8888/Tate/local/" + /([A-Z0-9])*_8.jpg$/.exec( d.thumbnailUrl )[0];
@@ -244,7 +244,7 @@ function makeHeap() {
 		
 	}
 	
-	ui = TT.ui.panel().heap(heap).fields(fields).record(record).initialise();
+	ui = TT.ui.panel().heap( heap ).fields( fields ).record( record ).initialise();
 	
 	
 	
