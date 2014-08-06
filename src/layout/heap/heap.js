@@ -104,6 +104,18 @@ TT.layout.heap = function() {
 		
 	function update() {		
 	
+		function computeDisplaceForColumn( column ) {
+			
+			return p.grid.table[ column ].length * p.styles.events.diameter / 2  + p.view.height / 2 ;
+			
+		}
+		
+		function computeGridXForColumn( column ) {
+			
+			return p.scales.dateToPx( column * p.grid.resolution + p.view.from.valueOf() );
+			
+		}
+		
 		function createEventsAppearance(events) {
 			
 			// Circle
@@ -171,10 +183,12 @@ TT.layout.heap = function() {
 					var minRow = p.grid.maxRow;
 					
 					for( var i = 0; i < d[nmsp].candidateCols.length; i++ ) {	
-						
+					
 						if ( p.grid.table[ d[nmsp].candidateCols[i] ].length  < minRow) {
+						
 							d[nmsp].col = d[nmsp].candidateCols[i];
 							minRow = p.grid.table[ d[nmsp].candidateCols[i] ].length;
+							
 						}
 						
 					}
@@ -184,22 +198,25 @@ TT.layout.heap = function() {
 					p.grid.table[ d[nmsp].col ][ d[nmsp].row ] = d;
 					
 					if (minRow == p.grid.maxRow) {
+					
 						p.grid.maxRow++;
+						
 					}
 
 				} );
 				
 				
 			}
+		
 			// Initialise heap grid
 			makeGrid();	
 			
 			// Translate columns and rows to x,y coordinates
 			p.data.forEach( function(d) {
 				
-				d[nmsp].x = p.scales.dateToPx( d[nmsp].col * p.grid.resolution + p.view.from.valueOf() );
+				d[nmsp].x = computeGridXForColumn( d[nmsp].col ); 
 				
-				var displace = p.grid.table[ d[nmsp].col ].length * p.styles.events.diameter / 2  + p.view.height / 2 ;
+				var displace = computeDisplaceForColumn( d[nmsp].col );
 				d[nmsp].y = -d[nmsp].row * p.styles.events.diameter + displace - displace % p.styles.events.diameter;
 				
 			});
@@ -223,6 +240,11 @@ TT.layout.heap = function() {
 				
 				imagesEnter.append("image")
 						.attr("xlink:href", function(d) {
+						
+							d3.select("#hs" + id + "_event_" + d.id + " image").on("error", function(event) {
+								d3.select(this).style("display", "none");
+							});
+						
 							d.hasImage = true;
 							return d.thumbnailUrl;
 						});
@@ -321,11 +343,21 @@ TT.layout.heap = function() {
 				
 				if( d.length > 0) {
 					
-					path.push( "S", _x( d[ d.length-1 ][nmsp].x - p.styles.events.diameter/2 ), ",", _y( d[ d.length-1 ][nmsp].y ), " ", _x( d[ d.length-1 ][nmsp].x ), ",", _y( d[ d.length-1 ][nmsp].y ) );	
-					path.unshift( "S", _x( d[ 0 ][nmsp].x + p.styles.events.diameter/2 ), ",", _y( d[ 0 ][nmsp].y ) , " " , _x( d[ 0 ][nmsp].x ), ",", _y( d[ 0 ][nmsp].y ) ); 
+					//path.push( "S", _x( d[ d.length-1 ][nmsp].x - p.styles.events.diameter/2 ), ",", _y( d[ d.length-1 ][nmsp].y ), " ", _x( d[ d.length-1 ][nmsp].x ), ",", _y( d[ d.length-1 ][nmsp].y ) );	
+					//path.unshift( "S", _x( d[ 0 ][nmsp].x + p.styles.events.diameter/2 ), ",", _y( d[ 0 ][nmsp].y ) , " " , _x( d[ 0 ][nmsp].x ), ",", _y( d[ 0 ][nmsp].y ) ); 
 					
-					//path.push( "L", x( d[ d.length-1 ][nmsp].x ), ",", y( d[ d.length-1 ][nmsp].y ) );	
-					//path.unshift( "L", x( d[ 0 ][nmsp].x ), ",", y( d[ 0 ][nmsp].y ) ); 
+					path.push( "L", _x( d[ d.length-1 ][nmsp].x ), ",", _y( d[ d.length-1 ][nmsp].y  - p.styles.events.diameter / 2 ) );	
+					path.unshift( "L", _x( d[ 0 ][nmsp].x ), ",", _y( d[ 0 ][nmsp].y ) +  p.styles.events.diameter / 2 ); 
+					
+				} else {
+					
+					// add point in middle
+					var centX = computeGridXForColumn( i );
+					var centY = computeDisplaceForColumn( i );
+					
+					path.push( "L", _x( centX ), ",", _y( centY ) );
+					path.unshift( "L", _x( centX ), ",", _y( centY ) );
+					
 				}
 				
 			}
@@ -486,6 +518,33 @@ TT.layout.heap = function() {
 		} else {
 			
 			p.styles.events[name] = value;
+		}
+		
+		p.grid.initialised = false;
+		update();
+		
+		return me;
+		
+	};
+	
+		
+	me.styles.images = function(name, value) {
+		
+		if (arguments.length < 2) {
+		
+			if(typeof name === "string") {
+				return p.styles.images[name];
+			} else if (typeof name === "object") {
+			
+				for(var i in name) {				
+					p.styles.images[i] = name[i];
+				}
+				
+			}
+		
+		} else {
+			
+			p.styles.images[name] = value;
 		}
 		
 		p.grid.initialised = false;
