@@ -1566,6 +1566,7 @@ TT.layout.heap = function() {
 					d[nmsp].row = minRow;
 					
 					// Add to grid
+					
 					p.grid.table[ d[nmsp].col ][ d[nmsp].row ] = d;
 					
 					if (minRow == p.grid.maxRow) {

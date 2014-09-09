@@ -2,6 +2,7 @@ TATEART = 0;
 COOPER = 1;
 TICTAC = 2;
 OXFORD = 3;
+GEFFRYE = 4;
 
 if (!location.hash) {
 
@@ -26,14 +27,17 @@ if (!location.hash) {
 		case "#oxford":
 			loadDataset = OXFORD;
 			break;
-		
+			
+		case "#geffrye":
+			loadDataset = GEFFRYE;
+			break;
 		
 		
 	}
 	
 }
 
-loadFormat = "csv";
+loadFormat = "json";
 
 $j = jQuery.noConflict();
 
@@ -42,8 +46,8 @@ var dataset = [],
 	timeline,
 	fields,
 	ui,
-	urlsJSON = ["../../Tate/allartworks.js"];
-	urlsCSV = ["../../Tate/artwork_data.csv", "../../coopeHewittCollection/meta/objects.csv", "../../ssl/tictac/tictac_tablets.csv", "../../oxford/data/pottery.csv"];
+	urlsJSON = ["../../Tate/allartworks.js", false, false, false, "../../ssl/geffrye/geffrye-api-objects-20140826.json"];
+	urlsCSV = ["../../Tate/artwork_data.csv", "../../coopeHewittCollection/meta/objects.csv", "../../ssl/tictac/tictac_tablets.csv", "../../oxford/data/pottery.csv",  "../../ssl/geffrye/geffrye-api-objects-20140826.csv"];
 
 
 $j(make);
@@ -269,6 +273,108 @@ function make() {
 				
 				}	
 			} )
+		
+		}
+		
+	} else if ( loadDataset == GEFFRYE ) {
+		
+		if( loadFormat == "json") {
+		
+			d3.json( urlsJSON[ loadDataset ], function(error, data) {
+			
+			
+				if( !error ) {
+			
+					data = data.result.items;						
+
+					data.forEach( function(d) {
+						
+						if ( d.productionDates.length ) {			
+									
+							var from = d.productionDates[ 0 ].earliest.split( "/" );
+							var to = d.productionDates[ 0 ].latest.split( "/" );
+							
+							d.id = d.uniqueID;
+							
+							d.from = new Date( +from[2], +from[1] - 1, +from[0] );
+							d.to = new Date( +to[2], +to[1] - 1, +to[0] );
+							
+							if ( isNaN( d.to.valueOf() )) {
+								
+								d.to = new Date( +from[2] + 1, +from[1] - 1, +from[0] );
+								
+							}
+							
+							d.thumbnailUrl = d.thumbURL.replace( "http://vonov", "http://mailgate.geffrye-museum.org.uk:7452" );
+							
+							if ( !isNaN(d.from.valueOf()) && d.from.valueOf() < d.to.valueOf() ){
+							
+								dataset.push(d);
+								
+							}
+							
+						}
+						
+					} );
+					
+					console.log( dataset.length + " instances" );			
+	
+					makeHeap();
+					
+				} else {
+					
+					console.error(error);
+				
+				}
+			});
+			
+		} else {
+		
+			d3.csv( urlsCSV[loadDataset], function(error, data) {
+			
+				if( !error ) {
+						
+					console.log( data );
+									
+					data.forEach( function(d) {
+										
+						var from = d[ "__anonymous__ - productionDates - __anonymous__ - earliest" ].split( "/" );
+						var to = d[ "__anonymous__ - productionDates - __anonymous__ - latest" ].split( "/" );
+						
+						d.id = d[ "__anonymous__ - uniqueID" ];
+						
+						d.from = new Date( +from[2], +from[1] - 1, +from[0] );
+						d.to = new Date( +to[2], +to[1] - 1, +to[0] );
+							
+						if ( isNaN( d.to.valueOf() )) {
+							
+							d.to = new Date( +from[2] + 1, +from[1] - 1, +from[0] );
+							
+						}
+						
+						d.thumbnailUrl = d[ "__anonymous__ - thumbURL" ];
+						
+						d.title = d[ "__anonymous__ - title - __anonymous__" ];
+												
+						if ( !isNaN(d.from.valueOf()) && d.from.valueOf() < d.to.valueOf() ){
+							
+							dataset.push(d);
+							
+						}
+
+								
+					} );
+					
+					console.log( dataset.length + " instances" );			
+	
+					makeHeap();
+					
+				} else {
+					
+					console.error(error);
+				
+				}
+			});
 		
 		}
 		
@@ -583,6 +689,48 @@ function makeHeap() {
 					
 				}
 			];
+		
+	} else if (loadDataset == GEFFRYE) {
+	
+		if (loadFormat == "json") {
+		
+		fields = [
+		
+			{
+				
+				title: "Materials",
+				accessor: function(d) {
+					return d.materials.join(", ");
+				}
+				
+			}, 
+			
+			{
+				
+				title: "Techniques",
+				accessor: function(d) {
+					return d.techniques.join(", ");
+				}
+				
+			}
+		];
+	}
+		
+		record = {
+			
+			title: function(d) {
+				return d.title[0] || d.wholeObjectName;
+			},
+			
+			subtitle: function(d) {
+				return d.briefDescription;
+			},
+			
+			image: function(d) {
+				return d.thumbnailUrl;
+			}
+			
+		}
 		
 	}
 	
