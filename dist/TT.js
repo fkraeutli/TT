@@ -1566,7 +1566,6 @@ TT.layout.heap = function() {
 					d[nmsp].row = minRow;
 					
 					// Add to grid
-					
 					p.grid.table[ d[nmsp].col ][ d[nmsp].row ] = d;
 					
 					if (minRow == p.grid.maxRow) {
@@ -1723,6 +1722,7 @@ TT.layout.heap = function() {
 					//path.unshift( "S", _x( d[ 0 ][nmsp].x + p.styles.events.diameter/2 ), ",", _y( d[ 0 ][nmsp].y ) , " " , _x( d[ 0 ][nmsp].x ), ",", _y( d[ 0 ][nmsp].y ) ); 
 					
 					path.push( "L", _x( d[ d.length-1 ][nmsp].x ), ",", _y( d[ d.length-1 ][nmsp].y  - p.styles.events.diameter / 2 ) );	
+					
 					path.unshift( "L", _x( d[ 0 ][nmsp].x ), ",", _y( d[ 0 ][nmsp].y ) +  p.styles.events.diameter / 2 ); 
 					
 				} else {
@@ -1819,13 +1819,22 @@ TT.layout.heap = function() {
 	// Accessors
 	me.data = function(_) {
 		if( !arguments.length ) return p.data;
-		p.data = _;
 		
-		p.data.forEach( function(d) {
-			if( !d.hasOwnProperty(nmsp) ) {
+		p.data = [];
+		
+		// Some cleaning: TODO notify user of records that didn't pass test
+		_.forEach( function(d) {
+			
+			if ( d.from && d.to && d.id && d.from < d.to ) {
+			
 				d[nmsp] = {};
+				
+				p.data.push( d );
+				
 			}
+			
 		});
+		
 		
 		p.grid.initialised = false;
 		
@@ -1836,13 +1845,13 @@ TT.layout.heap = function() {
 			
 			if( minFrom < p.view.from ) {
 				
-				parent.from( minFrom);
+				p.parent.from( minFrom);
 				
 			}
 			
 			if (maxTo > p.view.to ) {
 			
-				parent.to( maxTo );
+				p.parent.to( maxTo );
 				
 			}
 		
