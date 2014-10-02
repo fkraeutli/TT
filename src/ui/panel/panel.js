@@ -55,7 +55,7 @@ TT.ui.panel = function() {
 	
 	function panel( params ) {
 		
-		console.log( params );
+		//console.log( params );
 		
 		if( !params.event || !params.data ) {
 		

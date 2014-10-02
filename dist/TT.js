@@ -1670,6 +1670,10 @@ TT.layout.heap = function() {
 			.attr("class", "heap_event")
 			.attr("transform", attr.event.transform)
 			.on("click", function(d) { 
+			
+				// REMOVE ME
+				console.log(d);
+			
 				if( me.hasOwnProperty("publish") ) {	
 		
 					me.publish( {data: d, event: d3.event} );
@@ -2503,7 +2507,7 @@ TT.layout.heap = function() {
 	
 	function panel( params ) {
 		
-		console.log( params );
+		//console.log( params );
 		
 		if( !params.event || !params.data ) {
 		

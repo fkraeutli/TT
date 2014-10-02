@@ -305,7 +305,7 @@ function make() {
 								
 							}
 							
-							d.thumbnailUrl = d.thumbURL.replace( "http://vonov", "http://mailgate.geffrye-museum.org.uk:7452" );
+							d.thumbnailUrl = d.thumbURL.replace( "http://vonov", "http://mailgate.geffrye-museum.org.uk:7452" ).replace( "thumb", "webgrid" );
 							
 							if ( !isNaN(d.from.valueOf()) && d.from.valueOf() < d.to.valueOf() ){
 							
@@ -352,7 +352,7 @@ function make() {
 							
 						}
 						
-						d.thumbnailUrl = d[ "__anonymous__ - thumbURL" ];
+						d.thumbnailUrl = d[ "__anonymous__ - thumbURL" ].replace( "http://vonov", "http://mailgate.geffrye-museum.org.uk:7452" ).replace( "thumb", "webgrid" );
 						
 						d.title = d[ "__anonymous__ - title - __anonymous__" ];
 												
@@ -694,42 +694,128 @@ function makeHeap() {
 	
 		if (loadFormat == "json") {
 		
-		fields = [
-		
-			{
-				
-				title: "Materials",
-				accessor: function(d) {
-					return d.materials.join(", ");
-				}
-				
-			}, 
+			fields = [
 			
-			{
+			
+				{
+					
+					title: "Collection Code",
+					accessor: function(d) {
+						return d.collectionCode;
+					}
+					
+				}, 
 				
-				title: "Techniques",
-				accessor: function(d) {
-					return d.techniques.join(", ");
+				{
+					
+					title: "Materials",
+					accessor: function(d) {
+						return d.materials.join(", ");
+					}
+					
+				}, 
+				
+				{
+					
+					title: "Techniques",
+					accessor: function(d) {
+						return d.techniques.join(", ");
+					}
+					
+				}, 
+				
+				{
+					
+					title: "Place",
+					accessor: function(d) {
+						return d.productionPlaces ? d.productionPlaces[0].name : "unknown";
+					}
+					
+				}, 
+				
+				{
+					
+					title: "Style",
+					accessor: function(d) {
+						return d.stylePeriods.join(", ");
+					}
+					
+				}, 
+				
+				{
+					
+					title: "Image",
+					accessor: function(d) {
+						return d.thumbURL == "" ? "No" : "Yes";
+					}
+					
+				}, 
+				
+				{
+					
+					title: "On Display",
+					accessor: function(d) {
+						return d.parts[0].onDisplay == "" ? "No" : "Yes";
+					}
+					
+				}
+			];
+			
+			record = {
+				
+				title: function(d) {
+					return d.title[0] || d.wholeObjectName;
+				},
+				
+				subtitle: function(d) {
+					return d.briefDescription;
+				},
+				
+				image: function(d) {
+					return d.thumbnailUrl;
 				}
 				
 			}
-		];
-	}
-		
-		record = {
 			
-			title: function(d) {
-				return d.title[0] || d.wholeObjectName;
-			},
+		} else {
 			
-			subtitle: function(d) {
-				return d.briefDescription;
-			},
+			fields = [
 			
-			image: function(d) {
-				return d.thumbnailUrl;
+				{
+					
+					title: "Materials",
+					accessor: function(d) {
+						return d[ "__anonymous__ - materials - __anonymous__" ];
+					}
+					
+				}, 
+				
+				{
+					
+					title: "Techniques",
+					accessor: function(d) {
+						return d[ "__anonymous__ - techniques - __anonymous__"];
+					}
+					
+				}
+			];
+			
+			record = {
+				
+				title: function(d) {
+					return d.title || d[ "__anonymous__ - wholeObjectName" ];
+				},
+				
+				subtitle: function(d) {
+					return d[ "__anonymous__ - briefDescription" ];
+				},
+				
+				image: function(d) {
+					return d.thumbnailUrl;
+				}
+				
 			}
-			
+
 		}
 		
 	}
