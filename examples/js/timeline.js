@@ -37,7 +37,7 @@ if (!location.hash) {
 	
 }
 
-loadFormat = "json";
+loadFormat = "csv";
 
 $j = jQuery.noConflict();
 
