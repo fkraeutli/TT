@@ -1,11 +1,25 @@
+.sort {
+  display: none !important;
+}
 body {
   font-family: "Franklin Gothic Book", "Franklin Gothic", Verdana, sans-serif;
   font-size: 12px;
   margin: 0;
   padding: 0;
 }
+a,
+a:visited {
+  color: black;
+}
 #mainExample {
   padding: 0;
+}
+#timeline_demo {
+  overflow: hidden;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+}
+#timeline_demo svg {
+  overflow: hidden;
 }
 #leftCol {
   position: fixed;
@@ -83,7 +97,7 @@ body {
   stroke: #666666;
 }
 #crossfilter .chart.wordCloud .filtered span {
-  color: #cccccc;
+  color: rgba(0, 0, 0, 0.2);
 }
 #crossfilter .chart.wordCloud .filtered span.selected {
   color: black;
@@ -124,14 +138,158 @@ body {
 #slider_threshold .ui-rangeSlider-label .ui-rangeSlider-label-value {
   display: none;
 }
+.ui_panel_container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.ui_panel_container .ui_panel {
+  display: none;
+  top: 0;
+  left: 0;
+  position: absolute;
+  width: 360px;
+  height: 40%;
+  min-height: 400px;
+  background: white;
+  border-radius: 1em;
+  box-shadow: 0px 3px 20px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  overflow-y: auto;
+  pointer-events: all;
+}
+.ui_panel_container .ui_panel > h3 {
+  font-weight: normal;
+  text-align: center;
+}
+.ui_panel_container .ui_panel ul {
+  margin: 0;
+  padding: 0;
+}
+.ui_panel_container .ui_panel ul li {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 1em;
+  border-bottom: 1px solid #eee;
+}
+.ui_panel_container .ui_panel ul li label {
+  width: 7em;
+  display: inline-block;
+  font-weight: bold;
+}
+.ui_panel_container .ui_panel ul li .description {
+  font-size: .8em;
+}
+.ui_panel_container .ui_panel ul.select li:after {
+  background-image: url(images/sprite.png);
+  content: ".";
+  display: block;
+  text-indent: -10000px;
+  position: absolute;
+  right: 1em;
+  top: 50%;
+  width: 4px;
+  height: 8px;
+}
+.ui_panel_container .ui_panel ul.swatches li {
+  width: 35px;
+  height: 35px;
+  margin: 0;
+  margin-right: 1px;
+  margin-bottom: 1px;
+  padding: 0;
+  display: block;
+  float: left;
+}
+.ui_panel_container .ui_panel select.select {
+  margin: auto;
+  display: block;
+  width: 90%;
+}
+.ui_panel_container .ui_panel ul.operations {
+  overflow: hidden;
+  background-color: #efefef;
+}
+.ui_panel_container .ui_panel ul.operations li {
+  border: none;
+  width: 25%;
+  float: left;
+  text-align: center;
+}
+.ui_panel_container .ui_panel div.header {
+  padding: 1em;
+  background-size: 100%;
+  background-repeat: no-repeat;
+  min-height: 40%;
+}
+.ui_panel_container .ui_panel div.header h1,
+.ui_panel_container .ui_panel div.header h2,
+.ui_panel_container .ui_panel div.header h3 {
+  line-height: 1.8em;
+  margin-top: 0;
+  font-weight: normal;
+  color: white;
+  text-shadow: -1px -1px 1em rgba(0, 0, 0, 0.2), 1px -1px 1em rgba(0, 0, 0, 0.2), -1px 1px 1em rgba(0, 0, 0, 0.2), 1px 1px 1em rgba(0, 0, 0, 0.2);
+}
+.ui_panel_container .ui_panel .instructions {
+  clear: both;
+  padding: 0 1em;
+  text-align: center;
+}
+.ui_panel_container .ui_panel .pointer {
+  display: none;
+  position: absolute;
+  top: 50%;
+  width: 0px;
+  height: 0px;
+  border-style: solid;
+}
+.ui_panel_container .ui_panel .pointerRight {
+  border-color: transparent #ffffff transparent transparent;
+  border-width: 10px 10px 10px 0;
+  left: -10px;
+}
+.ui_panel_container .ui_panel .pointerLeft {
+  right: -10px;
+  border-color: transparent transparent transparent #ffffff;
+  border-width: 10px 0 10px 10px;
+}
+.ui_panel_container .ui_panel.pointerLeft .pointerLeft {
+  display: block;
+}
+.ui_panel_container .ui_panel.pointerLeft .pointerRight {
+  display: none;
+}
+.ui_panel_container .ui_panel.pointerRight .pointerLeft {
+  display: none;
+}
+.ui_panel_container .ui_panel.pointerRight .pointerRight {
+  display: block;
+}
+.ui_panel_container .ui_panel_overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: all;
+}
 svg.timeline,
 svg.heap,
 svg.histogram {
   margin-right: 2em;
 }
-svg.timeline .timeline_axis path,
-svg.heap .timeline_axis path,
-svg.histogram .timeline_axis path,
+svg.timeline .axis path,
+svg.heap .axis path,
+svg.histogram .axis path,
+svg.timeline .bars_axis path,
+svg.heap .bars_axis path,
+svg.histogram .bars_axis path,
 svg.timeline .heap_axis path,
 svg.heap .heap_axis path,
 svg.histogram .heap_axis path,
@@ -140,20 +298,26 @@ svg.heap .histogram_axis path,
 svg.histogram .histogram_axis path {
   fill: none;
 }
-svg.timeline .timeline_axis line,
-svg.heap .timeline_axis line,
-svg.histogram .timeline_axis line,
+svg.timeline .axis line,
+svg.heap .axis line,
+svg.histogram .axis line,
+svg.timeline .bars_axis line,
+svg.heap .bars_axis line,
+svg.histogram .bars_axis line,
 svg.timeline .heap_axis line,
 svg.heap .heap_axis line,
 svg.histogram .heap_axis line,
 svg.timeline .histogram_axis line,
 svg.heap .histogram_axis line,
 svg.histogram .histogram_axis line {
-  stroke: #cccccc;
+  stroke: rgba(0, 0, 0, 0.2);
 }
-svg.timeline .timeline_axis text,
-svg.heap .timeline_axis text,
-svg.histogram .timeline_axis text,
+svg.timeline .axis text,
+svg.heap .axis text,
+svg.histogram .axis text,
+svg.timeline .bars_axis text,
+svg.heap .bars_axis text,
+svg.histogram .bars_axis text,
 svg.timeline .heap_axis text,
 svg.heap .heap_axis text,
 svg.histogram .heap_axis text,
@@ -162,41 +326,41 @@ svg.heap .histogram_axis text,
 svg.histogram .histogram_axis text {
   fill: #000000;
 }
-svg.timeline .timeline_events .timeline_event .childrenIcon rect,
-svg.heap .timeline_events .timeline_event .childrenIcon rect,
-svg.histogram .timeline_events .timeline_event .childrenIcon rect {
+svg.timeline .bars_events .bars_event .childrenIcon rect,
+svg.heap .bars_events .bars_event .childrenIcon rect,
+svg.histogram .bars_events .bars_event .childrenIcon rect {
   fill: none;
   cursor: pointer;
   pointer-events: all;
 }
-svg.timeline .timeline_events .timeline_event .childrenIcon text,
-svg.heap .timeline_events .timeline_event .childrenIcon text,
-svg.histogram .timeline_events .timeline_event .childrenIcon text {
+svg.timeline .bars_events .bars_event .childrenIcon text,
+svg.heap .bars_events .bars_event .childrenIcon text,
+svg.histogram .bars_events .bars_event .childrenIcon text {
   fill: #ffffff;
 }
-svg.timeline .timeline_events .timeline_event .childrenIcon.open .closed,
-svg.heap .timeline_events .timeline_event .childrenIcon.open .closed,
-svg.histogram .timeline_events .timeline_event .childrenIcon.open .closed {
+svg.timeline .bars_events .bars_event .childrenIcon.open .closed,
+svg.heap .bars_events .bars_event .childrenIcon.open .closed,
+svg.histogram .bars_events .bars_event .childrenIcon.open .closed {
   display: none;
 }
-svg.timeline .timeline_events .timeline_event .childrenIcon.closed .open,
-svg.heap .timeline_events .timeline_event .childrenIcon.closed .open,
-svg.histogram .timeline_events .timeline_event .childrenIcon.closed .open {
+svg.timeline .bars_events .bars_event .childrenIcon.closed .open,
+svg.heap .bars_events .bars_event .childrenIcon.closed .open,
+svg.histogram .bars_events .bars_event .childrenIcon.closed .open {
   display: none;
 }
-svg.timeline .timeline_events .timeline_event .eventRect,
-svg.heap .timeline_events .timeline_event .eventRect,
-svg.histogram .timeline_events .timeline_event .eventRect {
+svg.timeline .bars_events .bars_event .eventRect,
+svg.heap .bars_events .bars_event .eventRect,
+svg.histogram .bars_events .bars_event .eventRect {
   fill: #008080;
 }
-svg.timeline .timeline_events .timeline_event .title,
-svg.heap .timeline_events .timeline_event .title,
-svg.histogram .timeline_events .timeline_event .title {
+svg.timeline .bars_events .bars_event .title,
+svg.heap .bars_events .bars_event .title,
+svg.histogram .bars_events .bars_event .title {
   fill: #ffffff;
 }
-svg.timeline .timeline_events .timeline_event .title[text-anchor=end],
-svg.heap .timeline_events .timeline_event .title[text-anchor=end],
-svg.histogram .timeline_events .timeline_event .title[text-anchor=end] {
+svg.timeline .bars_events .bars_event .title[text-anchor=end],
+svg.heap .bars_events .bars_event .title[text-anchor=end],
+svg.histogram .bars_events .bars_event .title[text-anchor=end] {
   fill: #000000;
 }
 svg.timeline .heap_events circle,
@@ -219,18 +383,18 @@ svg.histogram .overlay {
   fill: none;
   pointer-events: all;
 }
-svg.timeline .timeline_axis line,
-svg.heap .timeline_axis line,
-svg.histogram .timeline_axis line,
+svg.timeline .bars_axis line,
+svg.heap .bars_axis line,
+svg.histogram .bars_axis line,
 svg.timeline .heap_axis line,
 svg.heap .heap_axis line,
 svg.histogram .heap_axis line,
 svg.timeline .histogram_axis line,
 svg.heap .histogram_axis line,
 svg.histogram .histogram_axis line,
-svg.timeline .timeline_axis path,
-svg.heap .timeline_axis path,
-svg.histogram .timeline_axis path,
+svg.timeline .bars_axis path,
+svg.heap .bars_axis path,
+svg.histogram .bars_axis path,
 svg.timeline .heap_axis path,
 svg.heap .heap_axis path,
 svg.histogram .heap_axis path,
@@ -241,9 +405,9 @@ svg.histogram .histogram_axis path {
   fill: none;
   stroke-width: 1px;
 }
-svg.timeline .timeline_axis path,
-svg.heap .timeline_axis path,
-svg.histogram .timeline_axis path,
+svg.timeline .bars_axis path,
+svg.heap .bars_axis path,
+svg.histogram .bars_axis path,
 svg.timeline .heap_axis path,
 svg.heap .heap_axis path,
 svg.histogram .heap_axis path,
@@ -251,6 +415,17 @@ svg.timeline .histogram_axis path,
 svg.heap .histogram_axis path,
 svg.histogram .histogram_axis path {
   stroke: none;
+}
+a.button {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: .5em;
+  border-radius: .5em;
+  text-decoration: none;
+}
+a.button:hover {
+  background-color: #fff;
+  border: 1px solid #efefef;
 }
 /*
 
