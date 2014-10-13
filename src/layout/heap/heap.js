@@ -236,7 +236,8 @@ TT.layout.heap = function() {
 			
 			if(zoom.scale() > p.thresholds.images) {
 				
-				var imagesEnter = events.filter(function(d) { return !d.hasImage && d.thumbnailUrl; });
+				
+				var imagesEnter = events.filter( function(d) { return !d.hasImage && d.thumbnailUrl; });
 				
 				imagesEnter.append("image")
 						.attr("xlink:href", function(d) {
@@ -246,7 +247,26 @@ TT.layout.heap = function() {
 							});
 						
 							d.hasImage = true;
-							return d.thumbnailUrl;
+							
+							if ( typeof d.thumbnailUrl == "function" ) {
+								
+								var element = this,
+									datum = d;
+								
+								d.thumbnailUrl( function( url ) {
+									
+									d3.select( element )
+										.attr( "xlink:href", url );
+									
+									d.thumbnailUrl = url;
+									
+								} );
+								
+							} else {
+							
+								return d.thumbnailUrl;
+								
+							}
 						});
 				
 					
@@ -259,7 +279,7 @@ TT.layout.heap = function() {
 				
 			} else {
 			
-				events.selectAll("image").remove();
+				events.selectAll( "image" ).remove();
 				events.each( function(d) { d.hasImage = false; } );
 				
 			}
