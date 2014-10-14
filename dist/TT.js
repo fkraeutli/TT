@@ -1433,7 +1433,7 @@ TT.layout.heap = function() {
 		thresholds: {
 			
 			display: 2000, // amount of events
-			images: 30 // zoom factor
+			images: 50 // zoom factor
 			
 		},
 		
@@ -1607,45 +1607,53 @@ TT.layout.heap = function() {
 			
 			if(zoom.scale() > p.thresholds.images) {
 				
-				
 				var imagesEnter = events.filter( function(d) { return !d.hasImage && d.thumbnailUrl; });
 				
 				imagesEnter.append("image")
-						.attr("xlink:href", function(d) {
+					.attr("xlink:href", function(d) {
 						
-							d3.select("#hs" + id + "_event_" + d.id + " image").on("error", function(event) {
-								d3.select(this).style("display", "none");
-							});
-						
-							d.hasImage = true;
-							
-							if ( typeof d.thumbnailUrl == "function" ) {
-								
-								var element = this,
-									datum = d;
-								
-								d.thumbnailUrl( function( url ) {
-									
-									d3.select( element )
-										.attr( "xlink:href", url );
-									
-									d.thumbnailUrl = url;
-									
-								} );
-								
-							} else {
-							
-								return d.thumbnailUrl;
-								
-							}
+						d3.select("#hs" + id + "_event_" + d.id + " image").on("error", function(event) {
+							d3.select(this).style("display", "none");
 						});
+					
+						d.hasImage = true;
+						
+						if ( typeof d.thumbnailUrl == "function" ) {
+							
+							var element = this,
+								datum = d;
+							
+							d.thumbnailUrl( function( url ) {
+								
+								d3.select( element )
+									.attr( "xlink:href", url );
+								
+								d.thumbnailUrl = url;
+								
+							} );
+							
+						} else {
+						
+							return d.thumbnailUrl;
+							
+						}
+					});
 				
 					
 				events.selectAll("image")
 					.attr("x", -zoom.scale() / 2 * p.styles.images.factor)
 					.attr("y", -zoom.scale() / 2 * p.styles.images.factor)
 					.attr("width", zoom.scale() * p.styles.images.factor + "px")
-					.attr("height", zoom.scale() * p.styles.images.factor + "px");
+					.attr("height", zoom.scale() * p.styles.images.factor + "px")
+					.attr("xlink:href", function(d) {
+					
+						if ( typeof d.thumbnailUrl != "function" ) {
+						
+							return d.thumbnailUrl;
+							
+						}
+						
+					});
 					
 				
 			} else {
