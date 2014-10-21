@@ -55,8 +55,6 @@ TT.ui.panel = function() {
 	
 	function panel( params ) {
 		
-		//console.log( params );
-		
 		if( !params.event || !params.data ) {
 		
 			return false;
@@ -306,9 +304,28 @@ TT.ui.panel = function() {
 			addHeader();
 			addSwatches();
 		}
+		
+		function makePanel() {
 			
-		showPanel( params );
-		loadContent ( params.data );
+			showPanel( params );
+		
+			loadContent ( params.data );	
+			
+		}
+		
+		if ( ! params.data.initialise ) {
+			
+			makePanel();
+
+		} else {
+			
+			if ( typeof params.data.initialise == "function" ) {
+				
+				params.data.initialise( makePanel );
+				
+			} 
+			
+		}
 		
 	}
 	
@@ -426,9 +443,13 @@ TT.ui.panel = function() {
 				break;
 				
 			case "dblclick":
+			
 				if ( params.data && params.data.url ) {
+					
 					window.open( params.data.url );
+					
 				}
+				
 				break;
 			
 		}
