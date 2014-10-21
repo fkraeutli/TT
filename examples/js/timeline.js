@@ -69,5 +69,33 @@ function makeHeap() {
 	heap = TT.layout.heap().data( dataset );
 	
 	timeline.add( heap );	
+	
+	fields = [];
+	
+	record = {
+			
+		title: function( d ) {
+			
+			return "Title";
+			
+			
+		},
+		
+		subtitle: function(d) {
+			
+			return "Subtitle";
+			
+		},
+		
+		image: function(d) {
+			
+			return d.thumbnailUrl;
+			
+		}
+		
+	}
+	
+	ui = TT.ui.panel().heap( heap ).fields( fields ).record( record ).initialise();
+
 		
 }
