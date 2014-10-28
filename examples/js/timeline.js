@@ -53,6 +53,12 @@ function make() {
 			heap.data( dataset );
 			
 		}
+		
+		if ( numFetched >= numRows ) {
+			
+			$j( this ).off( "GeffryeAPI_loadingProgressed" );
+			
+		}
 	
 	} );
 				
@@ -70,27 +76,52 @@ function makeHeap() {
 	
 	timeline.add( heap );	
 	
-	fields = [];
+	fields = [
+			
+			
+		{
+			
+			title: "Collection",
+			field: "collectionCategory",
+			accessor: function(d) {
+				
+				return d.collectionCategory;
+				
+			},
+						
+		},
+		
+		{
+			
+			title: "Location",
+			field: "location",
+			accessor: function(d) {
+				
+				return d.location;
+				
+			}
+			
+		}
+			
+	];
 	
 	record = {
+				
+		title: function(d) {
 			
-		title: function( d ) {
-			
-			return "Title";
-			
+			return d.title[0] || d.wholeObjectName;
 			
 		},
 		
 		subtitle: function(d) {
 			
-			return "Subtitle";
+			return d.labelText;
 			
 		},
 		
 		image: function(d) {
 			
 			return d.thumbnailUrl;
-			
 		}
 		
 	}

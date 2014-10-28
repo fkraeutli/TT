@@ -67,8 +67,8 @@ TT.ui.panel = function() {
 						
 				// Add header
 				var header = p.elements.panel.append("div")
-					.attr("class", "header")
-					.style("background-image", "url(" + p.record.image.call( p.record.image, data ) + ")" );
+					.attr( "class", "header" )
+					.style( "background-image", "url(" + p.record.image.call( p.record.image, data ) + ")" );
 					
 				header.append("h2")
 					.html( p.record.title.call( p.record.title, data ) );
@@ -102,7 +102,6 @@ TT.ui.panel = function() {
 		function loadField( data ) {
 			
 			function addHeader () {
-			
 				
 				var header = p.elements.panel.append("ul")
 					.attr("class", "header");
@@ -156,6 +155,7 @@ TT.ui.panel = function() {
 						description: "Separate all items matching " + data.title + " \"" +  data.selected + "\" from their current heap"
 					},*/
 					{
+						
 						title: "Remove",
 						description: "Remove all items matching " + data.title + " \"" +  data.selected + "\"",
 						action: function() {
@@ -166,7 +166,7 @@ TT.ui.panel = function() {
 
 								// Repopulate field values
 								p.data = p.heap.data();
-								populateFields();
+								//populateFields();
 								
 								hidePanel();
 								
@@ -203,12 +203,12 @@ TT.ui.panel = function() {
 						.append("option")
 						.html(function(d) { return d; });
 						
-						
 					select.on("mouseover", null);
 						
 				}
 				
 				var select = p.elements.panel.append("select")
+				
 					.attr("class", "select")
 					.on("change", function(d) {
 						
@@ -229,14 +229,14 @@ TT.ui.panel = function() {
 			addHeader();
 			addOperations();
 			addInstructions();
-			addSelect();
+			
+			// addSelect(); // TODO: populate via API
 			
 		}
 		
 		function loadFilterByColour( data ) {
 			
 			function addHeader () {
-			
 				
 				var header = p.elements.panel.append("ul")
 					.attr("class", "header");
@@ -272,19 +272,54 @@ TT.ui.panel = function() {
 					.append("li")
 					.style("background-color", function(d) {
 						
-						return colour[ d%3 ](d);
+						return colour[ d % 3 ](d);
 						
 					})
-					.on("click", function(index) {
+					.on("click", function( index ) {
 					
 							if( p.heap ) {
 							
+								p.data = p.heap.data();
+									
+								var asyncRequested = false;
+								
 								p.data.forEach( function(d) { 
 									
-									if( data.accessor(d) == data.selected ) {
+									console.log( data.accessor( d ) );
 									
-										d.color = colour[ index%3 ](index);
+									if( data.accessor( d ) !== undefined ) {
 										
+										if( data.accessor( d ) == data.selected ) {
+										
+											d.color = colour[ index % 3 ](index);
+											
+										}
+									
+									} else {
+										
+										if ( ! asyncRequested && d.initialise && typeof d.initialise == "function" ) {
+											
+											asyncRequested = true;
+											
+											d.initialise( function() {
+												
+												p.data.forEach( function(d) { 
+
+													if( data.accessor( d ) == data.selected ) {
+											
+														d.color = colour[ index % 3 ](index);
+																										
+													}
+												} );
+												
+												p.heap.data( p.data ); 
+													
+											}, data.field );
+
+											
+										}
+										
+																				
 									}
 									
 								} );
@@ -323,7 +358,7 @@ TT.ui.panel = function() {
 				
 				params.data.initialise( makePanel );
 				
-			} 
+			}
 			
 		}
 		
@@ -411,7 +446,7 @@ TT.ui.panel = function() {
 							
 						}
 						
-						if (!objectInArray) {
+						if (! objectInArray ) {
 							
 							field.values.push(v);
 							
@@ -494,7 +529,7 @@ TT.ui.panel = function() {
 					
 		}
 		
-		populateFields();
+		//populateFields();
 		initPanel();
 		
 		initialised = true;
