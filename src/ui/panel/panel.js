@@ -89,20 +89,18 @@ TT.ui.panel = function() {
 						
 					} )
 					.on( "click", function(d) {
-						d.selected = d.accessor( data );
-						loadField( d );
 						
 						function doLoadField() {
 							
-							console.log( "DOING" );
 							d.selected = d.accessor( data );
-					
+										
 							loadField( d );
 							
 						}
 						
 						if ( d.initialise && typeof d.initialise == "function" ) {
 							
+							console.log( d );
 							d.initialise( doLoadField );
 							
 						} else {
@@ -188,7 +186,6 @@ TT.ui.panel = function() {
 
 								// Repopulate field values
 								p.data = p.heap.data();
-								//populateFields();
 								
 								hidePanel();
 								
@@ -219,6 +216,8 @@ TT.ui.panel = function() {
 				
 				function populateSelect() {					
 					
+					populateField( data );
+					
 					select.selectAll("option")
 						.data( data.values )
 					.enter()
@@ -234,7 +233,7 @@ TT.ui.panel = function() {
 					.attr("class", "select")
 					.on("change", function(d) {
 						
-						var selected = this.options[this.selectedIndex].__data__ ;
+						var selected = this.options[ this.selectedIndex ].__data__ ;
 						data.selected = selected;
 						loadField( data );				
 						
@@ -243,7 +242,7 @@ TT.ui.panel = function() {
 				select.insert("option", ":first-child")
 					.html( "Select a different " + data.title );
 					
-				setTimeout(populateSelect, 300);
+				setTimeout( populateSelect, 300 );
 				
 			}
 			
@@ -252,7 +251,7 @@ TT.ui.panel = function() {
 			addOperations();
 			addInstructions();
 			
-			// addSelect(); // TODO: populate via API
+			addSelect(); // TODO: populate via API
 			
 		}
 		
@@ -302,50 +301,16 @@ TT.ui.panel = function() {
 							if( p.heap ) {
 							
 								p.data = p.heap.data();
-									
-								var asyncRequested = false;
 								
-								p.data.forEach( function(d) { 
+								p.data.forEach( function(d) {
+																			
+									if( data.accessor( d ) == data.selected ) {
+								
+										d.color = colour[ index % 3 ](index);
 									
-									console.log( data.accessor( d ) );
-									
-									if( data.accessor( d ) !== undefined ) {
-										
-										if( data.accessor( d ) == data.selected ) {
-										
-											d.color = colour[ index % 3 ](index);
-											
-										}
-									
-									} else {
-										
-										if ( ! asyncRequested && d.initialise && typeof d.initialise == "function" ) {
-											
-											asyncRequested = true;
-											
-											d.initialise( function() {
-												
-												p.data.forEach( function(d) { 
-
-													if( data.accessor( d ) == data.selected ) {
-											
-														d.color = colour[ index % 3 ](index);
-																										
-													}
-												} );
-												
-												p.heap.data( p.data ); 
-													
-											}, data.field );
-
-											
-										}
-										
-																				
 									}
-									
-								} );
 								
+								} );
 								
 								p.heap.data( p.data ); 
 								
@@ -437,13 +402,11 @@ TT.ui.panel = function() {
 
 	}
 	
-	function populateFields() {
+	function populateField( field ) {
 	
-		fields.forEach( function(field) { 
-		
-			field.values = []; 
+		field.values = []; 
 			
-			p.data.forEach( function(d) { 
+		p.data.forEach( function(d) { 
 			
 				value = field.accessor.call(field.accessor, d); 
 				
@@ -483,9 +446,7 @@ TT.ui.panel = function() {
 				});
 			} );
 			
-			field.values.sort();
-			
-		} );
+		field.values.sort();
 		
 	}
 	
@@ -551,7 +512,6 @@ TT.ui.panel = function() {
 					
 		}
 		
-		//populateFields();
 		initPanel();
 		
 		initialised = true;

@@ -2581,15 +2581,15 @@ TT.layout.heap = function() {
 						
 						function doLoadField() {
 							
-							console.log( "DOING" );
 							d.selected = d.accessor( data );
-					
+										
 							loadField( d );
 							
 						}
 						
 						if ( d.initialise && typeof d.initialise == "function" ) {
 							
+							console.log( d );
 							d.initialise( doLoadField );
 							
 						} else {
@@ -2675,7 +2675,6 @@ TT.layout.heap = function() {
 
 								// Repopulate field values
 								p.data = p.heap.data();
-								//populateFields();
 								
 								hidePanel();
 								
@@ -2706,6 +2705,8 @@ TT.layout.heap = function() {
 				
 				function populateSelect() {					
 					
+					populateField( data );
+					
 					select.selectAll("option")
 						.data( data.values )
 					.enter()
@@ -2721,7 +2722,7 @@ TT.layout.heap = function() {
 					.attr("class", "select")
 					.on("change", function(d) {
 						
-						var selected = this.options[this.selectedIndex].__data__ ;
+						var selected = this.options[ this.selectedIndex ].__data__ ;
 						data.selected = selected;
 						loadField( data );				
 						
@@ -2730,7 +2731,7 @@ TT.layout.heap = function() {
 				select.insert("option", ":first-child")
 					.html( "Select a different " + data.title );
 					
-				setTimeout(populateSelect, 300);
+				setTimeout( populateSelect, 300 );
 				
 			}
 			
@@ -2739,7 +2740,7 @@ TT.layout.heap = function() {
 			addOperations();
 			addInstructions();
 			
-			// addSelect(); // TODO: populate via API
+			addSelect(); // TODO: populate via API
 			
 		}
 		
@@ -2789,12 +2790,16 @@ TT.layout.heap = function() {
 							if( p.heap ) {
 							
 								p.data = p.heap.data();
-																			
-								if( data.accessor( d ) == data.selected ) {
 								
-									d.color = colour[ index % 3 ](index);
+								p.data.forEach( function(d) {
+																			
+									if( data.accessor( d ) == data.selected ) {
+								
+										d.color = colour[ index % 3 ](index);
 									
-								}								
+									}
+								
+								} );
 								
 								p.heap.data( p.data ); 
 								
@@ -2886,13 +2891,11 @@ TT.layout.heap = function() {
 
 	}
 	
-	function populateFields() {
+	function populateField( field ) {
 	
-		fields.forEach( function(field) { 
-		
-			field.values = []; 
+		field.values = []; 
 			
-			p.data.forEach( function(d) { 
+		p.data.forEach( function(d) { 
 			
 				value = field.accessor.call(field.accessor, d); 
 				
@@ -2932,9 +2935,7 @@ TT.layout.heap = function() {
 				});
 			} );
 			
-			field.values.sort();
-			
-		} );
+		field.values.sort();
 		
 	}
 	
@@ -3000,7 +3001,6 @@ TT.layout.heap = function() {
 					
 		}
 		
-		//populateFields();
 		initPanel();
 		
 		initialised = true;

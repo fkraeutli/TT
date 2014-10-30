@@ -102,9 +102,11 @@ function makeHeap() {
 			},
 			initialise: function( callback ) {
 				
+				var obj = this;
+				
 				GeffryeAPI.loadField( "location", function() {
 					
-					delete this.initialise;
+					delete obj.initialise;
 					callback();
 					
 				} );
