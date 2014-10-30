@@ -103,6 +103,8 @@ TT.ui.panel = function() {
 							console.log( d );
 							d.initialise( doLoadField );
 							
+							this.on( "click", null ) ;
+							
 						} else {
 							
 							doLoadField();

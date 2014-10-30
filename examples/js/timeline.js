@@ -99,12 +99,19 @@ function makeHeap() {
 				
 				return d.location;
 				
-			},
-			initialise: function( callback ) {
+			}
+			
+		}
+			
+	];
+	
+	for( var i = 0; i < fields.length; i++ ) {
+		
+		fields[ i ].initialise = function( callback ) {
 				
 				var obj = this;
 				
-				GeffryeAPI.loadField( "location", function() {
+				GeffryeAPI.loadField( obj.field, function() {
 					
 					delete obj.initialise;
 					callback();
@@ -112,10 +119,8 @@ function makeHeap() {
 				} );
 				
 			}
-			
-		}
-			
-	];
+					
+	}
 	
 	record = {
 				
