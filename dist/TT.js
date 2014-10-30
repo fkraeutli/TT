@@ -2573,11 +2573,31 @@ TT.layout.heap = function() {
 					.enter()
 					.append("li")
 					.html( function(d) {
+						
 						return "<label>" + d.title + "</label>" + d.accessor( data ); 
+						
 					} )
 					.on( "click", function(d) {
-						d.selected = d.accessor( data );
-						loadField( d );
+						
+						function doLoadField() {
+							
+							console.log( "DOING" );
+							d.selected = d.accessor( data );
+					
+							loadField( d );
+							
+						}
+						
+						if ( d.initialise && typeof d.initialise == "function" ) {
+							
+							d.initialise( doLoadField );
+							
+						} else {
+							
+							doLoadField();
+							
+						}
+						
 					});
 				
 			}
@@ -2769,50 +2789,12 @@ TT.layout.heap = function() {
 							if( p.heap ) {
 							
 								p.data = p.heap.data();
-									
-								var asyncRequested = false;
+																			
+								if( data.accessor( d ) == data.selected ) {
 								
-								p.data.forEach( function(d) { 
+									d.color = colour[ index % 3 ](index);
 									
-									console.log( data.accessor( d ) );
-									
-									if( data.accessor( d ) !== undefined ) {
-										
-										if( data.accessor( d ) == data.selected ) {
-										
-											d.color = colour[ index % 3 ](index);
-											
-										}
-									
-									} else {
-										
-										if ( ! asyncRequested && d.initialise && typeof d.initialise == "function" ) {
-											
-											asyncRequested = true;
-											
-											d.initialise( function() {
-												
-												p.data.forEach( function(d) { 
-
-													if( data.accessor( d ) == data.selected ) {
-											
-														d.color = colour[ index % 3 ](index);
-																										
-													}
-												} );
-												
-												p.heap.data( p.data ); 
-													
-											}, data.field );
-
-											
-										}
-										
-																				
-									}
-									
-								} );
-								
+								}								
 								
 								p.heap.data( p.data ); 
 								

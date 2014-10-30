@@ -56,7 +56,7 @@ function make() {
 		
 		if ( numFetched >= numRows ) {
 			
-			$j( this ).off( "GeffryeAPI_loadingProgressed" );
+			//$j( this ).off( "GeffryeAPI_loadingProgressed" );
 			
 		}
 	
@@ -98,6 +98,16 @@ function makeHeap() {
 			accessor: function(d) {
 				
 				return d.location;
+				
+			},
+			initialise: function( callback ) {
+				
+				GeffryeAPI.loadField( "location", function() {
+					
+					delete this.initialise;
+					callback();
+					
+				} );
 				
 			}
 			

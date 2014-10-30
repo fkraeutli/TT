@@ -84,11 +84,33 @@ TT.ui.panel = function() {
 					.enter()
 					.append("li")
 					.html( function(d) {
+						
 						return "<label>" + d.title + "</label>" + d.accessor( data ); 
+						
 					} )
 					.on( "click", function(d) {
 						d.selected = d.accessor( data );
 						loadField( d );
+						
+						function doLoadField() {
+							
+							console.log( "DOING" );
+							d.selected = d.accessor( data );
+					
+							loadField( d );
+							
+						}
+						
+						if ( d.initialise && typeof d.initialise == "function" ) {
+							
+							d.initialise( doLoadField );
+							
+						} else {
+							
+							doLoadField();
+							
+						}
+						
 					});
 				
 			}
