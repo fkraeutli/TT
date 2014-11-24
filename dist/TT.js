@@ -2579,6 +2579,8 @@ TT.layout.heap = function() {
 					} )
 					.on( "click", function(d) {
 						
+						var obj = this;
+						
 						function doLoadField() {
 							
 							d.selected = d.accessor( data );
@@ -2591,8 +2593,6 @@ TT.layout.heap = function() {
 							
 							console.log( d );
 							d.initialise( doLoadField );
-							
-							this.on( "click", null ) ;
 							
 						} else {
 							

@@ -90,6 +90,8 @@ TT.ui.panel = function() {
 					} )
 					.on( "click", function(d) {
 						
+						var obj = this;
+						
 						function doLoadField() {
 							
 							d.selected = d.accessor( data );
@@ -102,8 +104,6 @@ TT.ui.panel = function() {
 							
 							console.log( d );
 							d.initialise( doLoadField );
-							
-							this.on( "click", null ) ;
 							
 						} else {
 							
