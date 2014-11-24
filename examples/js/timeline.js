@@ -3,6 +3,7 @@ COOPER = 1;
 TICTAC = 2;
 OXFORD = 3;
 GEFFRYE = 4;
+BRITTEN = 5;
 
 if (!location.hash) {
 
@@ -31,13 +32,17 @@ if (!location.hash) {
 		case "#geffrye":
 			loadDataset = GEFFRYE;
 			break;
+			
+		case "#britten":
+			loadDataset = BRITTEN;
+			break;
 		
 		
 	}
 	
 }
 
-loadFormat = "json";
+loadFormat = "csv";
 
 $j = jQuery.noConflict();
 
@@ -47,7 +52,7 @@ var dataset = [],
 	fields,
 	ui,
 	urlsJSON = ["../../Tate/allartworks.js", false, false, false, "../../ssl/geffrye/geffrye-api-objects-20140826.json"];
-	urlsCSV = ["../../Tate/artwork_data.csv", "../../coopeHewittCollection/meta/objects.csv", "../../ssl/tictac/tictac_tablets.csv", "../../oxford/data/pottery.csv",  "../../ssl/geffrye/geffrye-api-objects-20140826.csv"];
+	urlsCSV = ["../../Tate/artwork_data.csv", "../../coopeHewittCollection/meta/objects.csv", "../../ssl/tictac/tictac_tablets.csv", "../../oxford/data/pottery.csv",  "../../ssl/geffrye/geffrye-api-objects-20140826.csv",  "../../britten/works_with_dates.csv"];
 
 
 $j(make);
@@ -378,7 +383,53 @@ function make() {
 		
 		}
 		
-	}
+	}else if ( loadDataset == BRITTEN ) {
+		
+		if( loadFormat == "json") {
+			
+		} else {
+		
+			d3.csv(urlsCSV[ loadDataset ], function(error, data) {
+				
+		
+				if ( !error ) {
+				
+					data.forEach( function(d) {
+					
+						d.id = d.work_id;
+					
+						if ( parseInt( d.year_commenced ) ) {
+						
+							d.from = new Date( parseInt( d.year_commenced ), parseInt( d.month_commenced ) || 0, parseInt( d.day_commenced) || 0 );
+							d.to = new Date( parseInt( d.year_completed ) || 0, parseInt( d.month_completed ) || 0, parseInt( d.day_completed) || 0 );
+						
+						} else {
+							
+							d.from = new Date( parseInt( d.year_completed  ) - 1, parseInt( d.month_completed ) || 0, parseInt( d.day_completed) || 0 );	
+							d.to = new Date( parseInt( d.year_completed ), parseInt( d.month_completed ) || 0, parseInt( d.day_completed) || 0 );
+							
+						}
+												
+						if ( !isNaN(d.from.valueOf()) ){
+							dataset.push(d);
+						} else {
+							
+							console.log( d );
+							
+						}
+					
+					} );
+					
+					console.log( dataset.length + " instances" );			
+	
+					makeHeap();
+				
+				}	
+			} )
+		
+		}
+		
+	} 
 }
 
 
@@ -387,6 +438,12 @@ function makeHeap() {
 	//dataset.splice(1000);
 
 	heap = TT.layout.heap().data( dataset );
+	
+	if ( dataset.length < 2000 ) {
+		
+		heap.styles.events( "diameter", 4);
+		
+	}
 	
 	timeline.add( heap );
 	
@@ -818,7 +875,128 @@ function makeHeap() {
 
 		}
 		
-	}
+	}else if (loadDataset == BRITTEN) {
+		
+		record = {
+			
+			title: function(d) {
+			
+				return d.title;
+			},
+			
+			subtitle: function(d) {
+				return d.subtitle;
+			},
+			
+			image: function(d) {
+				return "";
+			}
+			
+		};
+		
+		fields = [
+		
+			
+				{
+				
+					title: "BBM No",
+					accessor: function(d) {
+						return d.bbm_number;
+					}
+					
+				},
+				{
+				
+					title: "Catalogue No",
+					accessor: function(d) {
+						return d.catalogue_no;
+					}
+					
+				},
+				{
+				
+					title: "Category",
+					accessor: function(d) {
+						return d.category;
+					}
+					
+				},
+				{
+				
+					title: "Commissioned",
+					accessor: function(d) {
+						return d.commissioned;
+					}
+					
+				},
+				{
+				
+					title: "Date Note",
+					accessor: function(d) {
+						return d.date_note;
+					}
+					
+				},
+				{
+				
+					title: "Dedication",
+					accessor: function(d) {
+						return d.dedication;
+					}
+					
+				},
+				{
+				
+					title: "Genre",
+					accessor: function(d) {
+						return d.gere;
+					}
+					
+				},
+				{
+				
+					title: "Instrumentation",
+					accessor: function(d) {
+						return d.instrumentation;
+					}
+					
+				},
+				{
+				
+					title: "Is Complete",
+					accessor: function(d) {
+						return d.is_complete;
+					}
+					
+				},
+				{
+				
+					title: "Keywords",
+					accessor: function(d) {
+						return d.keywords;
+					}
+					
+				},
+				{
+				
+					title: "Sub Genre",
+					accessor: function(d) {
+						return d.sub_genre;
+					}
+					
+				},
+				{
+				
+					title: "Text Set",
+					accessor: function(d) {
+						return d.text_set;
+					}
+					
+				},
+			
+		];
+		
+	} 
 	
 
 	
