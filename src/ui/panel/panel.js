@@ -71,6 +71,45 @@ TT.ui.panel = function() {
 			
 		}
 		
+		function doesMatch( d, data ) {
+			
+			var value = data.accessor( d ),
+				matches = false;
+			
+			if ( ! jQuery.isArray( value ) ) {
+													
+				if( value == data.selected ) {
+			
+					matches = true;
+				
+				}
+				
+			} else {
+				
+				var found = 0;
+				
+				for( var i = 0; i < data.selected.length; i++ ) {	
+					
+					if ( value.indexOf( data.selected[ i ] ) != -1 ) {
+						
+						found++;
+						
+					}
+					
+				}
+				
+				if ( found == data.selected.length ) {
+					
+					matches = true;
+					
+				}
+				
+			}
+			
+			return matches;
+			
+		}
+		
 		function loadContent( data ) {
 		
 			function addHeader() {
@@ -280,7 +319,59 @@ TT.ui.panel = function() {
 					}, 
 					{
 						title: "Duplicate",
-						description: "Create a new heap with the items matching " + data.title + " \"" +  data.selected + "\""
+						description: "Create a new heap with the items matching " + data.title + " \"" +  data.selected + "\"",
+						action: function() {
+							
+							var newDataset = p.heap.data( p.heap.data().filter( function(d) { 
+								
+								if ( ! jQuery.isArray( data.selected ) ) {
+	
+									return data.accessor(d) != data.selected;
+								
+								} else {
+									
+									var value = data.accessor( d ),
+										doInclude = false;
+									
+									if ( ! jQuery.isArray( value ) ) {
+																			
+										if( value == data.selected ) {
+									
+											doInclude = true;
+										
+										}
+										
+									} else {
+										
+										var found = 0;
+										
+										for( var i = 0; i < data.selected.length; i++ ) {	
+											
+											if ( value.indexOf( data.selected[ i ] ) != -1 ) {
+												
+												found++;
+												
+											}
+											
+										}
+										
+										if ( found == data.selected.length ) {
+											
+											doInclude = true;
+											
+										}
+										
+									}
+									
+									return doInclude;
+									
+								}
+										
+							} ) ); 
+							
+							var newHeap = TT.layout.heap().data( newDataset );
+							
+						}
 					}, 
 					/*{
 						title: "Separate",
@@ -466,40 +557,7 @@ TT.ui.panel = function() {
 								
 								p.data.forEach( function(d) {
 									
-									var value = data.accessor( d ),
-										doColour = false;
-									
-									if ( ! jQuery.isArray( value ) ) {
-																			
-										if( value == data.selected ) {
-									
-											doColour = true;
-										
-										}
-										
-									} else {
-										
-										var found = 0;
-										
-										for( var i = 0; i < data.selected.length; i++ ) {	
-											
-											if ( value.indexOf( data.selected[ i ] ) != -1 ) {
-												
-												found++;
-												
-											}
-											
-										}
-										
-										if ( found == data.selected.length ) {
-											
-											doColour = true;
-											
-										}
-										
-									}
-									
-									if ( doColour ) {
+									if ( doesMatch( d, data ) ) {
 										
 										d.color = colour[ index % 3 ](index);
 										

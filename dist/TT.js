@@ -2560,6 +2560,45 @@ TT.layout.heap = function() {
 			
 		}
 		
+		function doesMatch( d, data ) {
+			
+			var value = data.accessor( d ),
+				matches = false;
+			
+			if ( ! jQuery.isArray( value ) ) {
+													
+				if( value == data.selected ) {
+			
+					matches = true;
+				
+				}
+				
+			} else {
+				
+				var found = 0;
+				
+				for( var i = 0; i < data.selected.length; i++ ) {	
+					
+					if ( value.indexOf( data.selected[ i ] ) != -1 ) {
+						
+						found++;
+						
+					}
+					
+				}
+				
+				if ( found == data.selected.length ) {
+					
+					matches = true;
+					
+				}
+				
+			}
+			
+			return matches;
+			
+		}
+		
 		function loadContent( data ) {
 		
 			function addHeader() {
@@ -2955,40 +2994,7 @@ TT.layout.heap = function() {
 								
 								p.data.forEach( function(d) {
 									
-									var value = data.accessor( d ),
-										doColour = false;
-									
-									if ( ! jQuery.isArray( value ) ) {
-																			
-										if( value == data.selected ) {
-									
-											doColour = true;
-										
-										}
-										
-									} else {
-										
-										var found = 0;
-										
-										for( var i = 0; i < data.selected.length; i++ ) {	
-											
-											if ( value.indexOf( data.selected[ i ] ) != -1 ) {
-												
-												found++;
-												
-											}
-											
-										}
-										
-										if ( found == data.selected.length ) {
-											
-											doColour = true;
-											
-										}
-										
-									}
-									
-									if ( doColour ) {
+									if ( doesMatch( d, data ) ) {
 										
 										d.color = colour[ index % 3 ](index);
 										
