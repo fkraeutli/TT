@@ -455,6 +455,15 @@ TT.layout.heap = function() {
 					}
 				});
 				
+			var dragOutline = d3.behavior.drag().on( "drag", function( d ) {
+			
+				p.translate[1] += d3.event.dy;
+				update();
+				
+			} );
+			
+			p.elements.outline.call( dragOutline );
+				
 			p.elements.events = p.svg.insert("g")
 				.attr("class", "heap_events")
 				.attr("id", "hs" + id + "_events");
