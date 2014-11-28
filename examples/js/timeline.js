@@ -3,10 +3,11 @@ COOPER = 1;
 TICTAC = 2;
 OXFORD = 3;
 GEFFRYE = 4;
+TATEJSON = 5;
 
 if (!location.hash) {
 
-	loadDataset = TATEART;
+	loadDataset = TATEJSON;
 
 } else {
 	
@@ -14,6 +15,10 @@ if (!location.hash) {
 		
 		case "#tate":
 			loadDataset = TATEART;
+			break;
+			
+		case "#tatejs":
+			loadDataset = TATEJSON;
 			break;
 			
 		case "#cooper":
@@ -107,6 +112,56 @@ function make() {
 			}
 		});
 		
+	} else if (loadDataset === TATEJSON) {
+	
+		
+		d3.json( "../../Tate/allartworks.js", function(error, data) {
+		
+			if( !error ) {
+								
+				data.forEach( function(d) {
+					
+					if(d.dateRange && d.dateRange.startYear) {
+						
+						d.from = new Date( +d.dateRange.startYear, 0, 1 );
+						
+						d.to = new Date( d.from.valueOf() );
+						d.to.setFullYear( d.from.getFullYear() + 1 );
+
+						// Replace thumbnail url for local one REMOVE THIS
+						
+						if ( d.thumbnailUrl ) {
+							
+							var r = /([A-Z0-9])*_8.jpg$/.exec( d.thumbnailUrl);
+							
+							if ( r &&  r.length ) {
+							
+								d.thumbnailUrl = "http://otis.local:8888/Tate/local/" + /([A-Z0-9])*_8.jpg$/.exec( d.thumbnailUrl)[0];
+								
+							}
+							
+						}
+						
+					
+						if ( !isNaN(d.from.valueOf()) ){
+							dataset.push(d);
+						}
+					}
+					
+				} );
+				
+				console.log( dataset.length + " instances" );			
+
+				makeHeap();
+				
+			} else {
+				
+				console.error(error);
+			
+			}
+		});
+		
+				
 	} else if ( loadDataset == GEFFRYE ) {
 	
 		GeffryeAPI.initObjectDataset();
@@ -293,6 +348,18 @@ function makeHeap() {
 					
 				}
 				
+			},
+			
+			{
+				
+				title: "Materials",
+				field: "materials",
+				accessor: function(d) {
+					
+					return d.materials;
+					
+				}
+				
 			}
 				
 		];
@@ -335,6 +402,137 @@ function makeHeap() {
 			
 		}
 		
+	} else if (loadDataset == TATEJSON) {
+		
+		fields = [
+			
+			{
+				title: "Classification",
+				accessor: function(d) {
+					return d.classification;
+				}
+				
+			},
+			
+			{
+				title: "Artist",
+				accessor: function(d) {
+				
+					if(d.contributors.length) {
+						
+						var list = Array();
+						
+						for( var i = 0; i < d.contributors.length; i++ ) {
+							
+							list.push( d.contributors[ i ].fc );
+							
+						}
+						return list;
+					
+					}
+					
+					return "unknown";
+					
+				}
+			},
+			
+			{
+				title: "Medium",
+				accessor: function(d) {
+				
+					return d.medium;
+					
+				}
+			},
+			
+			{
+				title: "Movements",
+				accessor: function(d) {
+					
+					if ( ! d.movements ) {
+						
+						return Array( "unspecified" );
+						
+					}
+					
+					var movementNames = Array();
+					
+					for ( var i = 0; i < d.movements.length; i++ ) {
+						
+						movementNames.push( d.movements[ i ].name );
+						
+					}
+					
+					
+					return movementNames;	
+					
+				}
+			}
+			
+	/*
+,
+			
+			{
+				title: "Subjects",
+				accessor: function(d) {
+				
+					if( ! d.subjects) return [];		
+				
+					var allSubjects = Array();
+					
+					var getSubjects = function( obj ) {
+					
+						allSubjects.push( obj );
+						
+						if( obj.children && obj.children.length) {
+							
+							obj.children.forEach( function(child) {
+								
+								getSubjects(child);
+	
+							} );
+							
+						}
+					
+					}
+					
+					getSubjects(d.subjects);
+					
+					var subjectNames = Array();
+					
+					for( var i = 0; i < allSubjects.length; i++ ) {
+						
+						subjectNames.push( allSubjects[ i ].name );
+						
+					}
+					console.log( "doing" );
+					
+					return subjectNames;
+				}
+	
+			}
+*/
+			
+			
+		];
+		
+		
+		record = {
+			
+			title: function(d) {
+				return d.title;
+			},
+			
+			subtitle: function(d) {
+				return d.artist + "<br>" + d.dateText;
+			},
+			
+			image: function(d) {
+				return d.thumbnailUrl;
+			}
+			
+		}
+	
 	} else if ( loadDataset == TATEART ) {
 		
 		fields = [
@@ -551,8 +749,6 @@ function makeHeap() {
 			];
 		
 	}
-	
-	
 	
 	ui = TT.ui.panel().heap( heap ).fields( fields ).record( record ).initialise();
 

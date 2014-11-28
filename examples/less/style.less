@@ -359,7 +359,21 @@ a, a:visited {
 	
 			}
 			
+		}
+		
+		.header {
 			
+			.values {
+				
+				margin: 0 -1em;
+				
+				label {
+					
+					font-weight: normal;
+					
+				}
+				
+			}
 			
 		}
 		
@@ -369,6 +383,17 @@ a, a:visited {
 			height: 32px;
 			margin: 50% auto;
 			background: url(images/ajax-loader.gif);
+			
+		}
+		
+		.loading::after {
+			
+			.pseudoElement();
+			position: fixed;
+			left:0;
+			top:0;
+			width: 100vw;
+			height: 100vh;
 			
 		}
 		

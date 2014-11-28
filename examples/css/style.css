@@ -235,11 +235,27 @@ a:visited {
   color: white;
   text-shadow: -1px -1px 1em rgba(0, 0, 0, 0.2), 1px -1px 1em rgba(0, 0, 0, 0.2), -1px 1px 1em rgba(0, 0, 0, 0.2), 1px 1px 1em rgba(0, 0, 0, 0.2);
 }
+.ui_panel_container .ui_panel .header .values {
+  margin: 0 -1em;
+}
+.ui_panel_container .ui_panel .header .values label {
+  font-weight: normal;
+}
 .ui_panel_container .ui_panel .loading {
   width: 32px;
   height: 32px;
   margin: 50% auto;
   background: url(images/ajax-loader.gif);
+}
+.ui_panel_container .ui_panel .loading::after {
+  content: ".";
+  display: block;
+  text-indent: -10000px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
 }
 .ui_panel_container .ui_panel .loading.progress {
   width: 80%;
