@@ -322,7 +322,7 @@ TT.ui.panel = function() {
 						description: "Create a new heap with the items matching " + data.title + " \"" +  data.selected + "\"",
 						action: function() {
 							
-							var newDataset = p.heap.data( p.heap.data().filter( function(d) { 
+							var newDataset = p.heap.data().filter( function(d) { 
 								
 								if ( ! jQuery.isArray( data.selected ) ) {
 	
@@ -330,46 +330,25 @@ TT.ui.panel = function() {
 								
 								} else {
 									
-									var value = data.accessor( d ),
-										doInclude = false;
-									
-									if ( ! jQuery.isArray( value ) ) {
-																			
-										if( value == data.selected ) {
-									
-											doInclude = true;
-										
-										}
-										
-									} else {
-										
-										var found = 0;
-										
-										for( var i = 0; i < data.selected.length; i++ ) {	
-											
-											if ( value.indexOf( data.selected[ i ] ) != -1 ) {
-												
-												found++;
-												
-											}
-											
-										}
-										
-										if ( found == data.selected.length ) {
-											
-											doInclude = true;
-											
-										}
-										
-									}
-									
-									return doInclude;
+									return doesMatch( d, data );
 									
 								}
 										
-							} ) ); 
+							} ); 
+							
+							
+							console.log( "doing");
+							console.log( newDataset );
 							
 							var newHeap = TT.layout.heap().data( newDataset );
+							
+							p.heap.parent().add( newHeap );
+							
+							TT.ui.panel().heap( newHeap ).fields( p.fields ).record( p.record ).initialise();
+							
+							hidePanel();
+							
+
 							
 						}
 					}, 
