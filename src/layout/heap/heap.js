@@ -147,11 +147,13 @@ TT.layout.heap = function() {
 		}
 		
 		function updateDataValues() {
-		
-			if (p.grid.initialised) return false;
 					
-			function makeGrid() {
-				
+			if (p.grid.initialised) return false;
+			
+			console.log( "DOING" );
+					
+			function makeGrid() {				
+			
 				p.grid.availableWidth = p.scales.dateToPx( p.view.to ) - p.scales.dateToPx( p.view.from );
 				p.grid.numCols = Math.floor( p.grid.availableWidth / p.styles.events.diameter );
 					

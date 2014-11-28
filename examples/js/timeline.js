@@ -168,12 +168,12 @@ function make() {
 		
 		var heapInitialised = false;
 		
-		$j(document).on("loadingCompleted", function() {
+		$j( document ).on("loadingCompleted", function() {
 			
 				console.log( "Dataset Loaded" );
 			
 		} )
-		.on("loadingProgressed", function ( event, numFetched, numRows ) {
+		.on( "loadingProgressed", function ( event, numFetched, numRows ) {
 		
 			console.log( Math.floor( numFetched / numRows * 100 ) + "% loaded" );
 		
@@ -187,12 +187,13 @@ function make() {
 				
 			} else {
 				
-				heap.data( dataset );
+				//heap.data( dataset );
 				
 			}
 			
 			if ( numFetched >= numRows ) {
 				
+				heap.data( dataset );
 				//$j( this ).off( "loadingProgressed" );
 				
 			}
