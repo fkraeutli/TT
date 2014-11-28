@@ -92,10 +92,18 @@ TT.ui.panel = function() {
 				// Add list
 				p.elements.panel.append("ul").attr("class", "select").selectAll("li").data( p.fields )
 					.enter()
-					.append("li")
+				.append("li")
 					.html( function(d) {
 						
-						return "<label>" + d.title + "</label>" + d.accessor( data ); 
+						var content = d.accessor( data );
+						
+						if ( jQuery.isArray( content ) ) {
+							
+							content = content.join( ", " );
+							
+						}
+						
+						return "<label>" + d.title + "</label>" + content; 
 						
 					} )
 					.on( "click", function(d) {
@@ -105,6 +113,16 @@ TT.ui.panel = function() {
 						function doLoadField() {
 							
 							d.selected = d.accessor( data );
+							
+							if ( jQuery.isArray( d.selected ) ) {
+								
+								d.options = d.accessor( data );
+								
+							} else {
+								
+								d.options = false;
+								
+							}
 										
 							loadField( d );
 							
@@ -138,17 +156,96 @@ TT.ui.panel = function() {
 			
 			function addHeader () {
 				
+				var reloadField = function () {
+					
+					var selected = Array();
+					
+					header.select(".values").selectAll( "input[type=checkbox]").each( function( d ) {
+						
+						if ( jQuery( this ).is( ":checked" ) ) {
+							
+							selected.push( d );
+							
+						}
+						
+					} );
+					
+					data.selected = selected;
+					
+					loadField( data );	
+					
+				};
+				
+				
 				var header = p.elements.panel.append("ul")
 					.attr("class", "header");
+				
+				header.append("li")
+					.append( "a" )
+					.attr( "class", "back" )
+					.attr( "href", "#" )
+					.html( "Back" );
+								
+				if ( ! data.options ) {
 					
-				header.selectAll("li")
-					.data([
-						"<a class=\"back\" href=\"#\">Back</a>",
-						"<label>" + data.title + "</label>" + data.selected
-					])
-					.enter()
-					.append("li")
-					.html( function(d) { return d; });
+					header.append("li")
+						.html( function() {
+							return "<label>" + data.title + "</label>" + data.selected;
+							
+						} );
+					
+				} else {
+					
+					var li = header.append("li")
+						.html( function() {
+							return "<label>" + data.title + "</label><div class=\"values\"></div>";
+							
+						} );
+					
+					var enter = li.select( ".values" )
+						.append( "ul" )
+						.selectAll( "li" )
+					.data( data.options )
+						.enter()
+						.append( "li" );
+						
+					enter.append( "input" )
+						.attr( "id", function( d ) {
+							
+							return "input-" + data.field + "-" + d;
+							
+						} )
+						.attr( "type", "checkbox" )
+						.attr( "value", function( d )  {
+							
+							return d;
+							
+						} )
+						.attr( "checked", function( d ) {
+							
+							if ( data.selected.indexOf( d ) != -1 ) {
+								
+								return "checked";
+								
+							}
+							
+						} )
+						.on( "click", reloadField );
+						
+					enter.append( "label" )
+						.attr( "for", function( d ) {
+							
+							return "input-" + data.field + "-" + d;
+							
+						} )
+						.html( function( d ) {
+							
+							return d;
+							
+						} )
+						.on( "click", reloadField );
+				
+				}
 					
 				header.select("a.back")
 					.on("click", function() {
@@ -196,6 +293,8 @@ TT.ui.panel = function() {
 						action: function() {
 							
 							if( p.heap ) {
+								
+								// TODO update to support array fields
 								
 								p.heap.data( p.heap.data().filter( function(d) { return data.accessor(d) != data.selected;} ) ); 
 
@@ -318,11 +417,44 @@ TT.ui.panel = function() {
 								p.data = p.heap.data();
 								
 								p.data.forEach( function(d) {
-																			
-									if( data.accessor( d ) == data.selected ) {
-								
-										d.color = colour[ index % 3 ](index);
 									
+									var value = data.accessor( d ),
+										doColour = false;
+									
+									if ( ! jQuery.isArray( value ) ) {
+																			
+										if( value == data.selected ) {
+									
+											doColour = true;
+										
+										}
+										
+									} else {
+										
+										var found = 0;
+										
+										for( var i = 0; i < data.selected.length; i++ ) {	
+											
+											if ( value.indexOf( data.selected[ i ] ) != -1 ) {
+												
+												found++;
+												
+											}
+											
+										}
+										
+										if ( found == data.selected.length ) {
+											
+											doColour = true;
+											
+										}
+										
+									}
+									
+									if ( doColour ) {
+										
+										d.color = colour[ index % 3 ](index);
+										
 									}
 								
 								} );
@@ -385,9 +517,12 @@ TT.ui.panel = function() {
 	
 	function showPanel( params ) {
 		
+		// Displays panel at the position of the item
+		
 		p.elements.panel.style({
 			"display": "block"
 		});	
+		
 		p.elements.panel.datum( params.data );
 		
 		p.elements.panel.overlay.style("display", "block");
