@@ -167,6 +167,7 @@ function make() {
 		GeffryeAPI.initObjectDataset();
 		
 		var heapInitialised = false;
+		var initialLoading = true;
 		
 		$j( document ).on("loadingCompleted", function() {
 			
@@ -187,13 +188,15 @@ function make() {
 				
 			} else {
 				
-				//heap.data( dataset );
+				if ( initialLoading ) {
+					heap.data( dataset );
+				}
 				
 			}
 			
 			if ( numFetched >= numRows ) {
 				
-				heap.data( dataset );
+				initialLoading = false;
 				//$j( this ).off( "loadingProgressed" );
 				
 			}

@@ -149,8 +149,6 @@ TT.layout.heap = function() {
 		function updateDataValues() {
 					
 			if (p.grid.initialised) return false;
-			
-			console.log( "DOING" );
 					
 			function makeGrid() {				
 			
