@@ -7,7 +7,7 @@ TATEJSON = 5;
 
 if (!location.hash) {
 
-	loadDataset = TATEJSON;
+	loadDataset = GEFFRYE;
 
 } else {
 	
