@@ -1417,6 +1417,8 @@ TT.layout.heap = function() {
 			
 		},
 		
+		height: 400,
+		
 		parent: false,
 		
 		styles: {
@@ -1884,6 +1886,12 @@ TT.layout.heap = function() {
 		return me;
 	};
 	
+	me.height = function() {
+	
+		return p.height;
+		
+	};
+	
 	me.identifier = function() {
 
 		return nmsp;
@@ -1935,7 +1943,6 @@ TT.layout.heap = function() {
 		
 	};
 	
-		
 	me.styles.images = function(name, value) {
 		
 		if (arguments.length < 2) {
@@ -1966,6 +1973,17 @@ TT.layout.heap = function() {
 		
 		if( !arguments.length ) return p.svg;
 		p.svg = _;
+		
+		return me;
+		
+	};
+	
+	me.translate = function(_) {
+		
+		if( !arguments.length ) return p.translate;
+		p.translate = _;
+		
+		update();
 		
 		return me;
 		
@@ -2823,12 +2841,9 @@ TT.layout.heap = function() {
 							} ); 
 							
 							
-							console.log( "doing");
-							console.log( newDataset );
-							
 							var newHeap = TT.layout.heap().data( newDataset );
 							
-							p.heap.parent().add( newHeap );
+							p.heap.parent().add( newHeap ).translate( [ p.heap.translate()[0], p.heap.translate()[1] + p.heap.height() ] );
 							
 							TT.ui.panel().heap( newHeap ).fields( p.fields ).record( p.record ).initialise();
 							
@@ -2840,6 +2855,7 @@ TT.layout.heap = function() {
 						title: "Separate",
 						description: "Separate all items matching " + data.title + " \"" +  data.selected + "\" from their current heap",
 						action: function() {
+							// Create new
 							
 							var newDataset = p.heap.data().filter( function(d) { 
 								
@@ -2855,11 +2871,14 @@ TT.layout.heap = function() {
 										
 							} ); 
 							
-							var newHeap = TT.layout.heap().data( newDataset );
+							var newHeap = TT.layout.heap().data( newDataset ).translate( [ p.heap.translate()[0], p.heap.translate()[1] + p.heap.height() ] );
 							
 							p.heap.parent().add( newHeap );
 							
 							TT.ui.panel().heap( newHeap ).fields( p.fields ).record( p.record ).initialise();
+
+
+							// Remove from current
 							
 							p.heap.data( p.heap.data().filter( function(d) { 
 									
@@ -2876,6 +2895,9 @@ TT.layout.heap = function() {
 							} ) ) ; 
 								
 							p.data = p.heap.data();  // TODO: Are field values repopulated?
+							
+														
+				
 							
 							hidePanel();
 	

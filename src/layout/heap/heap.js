@@ -46,6 +46,8 @@ TT.layout.heap = function() {
 			
 		},
 		
+		height: 400,
+		
 		parent: false,
 		
 		styles: {
@@ -513,6 +515,12 @@ TT.layout.heap = function() {
 		return me;
 	};
 	
+	me.height = function() {
+	
+		return p.height;
+		
+	};
+	
 	me.identifier = function() {
 
 		return nmsp;
@@ -564,7 +572,6 @@ TT.layout.heap = function() {
 		
 	};
 	
-		
 	me.styles.images = function(name, value) {
 		
 		if (arguments.length < 2) {
@@ -595,6 +602,17 @@ TT.layout.heap = function() {
 		
 		if( !arguments.length ) return p.svg;
 		p.svg = _;
+		
+		return me;
+		
+	};
+	
+	me.translate = function(_) {
+		
+		if( !arguments.length ) return p.translate;
+		p.translate = _;
+		
+		update();
 		
 		return me;
 		
