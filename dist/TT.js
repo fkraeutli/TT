@@ -2833,15 +2833,55 @@ TT.layout.heap = function() {
 							TT.ui.panel().heap( newHeap ).fields( p.fields ).record( p.record ).initialise();
 							
 							hidePanel();
-							
-
-							
+	
 						}
 					}, 
-					/*{
+					{
 						title: "Separate",
-						description: "Separate all items matching " + data.title + " \"" +  data.selected + "\" from their current heap"
-					},*/
+						description: "Separate all items matching " + data.title + " \"" +  data.selected + "\" from their current heap",
+						action: function() {
+							
+							var newDataset = p.heap.data().filter( function(d) { 
+								
+								if ( ! jQuery.isArray( data.selected ) ) {
+	
+									return data.accessor(d) != data.selected;
+								
+								} else {
+									
+									return doesMatch( d, data );
+									
+								}
+										
+							} ); 
+							
+							var newHeap = TT.layout.heap().data( newDataset );
+							
+							p.heap.parent().add( newHeap );
+							
+							TT.ui.panel().heap( newHeap ).fields( p.fields ).record( p.record ).initialise();
+							
+							p.heap.data( p.heap.data().filter( function(d) { 
+									
+								if ( ! jQuery.isArray( data.selected ) ) {
+									
+									return data.accessor(d) != data.selected;
+									
+								} else {
+								
+									return ! doesMatch( d, data );
+									
+								}
+							
+							} ) ) ; 
+								
+							p.data = p.heap.data();  // TODO: Are field values repopulated?
+							
+							hidePanel();
+	
+						}
+						
+					},
 					{
 						
 						title: "Remove",
@@ -2852,38 +2892,22 @@ TT.layout.heap = function() {
 								
 								// TODO update to support array fields
 								
-								if ( ! jQuery.isArray( data.selected ) ) {
 								
-									p.heap.data( p.heap.data().filter( function(d) { 
+								p.heap.data( p.heap.data().filter( function(d) { 
+									
+									if ( ! jQuery.isArray( data.selected ) ) {
 										
 										return data.accessor(d) != data.selected;
 										
-									} ) ); 
+									} else {
 									
-								} else {
-									
-									p.heap.data( p.heap.data().filter( function(d) { 
+										return ! doesMatch( d, data );
+										
+									}
 								
-										var value = data.accessor( d );
+								} ) ) ; 
 									
-										for( var i = 0; i < data.selected.length; i++ ) {	
-											
-											if ( value.indexOf( data.selected[ i ] ) != -1 ) {
-												
-												return false;
-												
-											}
-											
-										}
-										
-										return true;
-										
-									} ) ); 
-									
-								}
-
-								// Repopulate field values
-								p.data = p.heap.data();
+								p.data = p.heap.data(); // TODO: Are field values repopulated?
 								
 								hidePanel();
 								

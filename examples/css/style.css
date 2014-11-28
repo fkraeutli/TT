@@ -213,12 +213,14 @@ a:visited {
 .ui_panel_container .ui_panel ul.operations {
   overflow: hidden;
   background-color: #efefef;
+  padding-top: 1em;
 }
 .ui_panel_container .ui_panel ul.operations li {
   border: none;
   width: 25%;
   float: left;
   text-align: center;
+  padding: 0;
 }
 .ui_panel_container .ui_panel div.header {
   padding: 1em;
@@ -240,6 +242,7 @@ a:visited {
 }
 .ui_panel_container .ui_panel .header .values label {
   font-weight: normal;
+  width: auto;
 }
 .ui_panel_container .ui_panel .loading {
   width: 32px;
