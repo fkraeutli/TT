@@ -1853,7 +1853,7 @@ TT.layout.heap = function() {
 		// Some cleaning: TODO notify user of records that didn't pass test
 		_.forEach( function(d) {
 			
-			if ( d.from && d.to && d.id && d.from < d.to ) {
+			if ( d.from && d.to && d.id && d.from <= d.to ) {
 			
 				d[nmsp] = {};
 				
