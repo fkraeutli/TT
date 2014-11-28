@@ -363,6 +363,32 @@ a, a:visited {
 			
 		}
 		
+		.loading {
+			
+			width: 32px;
+			height: 32px;
+			margin: 50% auto;
+			background: url(images/ajax-loader.gif);
+			
+		}
+		
+		.loading.progress {
+			
+			width: 80%;
+			background: none;
+			border: 1px solid @colAxisStroke;
+			height: 16px;
+			
+			.bar {
+				
+				.transition();
+				height: 100%;
+				background-color: @eventBarColor;
+				
+			}
+			
+		}
+		
 		.instructions {
 			clear: both;
 			padding: 0 1em;
@@ -390,6 +416,7 @@ a, a:visited {
 			border-width: 10px 0 10px 10px;
 		}
 	}
+	
 	
 	.ui_panel.pointerLeft {
 		
@@ -548,4 +575,13 @@ a.button:hover {
 	}
 }
 */
+
+.transition() {
+	
+	transition: .3s all linear;
+	-webkit-transition: .3s all linear;
+	-moz-transition: .3s all linear;
+	-o-transition: .3s all linear;
+	
+}
 

@@ -1,4 +1,41 @@
-loadFormat = "json";
+TATEART = 0;
+COOPER = 1;
+TICTAC = 2;
+OXFORD = 3;
+GEFFRYE = 4;
+
+if (!location.hash) {
+
+	loadDataset = TATEART;
+
+} else {
+	
+	switch ( location.hash ) {
+		
+		case "#tate":
+			loadDataset = TATEART;
+			break;
+			
+		case "#cooper":
+			loadDataset = COOPER;
+			break;
+			
+		case "#tictac":
+			loadDataset = TICTAC;
+			break;
+			
+		case "#oxford":
+			loadDataset = OXFORD;
+			break;
+			
+		case "#geffrye":
+			loadDataset = GEFFRYE;
+			break;
+		
+		
+	}
+	
+}
 
 $j = jQuery.noConflict();
 
@@ -9,7 +46,7 @@ var dataset = [],
 	ui
 
 
-$j(make);
+$j( make );
 
 function make() {
 
@@ -27,40 +64,116 @@ function make() {
 			.height( $j(window).height() );
 	})
 	
-	GeffryeAPI.initObjectDataset();
+	if ( loadDataset == GEFFRYE ) {
 	
-	var heapInitialised = false;
-	
-	$j(document).on("GeffryeAPI_loadingCompleted", function() {
+		GeffryeAPI.initObjectDataset();
 		
-			console.log( "Dataset Loaded" );
+		var heapInitialised = false;
 		
-	} )
-	.on("GeffryeAPI_loadingProgressed", function ( event, numFetched, numRows ) {
-	
-		console.log( Math.floor( numFetched / numRows * 100 ) + "% loaded" );
-	
-		dataset = GeffryeAPI.dataset();
+		$j(document).on("loadingCompleted", function() {
+			
+				console.log( "Dataset Loaded" );
+			
+		} )
+		.on("loadingProgressed", function ( event, numFetched, numRows ) {
 		
-		if ( ! heapInitialised ) {
-			
-			makeHeap();
-			
-			heapInitialised = true;
-			
-		} else {
-			
-			heap.data( dataset );
-			
-		}
+			console.log( Math.floor( numFetched / numRows * 100 ) + "% loaded" );
 		
-		if ( numFetched >= numRows ) {
+			dataset = GeffryeAPI.dataset();
 			
-			//$j( this ).off( "GeffryeAPI_loadingProgressed" );
+			if ( ! heapInitialised ) {
+				
+				makeHeap();
+				
+				heapInitialised = true;
+				
+			} else {
+				
+				heap.data( dataset );
+				
+			}
 			
-		}
+			if ( numFetched >= numRows ) {
+				
+				//$j( this ).off( "loadingProgressed" );
+				
+			}
+		
+		} );
+		
+	} else if ( loadDataset == TATEART ) {
+		
+		d3.csv( "../../Tate/artwork_data.csv", function(error, data) {
+		
+			if( !error ) {
+								
+				data.forEach( function(d) {
+					
+					if(d.year) {
+						
+						d.from = new Date( +d.year, 0, 1 );
+						
+						d.to = new Date( d.from.valueOf() );
+						d.to.setFullYear( d.from.getFullYear() + 1 );
+					
+						// Replace thumbnail url for local one REMOVE THIS
+						
+						if ( d.thumbnailUrl ) {
+							
+							d.thumbnailUrl = "http://otis.local:8888/Tate/local/" + /([A-Z0-9])*_8.jpg$/.exec( d.thumbnailUrl )[0];
+							
+						}
+						
+					
+						if ( !isNaN(d.from.valueOf()) ){
+							dataset.push(d);
+						}
+					}
+					
+				} );
+				
+				console.log( dataset.length + " instances" );			
+
+				makeHeap();
+				
+			} else {
+				
+				console.error(error);
+			
+			}
+		});
+		
+	} else if ( loadDataset == OXFORD ) {
+				
+		d3.csv( "../../oxford/data/pottery.csv", function(error, data) {
 	
-	} );
+			if ( !error ) {
+			
+				data.forEach( function(d) {
+				
+					d.id = d["Record - Vase-Number"];
+				
+					d.from = new Date( d["Record - Date - From-Date"], 0, 1);
+					d.to = new Date( d["Record - Date - To-Date"], 0, 1);
+					
+					//d.thumbnailUrl = "http://www.beazley.ox.ac.uk/Watermark/displayImage.asp?id=" + d["Record - id"];
+					d.thumbnailUrl = "http://www.beazley.ox.ac.uk/Vases/SPIFF/" + d["Record - Image-Record - Filename"].split(";")[0] + "cc001001.jpe";;
+					
+					if ( !isNaN(d.from.valueOf()) ){
+						dataset.push(d);
+					}
+				
+				} );
+				
+				console.log( dataset.length + " instances" );			
+
+				makeHeap();
+			
+			}	
+		} )
+	
+		
+	}
 				
 
 	//makeHeap();
@@ -76,72 +189,162 @@ function makeHeap() {
 	
 	timeline.add( heap );	
 	
-	fields = [
-			
-			
-		{
-			
-			title: "Collection",
-			field: "collectionCategory",
-			accessor: function(d) {
+	if ( loadDataset == GEFFRYE ) {
+	
+		fields = [
 				
-				return d.collectionCategory;
+				
+			{
+				
+				title: "Collection",
+				field: "collectionCategory",
+				accessor: function(d) {
+					
+					return d.collectionCategory;
+					
+				},
+							
+			},
+			
+			{
+				
+				title: "Location",
+				field: "location",
+				accessor: function(d) {
+					
+					return d.location;
+					
+				}
+				
+			}
+				
+		];
+		
+		for( var i = 0; i < fields.length; i++ ) {
+			
+			fields[ i ].initialise = function( callback ) {
+					
+					var obj = this;
+					
+					GeffryeAPI.loadField( obj.field, function() {
+						
+						delete obj.initialise;
+						callback();
+						
+					} );
+					
+				}
+						
+		}
+		
+		record = {
+					
+			title: function(d) {
+				
+				return d.title[0] || d.wholeObjectName;
 				
 			},
+			
+			subtitle: function(d) {
+				
+				return d.labelText;
+				
+			},
+			
+			image: function(d) {
+				
+				return d.thumbnailUrl;
+			}
+			
+		}
+		
+	} else if ( loadDataset == TATEART ) {
+		
+		fields = [
+			{
+			
+				title: "Artist",
+				accessor: function(d) {
+					return d.artist;
+				}
+				
+			},
+			{
+				
+				title: "Medium",
+				accessor: function(d) {
+				return d.medium;
+				}
+				
+			}
+		];
+		
+		record = {
+			
+			title: function(d) {
+				return d.title;
+			},
+			
+			subtitle: function(d) {
+				return d.artist + "<br>" + d.dateText;
+			},
+			
+			image: function(d) {
+				return d.thumbnailUrl;
+			}
+			
+		}
+		
+	} else if (loadDataset == OXFORD) {
+		
+		record = {
+			
+			title: function(d) {
+				console.log( d );
+				return "Vase #" + d["Record - Vase-Number"];
+			},
+			
+			subtitle: function(d) {
+				return d["Record - Date - From-Date"] + " &ndash; "  + d["Record - Date - To-Date"] + " (" + d["Record - Date-Range"] +  ")";
+			},
+			
+			image: function(d) {
+				return "";
+			}
+			
+		};
+		
+		fields = [
+				{
+				
+					title: "Technique",
+					accessor: function(d) {
+						return d["Record - Technique"];
+					}
+					
+				},
+				{
+				
+					title: "Collection",
+					accessor: function(d) {
+						return d["Record - Collection-Record - Collection - Collection-Name"];
+					}
+					
+				},
+				{
+					title: "Fabric",
+					accessor: function(d) {
 						
-		},
+						return d["Record - Fabric"];
+						
+					}
+					
+				}
+			];
 		
-		{
-			
-			title: "Location",
-			field: "location",
-			accessor: function(d) {
-				
-				return d.location;
-				
-			}
-			
-		}
-			
-	];
-	
-	for( var i = 0; i < fields.length; i++ ) {
-		
-		fields[ i ].initialise = function( callback ) {
-				
-				var obj = this;
-				
-				GeffryeAPI.loadField( obj.field, function() {
-					
-					delete obj.initialise;
-					callback();
-					
-				} );
-				
-			}
-					
 	}
 	
-	record = {
-				
-		title: function(d) {
-			
-			return d.title[0] || d.wholeObjectName;
-			
-		},
-		
-		subtitle: function(d) {
-			
-			return d.labelText;
-			
-		},
-		
-		image: function(d) {
-			
-			return d.thumbnailUrl;
-		}
-		
-	}
+	
 	
 	ui = TT.ui.panel().heap( heap ).fields( fields ).record( record ).initialise();
 

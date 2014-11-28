@@ -235,6 +235,26 @@ a:visited {
   color: white;
   text-shadow: -1px -1px 1em rgba(0, 0, 0, 0.2), 1px -1px 1em rgba(0, 0, 0, 0.2), -1px 1px 1em rgba(0, 0, 0, 0.2), 1px 1px 1em rgba(0, 0, 0, 0.2);
 }
+.ui_panel_container .ui_panel .loading {
+  width: 32px;
+  height: 32px;
+  margin: 50% auto;
+  background: url(images/ajax-loader.gif);
+}
+.ui_panel_container .ui_panel .loading.progress {
+  width: 80%;
+  background: none;
+  border: 1px solid #dddddd;
+  height: 16px;
+}
+.ui_panel_container .ui_panel .loading.progress .bar {
+  transition: .3s all linear;
+  -webkit-transition: .3s all linear;
+  -moz-transition: .3s all linear;
+  -o-transition: .3s all linear;
+  height: 100%;
+  background-color: #008080;
+}
 .ui_panel_container .ui_panel .instructions {
   clear: both;
   padding: 0 1em;
