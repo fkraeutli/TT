@@ -325,8 +325,8 @@ TT.ui.panel = function() {
 							var newDataset = p.heap.data().filter( function(d) { 
 								
 								if ( ! jQuery.isArray( data.selected ) ) {
-	
-									return data.accessor(d) != data.selected;
+									
+									return data.accessor( d ) == data.selected;
 								
 								} else {
 									
@@ -336,10 +336,10 @@ TT.ui.panel = function() {
 										
 							} ); 
 							
+												
+							var newHeap = TT.layout.heap().data( newDataset ).translate( [ p.heap.translate()[0], p.heap.translate()[1] + p.heap.height() ] );
 							
-							var newHeap = TT.layout.heap().data( newDataset );
-							
-							p.heap.parent().add( newHeap ).translate( [ p.heap.translate()[0], p.heap.translate()[1] + p.heap.height() ] );
+							p.heap.parent().add( newHeap );
 							
 							TT.ui.panel().heap( newHeap ).fields( p.fields ).record( p.record ).initialise();
 							
@@ -357,7 +357,7 @@ TT.ui.panel = function() {
 								
 								if ( ! jQuery.isArray( data.selected ) ) {
 	
-									return data.accessor(d) != data.selected;
+									return data.accessor(d) == data.selected;
 								
 								} else {
 									
