@@ -223,6 +223,12 @@ TT.layout.heap = function() {
 				
 			});
 			
+			p.height = d3.max( p.data, function(d) {
+				
+				return d[nmsp].y;
+				
+			} );
+			
 			p.grid.initialised = true;
 		}
 		
@@ -526,7 +532,7 @@ TT.layout.heap = function() {
 	
 	me.height = function() {
 	
-		return p.height;
+		return p.height / 10;
 		
 	};
 	
