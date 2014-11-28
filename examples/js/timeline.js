@@ -361,6 +361,18 @@ function makeHeap() {
 					
 				}
 				
+			},
+			
+			{
+				
+				title: "Keywords",
+				field: "webKeywords",
+				accessor: function(d) {
+					
+					return d.webKeywords;
+					
+				}
+				
 			}
 				
 		];
