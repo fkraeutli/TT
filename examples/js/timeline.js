@@ -64,7 +64,50 @@ function make() {
 			.height( $j(window).height() );
 	})
 	
-	if ( loadDataset == GEFFRYE ) {
+	
+	if ( loadDataset == TATEART ) {
+		
+		d3.csv( "../../Tate/artwork_data.csv", function(error, data) {
+		
+			if( !error ) {
+								
+				data.forEach( function(d) {
+					
+					if(d.year) {
+						
+						d.from = new Date( +d.year, 0, 1 );
+						
+						d.to = new Date( d.from.valueOf() );
+						d.to.setFullYear( d.from.getFullYear() + 1 );
+					
+						// Replace thumbnail url for local one REMOVE THIS
+						
+						if ( d.thumbnailUrl ) {
+							
+							d.thumbnailUrl = "http://otis.local:8888/Tate/local/" + /([A-Z0-9])*_8.jpg$/.exec( d.thumbnailUrl )[0];
+							
+						}
+						
+					
+						if ( !isNaN(d.from.valueOf()) ){
+							dataset.push(d);
+						}
+					}
+					
+				} );
+				
+				console.log( dataset.length + " instances" );			
+
+				makeHeap();
+				
+			} else {
+				
+				console.error(error);
+			
+			}
+		});
+		
+	} else if ( loadDataset == GEFFRYE ) {
 	
 		GeffryeAPI.initObjectDataset();
 		
@@ -101,34 +144,68 @@ function make() {
 		
 		} );
 		
-	} else if ( loadDataset == TATEART ) {
+	} else if ( loadDataset === COOPER ) {
 		
-		d3.csv( "../../Tate/artwork_data.csv", function(error, data) {
-		
-			if( !error ) {
+						
+		d3.csv( "../../coopeHewittCollection/meta/objects.csv", function(error, data) {		
+			
+			if( !error ) {				
 								
 				data.forEach( function(d) {
 					
-					if(d.year) {
+					if(d.year_start != "" && d.year_end != "") {
 						
-						d.from = new Date( +d.year, 0, 1 );
-						
-						d.to = new Date( d.from.valueOf() );
-						d.to.setFullYear( d.from.getFullYear() + 1 );
+						d.from = new Date( +d.year_start, 0, 1 );
+						d.to = new Date( +d.year_end, 0, 1 );
 					
-						// Replace thumbnail url for local one REMOVE THIS
-						
-						if ( d.thumbnailUrl ) {
-							
-							d.thumbnailUrl = "http://otis.local:8888/Tate/local/" + /([A-Z0-9])*_8.jpg$/.exec( d.thumbnailUrl )[0];
-							
+						if ( d.primary_image && d.primary_image != "" ) {
+							d.thumbnailUrl = d.primary_image.replace(/(_n.jpg|_z.jpg)/, "_b.jpg");
 						}
-						
 					
 						if ( !isNaN(d.from.valueOf()) ){
 							dataset.push(d);
 						}
 					}
+
+					
+				} );
+				
+				console.log( dataset.length + " instances" );			
+
+				makeHeap();
+				
+			} else {
+				
+				console.error(error);
+			
+			}
+			
+		});
+		
+	} else if ( loadDataset === TICTAC ) {		
+		
+		d3.csv( "../../ssl/tictac/tictac_tablets.csv", function(error, data) {
+			
+			if( !error ) {						
+								
+				data.forEach( function(d) {
+					
+					if(d.date_entered_timestamp) {
+						
+						d.id = d.tablet_id;
+						
+						d.from = new Date( d.date_entered_timestamp );
+						
+						d.to = new Date( d.from.valueOf() );
+						d.to.setFullYear( d.from.getFullYear() + 1 );
+						
+						d.thumbnailUrl = "../../ssl/tictac/assets/" + d.image_front;
+					
+						if ( !isNaN(d.from.valueOf()) ){
+							dataset.push(d);
+						}
+					}
+
 					
 				} );
 				
@@ -294,6 +371,137 @@ function makeHeap() {
 			}
 			
 		}
+		
+	} else if (loadDataset == COOPER) {
+		
+		record = {
+			
+			title: function(d) {
+				return d.title;
+			},
+			
+			subtitle: function(d) {
+				return d.provenance + "<br>" + d.date;
+			},
+			
+			image: function(d) {
+				return d.thumbnailUrl;
+			}
+			
+		};
+		
+		fields = [
+				{
+				
+					title: "Medium",
+					accessor: function(d) {
+						return d.medium;
+					}
+					
+				},
+				{
+				
+					title: "Decade",
+					accessor: function(d) {
+						return d.decade;
+					}
+					
+				},
+				{
+				
+					title: "Signed",
+					accessor: function(d) {
+						return d.signed;
+					}
+					
+				},
+				{
+				
+					title: "Markings",
+					accessor: function(d) {
+						return d.markings;
+					}
+					
+				},
+				{
+				
+					title: "Year Acquired",
+					accessor: function(d) {
+						return d.year_acquired;
+					}
+					
+				}
+			];
+		
+	} else if (loadDataset == TICTAC) {
+		
+		record = {
+			
+			title: function(d) {
+				return d.product_name;
+			},
+			
+			subtitle: function(d) {
+				return d.coating + "<br>" + d.date_entered;
+			},
+			
+			image: function(d) {
+				return d.thumbnailUrl;
+			}
+			
+		};
+		
+		fields = [
+				{
+				
+					title: "Coating",
+					accessor: function(d) {
+						return d.coating;
+					}
+					
+				},
+				{
+				
+					title: "Country",
+					accessor: function(d) {
+						return d.country_of_origin;
+					}
+					
+				},
+				{
+				
+					title: "Marking",
+					accessor: function(d) {
+						return d.marking;
+					}
+					
+				},
+				{
+				
+					title: "Colour",
+					accessor: function(d) {
+						return d.colour;
+					}
+					
+				},
+
+				{
+				
+					title: "Plan",
+					accessor: function(d) {
+						return d.plan;
+					}
+					
+				},
+				{
+				
+					title: "Scoring",
+					accessor: function(d) {
+						return d.scoring;
+					}
+					
+				}
+			];
 		
 	} else if (loadDataset == OXFORD) {
 		
