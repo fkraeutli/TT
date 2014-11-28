@@ -157,9 +157,6 @@ TT.timeline = function() {
 					.x(x)
 					.y(y)
 					.scaleExtent( p.scales.minMax.zoom.domain() );			
-					
-				// REMOVE
-				test_timeline_zoom = zoom;
 				
 				p.elements.children = p.svg.insert("g")
 					.attr("class", "timeline_children")
@@ -302,6 +299,12 @@ TT.timeline = function() {
 		p.children.push( layout );
 		
 		update();
+		
+	};
+	
+	me.children = function() {
+		
+		return p.children;
 		
 	};
 	
