@@ -1795,44 +1795,39 @@ TT.layout.heap = function() {
 	me.apply = function () {
 		
 		function initHeap() {
-						
-			function initEvents() {
-			
-				p.elements.outline = p.svg.insert("g")
-					.attr("class", "heap_outline")
-					.attr("id", "hs" + id + "_outline")
-					.append("path")
-					.on("click", function(d) { 
-						if( me.hasOwnProperty("publish") ) {	
 		
-							var event = d3.event;
-		
-							// Determine Column					
-							var dateClicked = new Date( p.scales.pxToDate( event.x + x.domain()[0] ) ),
-								offset =  dateClicked.valueOf() - p.view.from.valueOf(),
-								col = Math.floor(offset / p.grid.resolution);
-							
-							// Determine Row
-							var displace = p.grid.table[ col ].length * p.styles.events.diameter / 2  + p.view.height / 2 ,
-								yClicked = event.y + y.domain()[0],
-								row = Math.floor(( displace - yClicked) / zoom.scale() * p.styles.events.diameter );
-							
-							// FIXME: column and row incorrectly determined after zooming (panning works)
-							
-							console.log(col + "," + row);
+			p.elements.outline = p.svg.insert("g")
+				.attr("class", "heap_outline")
+				.attr("id", "hs" + id + "_outline")
+				.append("path")
+				.on("click", function(d) { 
+					if( me.hasOwnProperty("publish") ) {	
 	
-							me.publish( {data: p.grid.table[ col ][ row ], event: d3.event} );
-					
-						}
-					});
-					
-				p.elements.events = p.svg.insert("g")
-					.attr("class", "heap_events")
-					.attr("id", "hs" + id + "_events");
-					
-			}
+						var event = d3.event;
+	
+						// Determine Column					
+						var dateClicked = new Date( p.scales.pxToDate( event.x + x.domain()[0] ) ),
+							offset =  dateClicked.valueOf() - p.view.from.valueOf(),
+							col = Math.floor(offset / p.grid.resolution);
+						
+						// Determine Row
+						var displace = p.grid.table[ col ].length * p.styles.events.diameter / 2  + p.view.height / 2 ,
+							yClicked = event.y + y.domain()[0],
+							row = Math.floor(( displace - yClicked) / zoom.scale() * p.styles.events.diameter );
+						
+						// FIXME: column and row incorrectly determined after zooming (panning works)
+						
+						console.log(col + "," + row);
+
+						me.publish( {data: p.grid.table[ col ][ row ], event: d3.event} );
 				
-			initEvents();
+					}
+				});
+				
+			p.elements.events = p.svg.insert("g")
+				.attr("class", "heap_events")
+				.attr("id", "hs" + id + "_events");
+					
 			
 		}
 		
@@ -2193,7 +2188,9 @@ TT.layout.heap = function() {
 	function update() {
 		
 		p.children.forEach( function(child) {
+			
 			child.update();
+			
 		} );
 		
 	}
@@ -2808,7 +2805,38 @@ TT.layout.heap = function() {
 					}, 
 					{
 						title: "Duplicate",
-						description: "Create a new heap with the items matching " + data.title + " \"" +  data.selected + "\""
+						description: "Create a new heap with the items matching " + data.title + " \"" +  data.selected + "\"",
+						action: function() {
+							
+							var newDataset = p.heap.data().filter( function(d) { 
+								
+								if ( ! jQuery.isArray( data.selected ) ) {
+	
+									return data.accessor(d) != data.selected;
+								
+								} else {
+									
+									return doesMatch( d, data );
+									
+								}
+										
+							} ); 
+							
+							
+							console.log( "doing");
+							console.log( newDataset );
+							
+							var newHeap = TT.layout.heap().data( newDataset );
+							
+							p.heap.parent().add( newHeap );
+							
+							TT.ui.panel().heap( newHeap ).fields( p.fields ).record( p.record ).initialise();
+							
+							hidePanel();
+							
+
+							
+						}
 					}, 
 					/*{
 						title: "Separate",

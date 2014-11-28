@@ -95,7 +95,9 @@ TT.timeline = function() {
 	function update() {
 		
 		p.children.forEach( function(child) {
+			
 			child.update();
+			
 		} );
 		
 	}
