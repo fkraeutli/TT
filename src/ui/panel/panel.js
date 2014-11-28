@@ -61,6 +61,16 @@ TT.ui.panel = function() {
 			
 		}
 		
+		function bufferPanel() {
+			
+			showPanel( params );
+			
+			p.elements.panel.html( "" )
+				.append( "div" )
+				.attr( "class", "loading" );
+			
+		}
+		
 		function loadContent( data ) {
 		
 			function addHeader() {
@@ -103,6 +113,9 @@ TT.ui.panel = function() {
 						if ( d.initialise && typeof d.initialise == "function" ) {
 							
 							console.log( d );
+							
+							bufferPanel();
+							
 							d.initialise( doLoadField );
 							
 						} else {
@@ -345,6 +358,8 @@ TT.ui.panel = function() {
 			
 			if ( typeof params.data.initialise == "function" ) {
 				
+				bufferPanel();
+				
 				params.data.initialise( makePanel );
 				
 			}
@@ -510,6 +525,44 @@ TT.ui.panel = function() {
 				.attr("class", "pointer pointerLeft");
 			p.elements.panel.append("div")
 				.attr("class", "pointer pointerRight");
+				
+			
+			// Add listener for progress bar
+			jQuery( document ).on("loadingProgressed", function ( event, numFetched, numRows ) {
+			
+				var div = p.elements.panel.select( "div.loading" );
+				
+				if ( div.empty() ) {
+					
+					return false;
+					
+				}
+				
+					
+				var barWidth = function( d ) {
+					
+					return 100 / d.numRows * d.numFetched + "%";
+					
+				};
+				
+				if ( ! div.classed( "progress" ) ) {
+					
+					div.classed( "progress", true );
+					
+				}
+				
+				div.selectAll( "div.bar" )
+					.data( [ { numFetched: numFetched, numRows: numRows } ] )
+				.enter()
+					.append( "div" )
+					.attr( "class", "bar" )
+					.style( "width", barWidth );
+					
+				div.selectAll( "div.bar" )	
+					.style( "width", barWidth );
+				
+			
+			} );
 				
 					
 		}
