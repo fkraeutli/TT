@@ -296,7 +296,35 @@ TT.ui.panel = function() {
 								
 								// TODO update to support array fields
 								
-								p.heap.data( p.heap.data().filter( function(d) { return data.accessor(d) != data.selected;} ) ); 
+								if ( ! jQuery.isArray( data.selected ) ) {
+								
+									p.heap.data( p.heap.data().filter( function(d) { 
+										
+										return data.accessor(d) != data.selected;
+										
+									} ) ); 
+									
+								} else {
+									
+									p.heap.data( p.heap.data().filter( function(d) { 
+								
+										var value = data.accessor( d );
+									
+										for( var i = 0; i < data.selected.length; i++ ) {	
+											
+											if ( value.indexOf( data.selected[ i ] ) != -1 ) {
+												
+												return false;
+												
+											}
+											
+										}
+										
+										return true;
+										
+									} ) ); 
+									
+								}
 
 								// Repopulate field values
 								p.data = p.heap.data();
@@ -353,11 +381,22 @@ TT.ui.panel = function() {
 						
 						var selected = this.options[ this.selectedIndex ].__data__ ;
 						
-						console.log( data.selected);
-						console.log( selected );
+						if( data.options && data.options.indexOf( selected ) == -1 ) {
+							
+							data.options.push( selected );
+							
+						}
 						
+						if ( ! jQuery.isArray( data.selected) ) {
+							
 						
-						data.selected = selected;
+							data.selected = selected;
+							
+						} else {
+							
+							data.selected = Array( selected );
+							
+						}
 						loadField( data );				
 						
 					});
@@ -374,7 +413,7 @@ TT.ui.panel = function() {
 			addOperations();
 			addInstructions();
 			
-			addSelect(); // TODO: populate via API
+			addSelect();
 			
 		}
 		
