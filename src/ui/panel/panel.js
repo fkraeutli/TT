@@ -330,7 +330,11 @@ TT.ui.panel = function() {
 				
 				function populateSelect() {					
 					
-					populateField( data );
+					if ( ! data.values ) {
+						
+						populateField( data );
+						
+					}
 					
 					select.selectAll("option")
 						.data( data.values )
@@ -348,6 +352,11 @@ TT.ui.panel = function() {
 					.on("change", function(d) {
 						
 						var selected = this.options[ this.selectedIndex ].__data__ ;
+						
+						console.log( data.selected);
+						console.log( selected );
+						
+						
 						data.selected = selected;
 						loadField( data );				
 						
