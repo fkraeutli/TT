@@ -244,13 +244,16 @@ TT.layout.heap = function() {
 			
 			if(zoom.scale() > p.thresholds.images) {
 				
-				var imagesEnter = events.filter( function(d) { return !d.hasImage && d.thumbnailUrl; });
+				var imagesEnter = events.filter( function(d) { return ! d.hasImage && d.thumbnailUrl; });
 				
 				imagesEnter.append("image")
 					.attr("xlink:href", function(d) {
 						
 						d3.select("#hs" + id + "_event_" + d.id + " image").on("error", function(event) {
+							
 							d3.select(this).style("display", "none");
+							
+							
 						});
 					
 						d.hasImage = true;

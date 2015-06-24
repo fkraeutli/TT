@@ -456,11 +456,11 @@ TT.ui.panel = function() {
 				
 				function populateSelect() {					
 					
-					if ( ! data.values ) {
+					//if ( ! data.values ) {
 						
 						populateField( data );
 						
-					}
+					//}
 					
 					select.selectAll("option")
 						.data( data.values )
@@ -670,6 +670,8 @@ TT.ui.panel = function() {
 	function populateField( field ) {
 	
 		field.values = []; 
+		
+		p.data = p.heap.data(); // to make sure dataset is complete
 			
 		p.data.forEach( function(d) { 
 			
