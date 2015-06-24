@@ -457,6 +457,14 @@ TT.layout.bars = function() {
 		update();
 		
 	};
+	
+	me.initialise = function() {
+		
+		p.svg.call(me);
+		
+		return me;
+		
+	};
 
 	// Accessors
 	me.data = function(_) {
@@ -481,30 +489,10 @@ TT.layout.bars = function() {
 
 	};
 	
-	me.update = function() {
-		update();
-	};
-	
-	// Linking accessors
-	me.x = function(_) {
-		if( !arguments.length ) return x;
-		x = _;
+	me.identifier = function() {
+
+		return nmsp;
 		
-		return me;
-	};
-		
-	me.y = function(_) {
-		if( !arguments.length ) return y;
-		y = _;
-		
-		return me;
-	};
-	
-	me.zoom = function(_) {
-		if( !arguments.length ) return zoom;
-		zoom = _;
-		
-		return me;
 	};
 	
 	me.styles = {};
@@ -558,6 +546,70 @@ TT.layout.bars = function() {
 		return me;
 		
 	};
+	
+	me.update = function() {
+		update();
+	};
+	
+	// Linking accessors
+	
+	me.parent = function(_) {
+		
+		if( !arguments.length ) return p.parent;
+		p.parent = _;
+		
+		return me;
+		
+	};
+	
+	me.scales = function(_) {
+		
+		if( !arguments.length ) return p.scales;
+		p.scales = _;
+		
+		return me;
+		
+	};
+	
+	me.svg = function(_) {
+		
+		if( !arguments.length ) return p.svg;
+		p.svg = _;
+		
+		return me;
+		
+	};
+	
+	me.view = function(_) {
+		
+		if( !arguments.length ) return p.view;
+		p.view = _;
+		
+		return me;
+		
+	};
+	
+	me.x = function(_) {
+		if( !arguments.length ) return x;
+		x = _;
+		
+		return me;
+	};
+		
+	me.y = function(_) {
+		if( !arguments.length ) return y;
+		y = _;
+		
+		return me;
+	};
+	
+	me.zoom = function(_) {
+		if( !arguments.length ) return zoom;
+		zoom = _;
+		
+		return me;
+	};
+	
 	
 	return me;
 	
