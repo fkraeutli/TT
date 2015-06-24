@@ -483,7 +483,6 @@ function make() {
 
 function makeHeap() {
 
-	timeline.multiplier( 2 );
 	heap = TT.layout.heap().data( dataset );
 	
 	timeline.add( heap );	

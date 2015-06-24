@@ -1265,6 +1265,14 @@ TT.layout.bars = function() {
 		update();
 		
 	};
+	
+	me.initialise = function() {
+		
+		p.svg.call(me);
+		
+		return me;
+		
+	};
 
 	// Accessors
 	me.data = function(_) {
@@ -1289,30 +1297,10 @@ TT.layout.bars = function() {
 
 	};
 	
-	me.update = function() {
-		update();
-	};
-	
-	// Linking accessors
-	me.x = function(_) {
-		if( !arguments.length ) return x;
-		x = _;
+	me.identifier = function() {
+
+		return nmsp;
 		
-		return me;
-	};
-		
-	me.y = function(_) {
-		if( !arguments.length ) return y;
-		y = _;
-		
-		return me;
-	};
-	
-	me.zoom = function(_) {
-		if( !arguments.length ) return zoom;
-		zoom = _;
-		
-		return me;
 	};
 	
 	me.styles = {};
@@ -1366,6 +1354,70 @@ TT.layout.bars = function() {
 		return me;
 		
 	};
+	
+	me.update = function() {
+		update();
+	};
+	
+	// Linking accessors
+	
+	me.parent = function(_) {
+		
+		if( !arguments.length ) return p.parent;
+		p.parent = _;
+		
+		return me;
+		
+	};
+	
+	me.scales = function(_) {
+		
+		if( !arguments.length ) return p.scales;
+		p.scales = _;
+		
+		return me;
+		
+	};
+	
+	me.svg = function(_) {
+		
+		if( !arguments.length ) return p.svg;
+		p.svg = _;
+		
+		return me;
+		
+	};
+	
+	me.view = function(_) {
+		
+		if( !arguments.length ) return p.view;
+		p.view = _;
+		
+		return me;
+		
+	};
+	
+	me.x = function(_) {
+		if( !arguments.length ) return x;
+		x = _;
+		
+		return me;
+	};
+		
+	me.y = function(_) {
+		if( !arguments.length ) return y;
+		y = _;
+		
+		return me;
+	};
+	
+	me.zoom = function(_) {
+		if( !arguments.length ) return zoom;
+		zoom = _;
+		
+		return me;
+	};
+	
 	
 	return me;
 	
@@ -1518,11 +1570,11 @@ TT.layout.heap = function() {
 		}
 		
 		function updateDataValues() {
-		
+					
 			if (p.grid.initialised) return false;
 					
-			function makeGrid() {
-				
+			function makeGrid() {				
+			
 				p.grid.availableWidth = p.scales.dateToPx( p.view.to ) - p.scales.dateToPx( p.view.from );
 				p.grid.numCols = Math.floor( p.grid.availableWidth / p.styles.events.diameter );
 					
@@ -1594,6 +1646,12 @@ TT.layout.heap = function() {
 				
 			});
 			
+			p.height = d3.max( p.data, function(d) {
+				
+				return d[nmsp].y;
+				
+			} );
+			
 			p.grid.initialised = true;
 		}
 		
@@ -1609,13 +1667,16 @@ TT.layout.heap = function() {
 			
 			if(zoom.scale() > p.thresholds.images) {
 				
-				var imagesEnter = events.filter( function(d) { return !d.hasImage && d.thumbnailUrl; });
+				var imagesEnter = events.filter( function(d) { return ! d.hasImage && d.thumbnailUrl; });
 				
 				imagesEnter.append("image")
 					.attr("xlink:href", function(d) {
 						
 						d3.select("#hs" + id + "_event_" + d.id + " image").on("error", function(event) {
+							
 							d3.select(this).style("display", "none");
+							
+							
 						});
 					
 						d.hasImage = true;
@@ -1826,6 +1887,15 @@ TT.layout.heap = function() {
 					}
 				});
 				
+			var dragOutline = d3.behavior.drag().on( "drag", function( d ) {
+			
+				p.translate[1] += d3.event.dy;
+				update();
+				
+			} );
+			
+			p.elements.outline.call( dragOutline );
+				
 			p.elements.events = p.svg.insert("g")
 				.attr("class", "heap_events")
 				.attr("id", "hs" + id + "_events");
@@ -1888,7 +1958,7 @@ TT.layout.heap = function() {
 	
 	me.height = function() {
 	
-		return p.height;
+		return p.height / 10;
 		
 	};
 	
@@ -2268,9 +2338,6 @@ TT.layout.heap = function() {
 					.x(x)
 					.y(y)
 					.scaleExtent( p.scales.minMax.zoom.domain() );			
-					
-				// REMOVE
-				test_timeline_zoom = zoom;
 				
 				p.elements.children = p.svg.insert("g")
 					.attr("class", "timeline_children")
@@ -2413,6 +2480,12 @@ TT.layout.heap = function() {
 		p.children.push( layout );
 		
 		update();
+		
+	};
+	
+	me.children = function() {
+		
+		return p.children;
 		
 	};
 	
@@ -2829,8 +2902,8 @@ TT.layout.heap = function() {
 							var newDataset = p.heap.data().filter( function(d) { 
 								
 								if ( ! jQuery.isArray( data.selected ) ) {
-	
-									return data.accessor(d) != data.selected;
+									
+									return data.accessor( d ) == data.selected;
 								
 								} else {
 									
@@ -2840,10 +2913,10 @@ TT.layout.heap = function() {
 										
 							} ); 
 							
+												
+							var newHeap = TT.layout.heap().data( newDataset ).translate( [ p.heap.translate()[0], p.heap.translate()[1] + p.heap.height() ] );
 							
-							var newHeap = TT.layout.heap().data( newDataset );
-							
-							p.heap.parent().add( newHeap ).translate( [ p.heap.translate()[0], p.heap.translate()[1] + p.heap.height() ] );
+							p.heap.parent().add( newHeap );
 							
 							TT.ui.panel().heap( newHeap ).fields( p.fields ).record( p.record ).initialise();
 							
@@ -2861,7 +2934,7 @@ TT.layout.heap = function() {
 								
 								if ( ! jQuery.isArray( data.selected ) ) {
 	
-									return data.accessor(d) != data.selected;
+									return data.accessor(d) == data.selected;
 								
 								} else {
 									
@@ -2960,11 +3033,11 @@ TT.layout.heap = function() {
 				
 				function populateSelect() {					
 					
-					if ( ! data.values ) {
+					//if ( ! data.values ) {
 						
 						populateField( data );
 						
-					}
+					//}
 					
 					select.selectAll("option")
 						.data( data.values )
@@ -3174,6 +3247,8 @@ TT.layout.heap = function() {
 	function populateField( field ) {
 	
 		field.values = []; 
+		
+		p.data = p.heap.data(); // to make sure dataset is complete
 			
 		p.data.forEach( function(d) { 
 			
