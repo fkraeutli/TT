@@ -6,10 +6,11 @@ GEFFRYE = 4;
 TATEJSON = 5;
 LTM = 6;
 PENN = 7;
+VANDA = 8;
 
 if (!location.hash) {
 
-	loadDataset = GEFFRYE;
+	loadDataset = VANDA;
 
 } else {
 	
@@ -50,6 +51,10 @@ if (!location.hash) {
 		case "#penn":
 			loadDataset = PENN;
 			break;
+			
+		case "#vanda":
+			loadDataset = VANDA;
+			break;
 		
 		
 	}
@@ -86,7 +91,7 @@ function make() {
 	
 	if ( loadDataset == TATEART ) {
 		
-		d3.csv( "../../Tate/artwork_data.csv", function(error, data) {
+		d3.csv( "../../Tate/artwork_data_latest.csv", function(error, data) {
 		
 			if( !error ) {
 								
@@ -216,6 +221,48 @@ function make() {
 			}
 		
 		} );
+		
+	} else if ( loadDataset === VANDA ) {
+		
+		VandAAPI.initObjectDataset();
+		
+		var VAheapInitialised = false;
+		var VAinitialLoading = true;
+		
+		$j( document ).on("loadingCompleted", function() {
+			
+				console.log( "Dataset Loaded" );
+			
+		} )
+		.on( "loadingProgressed", function ( event, numFetched, numRows ) {
+		
+			console.log( Math.floor( numFetched / numRows * 100 ) + "% loaded" );
+		
+			dataset = VandAAPI.dataset();
+			
+			if ( ! VAheapInitialised ) {
+				
+				makeHeap();
+				
+				VAheapInitialised = true;
+				
+			} else {
+				
+				if ( VAinitialLoading ) {
+					heap.data( dataset );
+				}
+				
+			}
+			
+			if ( numFetched >= numRows ) {
+				
+				VAinitialLoading = false;
+				//$j( this ).off( "loadingProgressed" );
+				
+			}
+		
+		} );
+		
 		
 	} else if ( loadDataset === COOPER ) {
 		
@@ -594,6 +641,72 @@ function makeHeap() {
 			
 		};
 		
+	} else if ( loadDataset == VANDA ) {
+	
+			
+	
+		fields = [
+				
+			{
+			
+			title: "Artist",
+			accessor: function(d) {
+				
+					return d.fields.artist;
+					
+				}
+			},	
+			{
+			
+			title: "Location",
+			accessor: function(d) {
+				
+				return d.fields.location;
+						
+				}
+			},
+			{
+			
+			title: "Object",
+			accessor: function(d) {
+				
+				return d.fields.object;
+						
+				}
+			},
+			{
+			
+			title: "Place",
+			accessor: function(d) {
+				
+				return d.fields.place;
+				
+				}
+			}
+						
+		];
+		
+		record = {
+					
+			title: function(d) {
+				
+				return d.fields.title;
+				
+			},
+			
+			subtitle: function(d) {
+				
+				return d.fields.date_text;
+				
+			},
+			
+			image: function(d) {
+				
+				return d.thumbnailUrl;
+			}
+			
+		};
+		
 	} else if (loadDataset == TATEJSON) {
 		
 		fields = [
@@ -741,6 +854,14 @@ function makeHeap() {
 				title: "Medium",
 				accessor: function(d) {
 				return d.medium;
+				}
+				
+			},
+			{
+			
+				title: "Artist Role",
+				accessor: function(d) {
+					return d.artistRole;
 				}
 				
 			}
