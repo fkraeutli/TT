@@ -1265,6 +1265,14 @@ TT.layout.bars = function() {
 		update();
 		
 	};
+	
+	me.initialise = function() {
+		
+		p.svg.call(me);
+		
+		return me;
+		
+	};
 
 	// Accessors
 	me.data = function(_) {
@@ -1289,30 +1297,10 @@ TT.layout.bars = function() {
 
 	};
 	
-	me.update = function() {
-		update();
-	};
-	
-	// Linking accessors
-	me.x = function(_) {
-		if( !arguments.length ) return x;
-		x = _;
+	me.identifier = function() {
+
+		return nmsp;
 		
-		return me;
-	};
-		
-	me.y = function(_) {
-		if( !arguments.length ) return y;
-		y = _;
-		
-		return me;
-	};
-	
-	me.zoom = function(_) {
-		if( !arguments.length ) return zoom;
-		zoom = _;
-		
-		return me;
 	};
 	
 	me.styles = {};
@@ -1367,6 +1355,70 @@ TT.layout.bars = function() {
 		
 	};
 	
+	me.update = function() {
+		update();
+	};
+	
+	// Linking accessors
+	
+	me.parent = function(_) {
+		
+		if( !arguments.length ) return p.parent;
+		p.parent = _;
+		
+		return me;
+		
+	};
+	
+	me.scales = function(_) {
+		
+		if( !arguments.length ) return p.scales;
+		p.scales = _;
+		
+		return me;
+		
+	};
+	
+	me.svg = function(_) {
+		
+		if( !arguments.length ) return p.svg;
+		p.svg = _;
+		
+		return me;
+		
+	};
+	
+	me.view = function(_) {
+		
+		if( !arguments.length ) return p.view;
+		p.view = _;
+		
+		return me;
+		
+	};
+	
+	me.x = function(_) {
+		if( !arguments.length ) return x;
+		x = _;
+		
+		return me;
+	};
+		
+	me.y = function(_) {
+		if( !arguments.length ) return y;
+		y = _;
+		
+		return me;
+	};
+	
+	me.zoom = function(_) {
+		if( !arguments.length ) return zoom;
+		zoom = _;
+		
+		return me;
+	};
+	
+	
 	return me;
 	
 };;/*
@@ -1417,6 +1469,8 @@ TT.layout.heap = function() {
 			
 		},
 		
+		height: 400,
+		
 		parent: false,
 		
 		styles: {
@@ -1433,7 +1487,7 @@ TT.layout.heap = function() {
 		thresholds: {
 			
 			display: 2000, // amount of events
-			images: 30 // zoom factor
+			images: 50 // zoom factor
 			
 		},
 		
@@ -1516,11 +1570,11 @@ TT.layout.heap = function() {
 		}
 		
 		function updateDataValues() {
-		
+					
 			if (p.grid.initialised) return false;
 					
-			function makeGrid() {
-				
+			function makeGrid() {				
+			
 				p.grid.availableWidth = p.scales.dateToPx( p.view.to ) - p.scales.dateToPx( p.view.from );
 				p.grid.numCols = Math.floor( p.grid.availableWidth / p.styles.events.diameter );
 					
@@ -1566,7 +1620,6 @@ TT.layout.heap = function() {
 					d[nmsp].row = minRow;
 					
 					// Add to grid
-					
 					p.grid.table[ d[nmsp].col ][ d[nmsp].row ] = d;
 					
 					if (minRow == p.grid.maxRow) {
@@ -1593,6 +1646,12 @@ TT.layout.heap = function() {
 				
 			});
 			
+			p.height = d3.max( p.data, function(d) {
+				
+				return d[nmsp].y;
+				
+			} );
+			
 			p.grid.initialised = true;
 		}
 		
@@ -1608,30 +1667,61 @@ TT.layout.heap = function() {
 			
 			if(zoom.scale() > p.thresholds.images) {
 				
-				var imagesEnter = events.filter(function(d) { return !d.hasImage && d.thumbnailUrl; });
+				var imagesEnter = events.filter( function(d) { return ! d.hasImage && d.thumbnailUrl; });
 				
 				imagesEnter.append("image")
-						.attr("xlink:href", function(d) {
+					.attr("xlink:href", function(d) {
 						
-							d3.select("#hs" + id + "_event_" + d.id + " image").on("error", function(event) {
-								d3.select(this).style("display", "none");
-							});
-						
-							d.hasImage = true;
-							return d.thumbnailUrl;
+						d3.select("#hs" + id + "_event_" + d.id + " image").on("error", function(event) {
+							
+							d3.select(this).style("display", "none");
+							
+							
 						});
+					
+						d.hasImage = true;
+						
+						if ( typeof d.thumbnailUrl == "function" ) {
+							
+							var element = this,
+								datum = d;
+							
+							d.thumbnailUrl( function( url ) {
+								
+								d3.select( element )
+									.attr( "xlink:href", url );
+								
+								d.thumbnailUrl = url;
+								
+							} );
+							
+						} else {
+						
+							return d.thumbnailUrl;
+							
+						}
+					});
 				
 					
 				events.selectAll("image")
 					.attr("x", -zoom.scale() / 2 * p.styles.images.factor)
 					.attr("y", -zoom.scale() / 2 * p.styles.images.factor)
 					.attr("width", zoom.scale() * p.styles.images.factor + "px")
-					.attr("height", zoom.scale() * p.styles.images.factor + "px");
+					.attr("height", zoom.scale() * p.styles.images.factor + "px")
+					.attr("xlink:href", function(d) {
+					
+						if ( typeof d.thumbnailUrl != "function" ) {
+						
+							return d.thumbnailUrl;
+							
+						}
+						
+					});
 					
 				
 			} else {
 			
-				events.selectAll("image").remove();
+				events.selectAll( "image" ).remove();
 				events.each( function(d) { d.hasImage = false; } );
 				
 			}
@@ -1723,6 +1813,7 @@ TT.layout.heap = function() {
 					//path.unshift( "S", _x( d[ 0 ][nmsp].x + p.styles.events.diameter/2 ), ",", _y( d[ 0 ][nmsp].y ) , " " , _x( d[ 0 ][nmsp].x ), ",", _y( d[ 0 ][nmsp].y ) ); 
 					
 					path.push( "L", _x( d[ d.length-1 ][nmsp].x ), ",", _y( d[ d.length-1 ][nmsp].y  - p.styles.events.diameter / 2 ) );	
+					
 					path.unshift( "L", _x( d[ 0 ][nmsp].x ), ",", _y( d[ 0 ][nmsp].y ) +  p.styles.events.diameter / 2 ); 
 					
 				} else {
@@ -1767,44 +1858,48 @@ TT.layout.heap = function() {
 	me.apply = function () {
 		
 		function initHeap() {
-						
-			function initEvents() {
-			
-				p.elements.outline = p.svg.insert("g")
-					.attr("class", "heap_outline")
-					.attr("id", "hs" + id + "_outline")
-					.append("path")
-					.on("click", function(d) { 
-						if( me.hasOwnProperty("publish") ) {	
 		
-							var event = d3.event;
-		
-							// Determine Column					
-							var dateClicked = new Date( p.scales.pxToDate( event.x + x.domain()[0] ) ),
-								offset =  dateClicked.valueOf() - p.view.from.valueOf(),
-								col = Math.floor(offset / p.grid.resolution);
-							
-							// Determine Row
-							var displace = p.grid.table[ col ].length * p.styles.events.diameter / 2  + p.view.height / 2 ,
-								yClicked = event.y + y.domain()[0],
-								row = Math.floor(( displace - yClicked) / zoom.scale() * p.styles.events.diameter );
-							
-							// FIXME: column and row incorrectly determined after zooming (panning works)
-							
-							console.log(col + "," + row);
+			p.elements.outline = p.svg.insert("g")
+				.attr("class", "heap_outline")
+				.attr("id", "hs" + id + "_outline")
+				.append("path")
+				.on("click", function(d) { 
+					if( me.hasOwnProperty("publish") ) {	
 	
-							me.publish( {data: p.grid.table[ col ][ row ], event: d3.event} );
-					
-						}
-					});
-					
-				p.elements.events = p.svg.insert("g")
-					.attr("class", "heap_events")
-					.attr("id", "hs" + id + "_events");
-					
-			}
+						var event = d3.event;
+	
+						// Determine Column					
+						var dateClicked = new Date( p.scales.pxToDate( event.x + x.domain()[0] ) ),
+							offset =  dateClicked.valueOf() - p.view.from.valueOf(),
+							col = Math.floor(offset / p.grid.resolution);
+						
+						// Determine Row
+						var displace = p.grid.table[ col ].length * p.styles.events.diameter / 2  + p.view.height / 2 ,
+							yClicked = event.y + y.domain()[0],
+							row = Math.floor(( displace - yClicked) / zoom.scale() * p.styles.events.diameter );
+						
+						// FIXME: column and row incorrectly determined after zooming (panning works)
+						
+						console.log(col + "," + row);
+
+						me.publish( {data: p.grid.table[ col ][ row ], event: d3.event} );
 				
-			initEvents();
+					}
+				});
+				
+			var dragOutline = d3.behavior.drag().on( "drag", function( d ) {
+			
+				p.translate[1] += d3.event.dy;
+				update();
+				
+			} );
+			
+			p.elements.outline.call( dragOutline );
+				
+			p.elements.events = p.svg.insert("g")
+				.attr("class", "heap_events")
+				.attr("id", "hs" + id + "_events");
+					
 			
 		}
 		
@@ -1819,13 +1914,22 @@ TT.layout.heap = function() {
 	// Accessors
 	me.data = function(_) {
 		if( !arguments.length ) return p.data;
-		p.data = _;
 		
-		p.data.forEach( function(d) {
-			if( !d.hasOwnProperty(nmsp) ) {
+		p.data = [];
+		
+		// Some cleaning: TODO notify user of records that didn't pass test
+		_.forEach( function(d) {
+			
+			if ( d.from && d.to && d.id && d.from <= d.to ) {
+			
 				d[nmsp] = {};
+				
+				p.data.push( d );
+				
 			}
+			
 		});
+		
 		
 		p.grid.initialised = false;
 		
@@ -1836,13 +1940,13 @@ TT.layout.heap = function() {
 			
 			if( minFrom < p.view.from ) {
 				
-				parent.from( minFrom);
+				p.parent.from( minFrom);
 				
 			}
 			
 			if (maxTo > p.view.to ) {
 			
-				parent.to( maxTo );
+				p.parent.to( maxTo );
 				
 			}
 		
@@ -1850,6 +1954,12 @@ TT.layout.heap = function() {
 		}
 		
 		return me;
+	};
+	
+	me.height = function() {
+	
+		return p.height / 10;
+		
 	};
 	
 	me.identifier = function() {
@@ -1903,7 +2013,6 @@ TT.layout.heap = function() {
 		
 	};
 	
-		
 	me.styles.images = function(name, value) {
 		
 		if (arguments.length < 2) {
@@ -1934,6 +2043,17 @@ TT.layout.heap = function() {
 		
 		if( !arguments.length ) return p.svg;
 		p.svg = _;
+		
+		return me;
+		
+	};
+	
+	me.translate = function(_) {
+		
+		if( !arguments.length ) return p.translate;
+		p.translate = _;
+		
+		update();
 		
 		return me;
 		
@@ -2156,7 +2276,9 @@ TT.layout.heap = function() {
 	function update() {
 		
 		p.children.forEach( function(child) {
+			
 			child.update();
+			
 		} );
 		
 	}
@@ -2216,9 +2338,6 @@ TT.layout.heap = function() {
 					.x(x)
 					.y(y)
 					.scaleExtent( p.scales.minMax.zoom.domain() );			
-					
-				// REMOVE
-				test_timeline_zoom = zoom;
 				
 				p.elements.children = p.svg.insert("g")
 					.attr("class", "timeline_children")
@@ -2361,6 +2480,12 @@ TT.layout.heap = function() {
 		p.children.push( layout );
 		
 		update();
+		
+	};
+	
+	me.children = function() {
+		
+		return p.children;
 		
 	};
 	
@@ -2507,11 +2632,58 @@ TT.layout.heap = function() {
 	
 	function panel( params ) {
 		
-		//console.log( params );
-		
 		if( !params.event || !params.data ) {
 		
 			return false;
+			
+		}
+		
+		function bufferPanel() {
+			
+			showPanel( params );
+			
+			p.elements.panel.html( "" )
+				.append( "div" )
+				.attr( "class", "loading" );
+			
+		}
+		
+		function doesMatch( d, data ) {
+			
+			var value = data.accessor( d ),
+				matches = false;
+			
+			if ( ! jQuery.isArray( value ) ) {
+													
+				if( value == data.selected ) {
+			
+					matches = true;
+				
+				}
+				
+			} else {
+				
+				var found = 0;
+				
+				for( var i = 0; i < data.selected.length; i++ ) {	
+					
+					if ( value.indexOf( data.selected[ i ] ) != -1 ) {
+						
+						found++;
+						
+					}
+					
+				}
+				
+				if ( found == data.selected.length ) {
+					
+					matches = true;
+					
+				}
+				
+			}
+			
+			return matches;
 			
 		}
 		
@@ -2521,8 +2693,8 @@ TT.layout.heap = function() {
 						
 				// Add header
 				var header = p.elements.panel.append("div")
-					.attr("class", "header")
-					.style("background-image", "url(" + p.record.image.call( p.record.image, data ) + ")" );
+					.attr( "class", "header" )
+					.style( "background-image", "url(" + p.record.image.call( p.record.image, data ) + ")" );
 					
 				header.append("h2")
 					.html( p.record.title.call( p.record.title, data ) );
@@ -2536,13 +2708,56 @@ TT.layout.heap = function() {
 				// Add list
 				p.elements.panel.append("ul").attr("class", "select").selectAll("li").data( p.fields )
 					.enter()
-					.append("li")
+				.append("li")
 					.html( function(d) {
-						return "<label>" + d.title + "</label>" + d.accessor( data ); 
+						
+						var content = d.accessor( data );
+						
+						if ( jQuery.isArray( content ) ) {
+							
+							content = content.join( ", " );
+							
+						}
+						
+						return "<label>" + d.title + "</label>" + content; 
+						
 					} )
 					.on( "click", function(d) {
-						d.selected = d.accessor( data );
-						loadField( d );
+						
+						var obj = this;
+						
+						function doLoadField() {
+							
+							d.selected = d.accessor( data );
+							
+							if ( jQuery.isArray( d.selected ) ) {
+								
+								d.options = d.accessor( data );
+								
+							} else {
+								
+								d.options = false;
+								
+							}
+										
+							loadField( d );
+							
+						}
+						
+						if ( d.initialise && typeof d.initialise == "function" ) {
+							
+							console.log( d );
+							
+							bufferPanel();
+							
+							d.initialise( doLoadField );
+							
+						} else {
+							
+							doLoadField();
+							
+						}
+						
 					});
 				
 			}
@@ -2556,19 +2771,97 @@ TT.layout.heap = function() {
 		function loadField( data ) {
 			
 			function addHeader () {
-			
+				
+				var reloadField = function () {
+					
+					var selected = Array();
+					
+					header.select(".values").selectAll( "input[type=checkbox]").each( function( d ) {
+						
+						if ( jQuery( this ).is( ":checked" ) ) {
+							
+							selected.push( d );
+							
+						}
+						
+					} );
+					
+					data.selected = selected;
+					
+					loadField( data );	
+					
+				};
+				
 				
 				var header = p.elements.panel.append("ul")
 					.attr("class", "header");
+				
+				header.append("li")
+					.append( "a" )
+					.attr( "class", "back" )
+					.attr( "href", "#" )
+					.html( "Back" );
+								
+				if ( ! data.options ) {
 					
-				header.selectAll("li")
-					.data([
-						"<a class=\"back\" href=\"#\">Back</a>",
-						"<label>" + data.title + "</label>" + data.selected
-					])
-					.enter()
-					.append("li")
-					.html( function(d) { return d; });
+					header.append("li")
+						.html( function() {
+							return "<label>" + data.title + "</label>" + data.selected;
+							
+						} );
+					
+				} else {
+					
+					var li = header.append("li")
+						.html( function() {
+							return "<label>" + data.title + "</label><div class=\"values\"></div>";
+							
+						} );
+					
+					var enter = li.select( ".values" )
+						.append( "ul" )
+						.selectAll( "li" )
+					.data( data.options )
+						.enter()
+						.append( "li" );
+						
+					enter.append( "input" )
+						.attr( "id", function( d ) {
+							
+							return "input-" + data.field + "-" + d;
+							
+						} )
+						.attr( "type", "checkbox" )
+						.attr( "value", function( d )  {
+							
+							return d;
+							
+						} )
+						.attr( "checked", function( d ) {
+							
+							if ( data.selected.indexOf( d ) != -1 ) {
+								
+								return "checked";
+								
+							}
+							
+						} )
+						.on( "click", reloadField );
+						
+					enter.append( "label" )
+						.attr( "for", function( d ) {
+							
+							return "input-" + data.field + "-" + d;
+							
+						} )
+						.html( function( d ) {
+							
+							return d;
+							
+						} )
+						.on( "click", reloadField );
+				
+				}
 					
 				header.select("a.back")
 					.on("click", function() {
@@ -2603,24 +2896,113 @@ TT.layout.heap = function() {
 					}, 
 					{
 						title: "Duplicate",
-						description: "Create a new heap with the items matching " + data.title + " \"" +  data.selected + "\""
+						description: "Create a new heap with the items matching " + data.title + " \"" +  data.selected + "\"",
+						action: function() {
+							
+							var newDataset = p.heap.data().filter( function(d) { 
+								
+								if ( ! jQuery.isArray( data.selected ) ) {
+									
+									return data.accessor( d ) == data.selected;
+								
+								} else {
+									
+									return doesMatch( d, data );
+									
+								}
+										
+							} ); 
+							
+												
+							var newHeap = TT.layout.heap().data( newDataset ).translate( [ p.heap.translate()[0], p.heap.translate()[1] + p.heap.height() ] );
+							
+							p.heap.parent().add( newHeap );
+							
+							TT.ui.panel().heap( newHeap ).fields( p.fields ).record( p.record ).initialise();
+							
+							hidePanel();
+	
+						}
 					}, 
-					/*{
-						title: "Separate",
-						description: "Separate all items matching " + data.title + " \"" +  data.selected + "\" from their current heap"
-					},*/
 					{
+						title: "Separate",
+						description: "Separate all items matching " + data.title + " \"" +  data.selected + "\" from their current heap",
+						action: function() {
+							// Create new
+							
+							var newDataset = p.heap.data().filter( function(d) { 
+								
+								if ( ! jQuery.isArray( data.selected ) ) {
+	
+									return data.accessor(d) == data.selected;
+								
+								} else {
+									
+									return doesMatch( d, data );
+									
+								}
+										
+							} ); 
+							
+							var newHeap = TT.layout.heap().data( newDataset ).translate( [ p.heap.translate()[0], p.heap.translate()[1] + p.heap.height() ] );
+							
+							p.heap.parent().add( newHeap );
+							
+							TT.ui.panel().heap( newHeap ).fields( p.fields ).record( p.record ).initialise();
+
+
+							// Remove from current
+							
+							p.heap.data( p.heap.data().filter( function(d) { 
+									
+								if ( ! jQuery.isArray( data.selected ) ) {
+									
+									return data.accessor(d) != data.selected;
+									
+								} else {
+								
+									return ! doesMatch( d, data );
+									
+								}
+							
+							} ) ) ; 
+								
+							p.data = p.heap.data();  // TODO: Are field values repopulated?
+							
+														
+				
+							
+							hidePanel();
+	
+						}
+						
+					},
+					{
+						
 						title: "Remove",
 						description: "Remove all items matching " + data.title + " \"" +  data.selected + "\"",
 						action: function() {
 							
 							if( p.heap ) {
 								
-								p.heap.data( p.heap.data().filter( function(d) { return data.accessor(d) != data.selected;} ) ); 
-
-								// Repopulate field values
-								p.data = p.heap.data();
-								populateFields();
+								// TODO update to support array fields
+								
+								
+								p.heap.data( p.heap.data().filter( function(d) { 
+									
+									if ( ! jQuery.isArray( data.selected ) ) {
+										
+										return data.accessor(d) != data.selected;
+										
+									} else {
+									
+										return ! doesMatch( d, data );
+										
+									}
+								
+								} ) ) ; 
+									
+								p.data = p.heap.data(); // TODO: Are field values repopulated?
 								
 								hidePanel();
 								
@@ -2651,23 +3033,45 @@ TT.layout.heap = function() {
 				
 				function populateSelect() {					
 					
+					//if ( ! data.values ) {
+						
+						populateField( data );
+						
+					//}
+					
 					select.selectAll("option")
 						.data( data.values )
 					.enter()
 						.append("option")
 						.html(function(d) { return d; });
 						
-						
 					select.on("mouseover", null);
 						
 				}
 				
 				var select = p.elements.panel.append("select")
+				
 					.attr("class", "select")
 					.on("change", function(d) {
 						
-						var selected = this.options[this.selectedIndex].__data__ ;
-						data.selected = selected;
+						var selected = this.options[ this.selectedIndex ].__data__ ;
+						
+						if( data.options && data.options.indexOf( selected ) == -1 ) {
+							
+							data.options.push( selected );
+							
+						}
+						
+						if ( ! jQuery.isArray( data.selected) ) {
+							
+						
+							data.selected = selected;
+							
+						} else {
+							
+							data.selected = Array( selected );
+							
+						}
 						loadField( data );				
 						
 					});
@@ -2675,7 +3079,7 @@ TT.layout.heap = function() {
 				select.insert("option", ":first-child")
 					.html( "Select a different " + data.title );
 					
-				setTimeout(populateSelect, 300);
+				setTimeout( populateSelect, 300 );
 				
 			}
 			
@@ -2683,6 +3087,7 @@ TT.layout.heap = function() {
 			addHeader();
 			addOperations();
 			addInstructions();
+			
 			addSelect();
 			
 		}
@@ -2690,7 +3095,6 @@ TT.layout.heap = function() {
 		function loadFilterByColour( data ) {
 			
 			function addHeader () {
-			
 				
 				var header = p.elements.panel.append("ul")
 					.attr("class", "header");
@@ -2726,23 +3130,24 @@ TT.layout.heap = function() {
 					.append("li")
 					.style("background-color", function(d) {
 						
-						return colour[ d%3 ](d);
+						return colour[ d % 3 ](d);
 						
 					})
-					.on("click", function(index) {
+					.on("click", function( index ) {
 					
 							if( p.heap ) {
 							
-								p.data.forEach( function(d) { 
+								p.data = p.heap.data();
+								
+								p.data.forEach( function(d) {
 									
-									if( data.accessor(d) == data.selected ) {
-									
-										d.color = colour[ index%3 ](index);
+									if ( doesMatch( d, data ) ) {
+										
+										d.color = colour[ index % 3 ](index);
 										
 									}
-									
-								} );
 								
+								} );
 								
 								p.heap.data( p.data ); 
 								
@@ -2758,9 +3163,30 @@ TT.layout.heap = function() {
 			addHeader();
 			addSwatches();
 		}
+		
+		function makePanel() {
 			
-		showPanel( params );
-		loadContent ( params.data );
+			showPanel( params );
+		
+			loadContent ( params.data );	
+			
+		}
+		
+		if ( ! params.data.initialise ) {
+			
+			makePanel();
+
+		} else {
+			
+			if ( typeof params.data.initialise == "function" ) {
+				
+				bufferPanel();
+				
+				params.data.initialise( makePanel );
+				
+			}
+			
+		}
 		
 	}
 	
@@ -2781,9 +3207,12 @@ TT.layout.heap = function() {
 	
 	function showPanel( params ) {
 		
+		// Displays panel at the position of the item
+		
 		p.elements.panel.style({
 			"display": "block"
 		});	
+		
 		p.elements.panel.datum( params.data );
 		
 		p.elements.panel.overlay.style("display", "block");
@@ -2815,13 +3244,13 @@ TT.layout.heap = function() {
 
 	}
 	
-	function populateFields() {
+	function populateField( field ) {
 	
-		fields.forEach( function(field) { 
+		field.values = []; 
 		
-			field.values = []; 
+		p.data = p.heap.data(); // to make sure dataset is complete
 			
-			p.data.forEach( function(d) { 
+		p.data.forEach( function(d) { 
 			
 				value = field.accessor.call(field.accessor, d); 
 				
@@ -2846,7 +3275,7 @@ TT.layout.heap = function() {
 							
 						}
 						
-						if (!objectInArray) {
+						if (! objectInArray ) {
 							
 							field.values.push(v);
 							
@@ -2861,9 +3290,7 @@ TT.layout.heap = function() {
 				});
 			} );
 			
-			field.values.sort();
-			
-		} );
+		field.values.sort();
 		
 	}
 	
@@ -2878,9 +3305,13 @@ TT.layout.heap = function() {
 				break;
 				
 			case "dblclick":
+			
 				if ( params.data && params.data.url ) {
+					
 					window.open( params.data.url );
+					
 				}
+				
 				break;
 			
 		}
@@ -2922,10 +3353,47 @@ TT.layout.heap = function() {
 			p.elements.panel.append("div")
 				.attr("class", "pointer pointerRight");
 				
+			
+			// Add listener for progress bar
+			jQuery( document ).on("loadingProgressed", function ( event, numFetched, numRows ) {
+			
+				var div = p.elements.panel.select( "div.loading" );
+				
+				if ( div.empty() ) {
+					
+					return false;
+					
+				}
+				
+					
+				var barWidth = function( d ) {
+					
+					return 100 / d.numRows * d.numFetched + "%";
+					
+				};
+				
+				if ( ! div.classed( "progress" ) ) {
+					
+					div.classed( "progress", true );
+					
+				}
+				
+				div.selectAll( "div.bar" )
+					.data( [ { numFetched: numFetched, numRows: numRows } ] )
+				.enter()
+					.append( "div" )
+					.attr( "class", "bar" )
+					.style( "width", barWidth );
+					
+				div.selectAll( "div.bar" )	
+					.style( "width", barWidth );
+				
+			
+			} );
+				
 					
 		}
 		
-		populateFields();
 		initPanel();
 		
 		initialised = true;

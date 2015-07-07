@@ -213,12 +213,14 @@ a:visited {
 .ui_panel_container .ui_panel ul.operations {
   overflow: hidden;
   background-color: #efefef;
+  padding-top: 1em;
 }
 .ui_panel_container .ui_panel ul.operations li {
   border: none;
   width: 25%;
   float: left;
   text-align: center;
+  padding: 0;
 }
 .ui_panel_container .ui_panel div.header {
   padding: 1em;
@@ -234,6 +236,43 @@ a:visited {
   font-weight: normal;
   color: white;
   text-shadow: -1px -1px 1em rgba(0, 0, 0, 0.2), 1px -1px 1em rgba(0, 0, 0, 0.2), -1px 1px 1em rgba(0, 0, 0, 0.2), 1px 1px 1em rgba(0, 0, 0, 0.2);
+}
+.ui_panel_container .ui_panel .header .values {
+  margin: 0 -1em;
+}
+.ui_panel_container .ui_panel .header .values label {
+  font-weight: normal;
+  width: auto;
+}
+.ui_panel_container .ui_panel .loading {
+  width: 32px;
+  height: 32px;
+  margin: 50% auto;
+  background: url(images/ajax-loader.gif);
+}
+.ui_panel_container .ui_panel .loading::after {
+  content: ".";
+  display: block;
+  text-indent: -10000px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+}
+.ui_panel_container .ui_panel .loading.progress {
+  width: 80%;
+  background: none;
+  border: 1px solid #dddddd;
+  height: 16px;
+}
+.ui_panel_container .ui_panel .loading.progress .bar {
+  transition: .3s all linear;
+  -webkit-transition: .3s all linear;
+  -moz-transition: .3s all linear;
+  -o-transition: .3s all linear;
+  height: 100%;
+  background-color: #008080;
 }
 .ui_panel_container .ui_panel .instructions {
   clear: both;

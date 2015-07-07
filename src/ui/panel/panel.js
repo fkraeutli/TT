@@ -55,11 +55,58 @@ TT.ui.panel = function() {
 	
 	function panel( params ) {
 		
-		//console.log( params );
-		
 		if( !params.event || !params.data ) {
 		
 			return false;
+			
+		}
+		
+		function bufferPanel() {
+			
+			showPanel( params );
+			
+			p.elements.panel.html( "" )
+				.append( "div" )
+				.attr( "class", "loading" );
+			
+		}
+		
+		function doesMatch( d, data ) {
+			
+			var value = data.accessor( d ),
+				matches = false;
+			
+			if ( ! jQuery.isArray( value ) ) {
+													
+				if( value == data.selected ) {
+			
+					matches = true;
+				
+				}
+				
+			} else {
+				
+				var found = 0;
+				
+				for( var i = 0; i < data.selected.length; i++ ) {	
+					
+					if ( value.indexOf( data.selected[ i ] ) != -1 ) {
+						
+						found++;
+						
+					}
+					
+				}
+				
+				if ( found == data.selected.length ) {
+					
+					matches = true;
+					
+				}
+				
+			}
+			
+			return matches;
 			
 		}
 		
@@ -69,8 +116,8 @@ TT.ui.panel = function() {
 						
 				// Add header
 				var header = p.elements.panel.append("div")
-					.attr("class", "header")
-					.style("background-image", "url(" + p.record.image.call( p.record.image, data ) + ")" );
+					.attr( "class", "header" )
+					.style( "background-image", "url(" + p.record.image.call( p.record.image, data ) + ")" );
 					
 				header.append("h2")
 					.html( p.record.title.call( p.record.title, data ) );
@@ -84,13 +131,56 @@ TT.ui.panel = function() {
 				// Add list
 				p.elements.panel.append("ul").attr("class", "select").selectAll("li").data( p.fields )
 					.enter()
-					.append("li")
+				.append("li")
 					.html( function(d) {
-						return "<label>" + d.title + "</label>" + d.accessor( data ); 
+						
+						var content = d.accessor( data );
+						
+						if ( jQuery.isArray( content ) ) {
+							
+							content = content.join( ", " );
+							
+						}
+						
+						return "<label>" + d.title + "</label>" + content; 
+						
 					} )
 					.on( "click", function(d) {
-						d.selected = d.accessor( data );
-						loadField( d );
+						
+						var obj = this;
+						
+						function doLoadField() {
+							
+							d.selected = d.accessor( data );
+							
+							if ( jQuery.isArray( d.selected ) ) {
+								
+								d.options = d.accessor( data );
+								
+							} else {
+								
+								d.options = false;
+								
+							}
+										
+							loadField( d );
+							
+						}
+						
+						if ( d.initialise && typeof d.initialise == "function" ) {
+							
+							console.log( d );
+							
+							bufferPanel();
+							
+							d.initialise( doLoadField );
+							
+						} else {
+							
+							doLoadField();
+							
+						}
+						
 					});
 				
 			}
@@ -104,19 +194,97 @@ TT.ui.panel = function() {
 		function loadField( data ) {
 			
 			function addHeader () {
-			
+				
+				var reloadField = function () {
+					
+					var selected = Array();
+					
+					header.select(".values").selectAll( "input[type=checkbox]").each( function( d ) {
+						
+						if ( jQuery( this ).is( ":checked" ) ) {
+							
+							selected.push( d );
+							
+						}
+						
+					} );
+					
+					data.selected = selected;
+					
+					loadField( data );	
+					
+				};
+				
 				
 				var header = p.elements.panel.append("ul")
 					.attr("class", "header");
+				
+				header.append("li")
+					.append( "a" )
+					.attr( "class", "back" )
+					.attr( "href", "#" )
+					.html( "Back" );
+								
+				if ( ! data.options ) {
 					
-				header.selectAll("li")
-					.data([
-						"<a class=\"back\" href=\"#\">Back</a>",
-						"<label>" + data.title + "</label>" + data.selected
-					])
-					.enter()
-					.append("li")
-					.html( function(d) { return d; });
+					header.append("li")
+						.html( function() {
+							return "<label>" + data.title + "</label>" + data.selected;
+							
+						} );
+					
+				} else {
+					
+					var li = header.append("li")
+						.html( function() {
+							return "<label>" + data.title + "</label><div class=\"values\"></div>";
+							
+						} );
+					
+					var enter = li.select( ".values" )
+						.append( "ul" )
+						.selectAll( "li" )
+					.data( data.options )
+						.enter()
+						.append( "li" );
+						
+					enter.append( "input" )
+						.attr( "id", function( d ) {
+							
+							return "input-" + data.field + "-" + d;
+							
+						} )
+						.attr( "type", "checkbox" )
+						.attr( "value", function( d )  {
+							
+							return d;
+							
+						} )
+						.attr( "checked", function( d ) {
+							
+							if ( data.selected.indexOf( d ) != -1 ) {
+								
+								return "checked";
+								
+							}
+							
+						} )
+						.on( "click", reloadField );
+						
+					enter.append( "label" )
+						.attr( "for", function( d ) {
+							
+							return "input-" + data.field + "-" + d;
+							
+						} )
+						.html( function( d ) {
+							
+							return d;
+							
+						} )
+						.on( "click", reloadField );
+				
+				}
 					
 				header.select("a.back")
 					.on("click", function() {
@@ -151,24 +319,113 @@ TT.ui.panel = function() {
 					}, 
 					{
 						title: "Duplicate",
-						description: "Create a new heap with the items matching " + data.title + " \"" +  data.selected + "\""
+						description: "Create a new heap with the items matching " + data.title + " \"" +  data.selected + "\"",
+						action: function() {
+							
+							var newDataset = p.heap.data().filter( function(d) { 
+								
+								if ( ! jQuery.isArray( data.selected ) ) {
+									
+									return data.accessor( d ) == data.selected;
+								
+								} else {
+									
+									return doesMatch( d, data );
+									
+								}
+										
+							} ); 
+							
+												
+							var newHeap = TT.layout.heap().data( newDataset ).translate( [ p.heap.translate()[0], p.heap.translate()[1] + p.heap.height() ] );
+							
+							p.heap.parent().add( newHeap );
+							
+							TT.ui.panel().heap( newHeap ).fields( p.fields ).record( p.record ).initialise();
+							
+							hidePanel();
+	
+						}
 					}, 
-					/*{
-						title: "Separate",
-						description: "Separate all items matching " + data.title + " \"" +  data.selected + "\" from their current heap"
-					},*/
 					{
+						title: "Separate",
+						description: "Separate all items matching " + data.title + " \"" +  data.selected + "\" from their current heap",
+						action: function() {
+							// Create new
+							
+							var newDataset = p.heap.data().filter( function(d) { 
+								
+								if ( ! jQuery.isArray( data.selected ) ) {
+	
+									return data.accessor(d) == data.selected;
+								
+								} else {
+									
+									return doesMatch( d, data );
+									
+								}
+										
+							} ); 
+							
+							var newHeap = TT.layout.heap().data( newDataset ).translate( [ p.heap.translate()[0], p.heap.translate()[1] + p.heap.height() ] );
+							
+							p.heap.parent().add( newHeap );
+							
+							TT.ui.panel().heap( newHeap ).fields( p.fields ).record( p.record ).initialise();
+
+
+							// Remove from current
+							
+							p.heap.data( p.heap.data().filter( function(d) { 
+									
+								if ( ! jQuery.isArray( data.selected ) ) {
+									
+									return data.accessor(d) != data.selected;
+									
+								} else {
+								
+									return ! doesMatch( d, data );
+									
+								}
+							
+							} ) ) ; 
+								
+							p.data = p.heap.data();  // TODO: Are field values repopulated?
+							
+														
+				
+							
+							hidePanel();
+	
+						}
+						
+					},
+					{
+						
 						title: "Remove",
 						description: "Remove all items matching " + data.title + " \"" +  data.selected + "\"",
 						action: function() {
 							
 							if( p.heap ) {
 								
-								p.heap.data( p.heap.data().filter( function(d) { return data.accessor(d) != data.selected;} ) ); 
-
-								// Repopulate field values
-								p.data = p.heap.data();
-								populateFields();
+								// TODO update to support array fields
+								
+								
+								p.heap.data( p.heap.data().filter( function(d) { 
+									
+									if ( ! jQuery.isArray( data.selected ) ) {
+										
+										return data.accessor(d) != data.selected;
+										
+									} else {
+									
+										return ! doesMatch( d, data );
+										
+									}
+								
+								} ) ) ; 
+									
+								p.data = p.heap.data(); // TODO: Are field values repopulated?
 								
 								hidePanel();
 								
@@ -199,23 +456,45 @@ TT.ui.panel = function() {
 				
 				function populateSelect() {					
 					
+					//if ( ! data.values ) {
+						
+						populateField( data );
+						
+					//}
+					
 					select.selectAll("option")
 						.data( data.values )
 					.enter()
 						.append("option")
 						.html(function(d) { return d; });
 						
-						
 					select.on("mouseover", null);
 						
 				}
 				
 				var select = p.elements.panel.append("select")
+				
 					.attr("class", "select")
 					.on("change", function(d) {
 						
-						var selected = this.options[this.selectedIndex].__data__ ;
-						data.selected = selected;
+						var selected = this.options[ this.selectedIndex ].__data__ ;
+						
+						if( data.options && data.options.indexOf( selected ) == -1 ) {
+							
+							data.options.push( selected );
+							
+						}
+						
+						if ( ! jQuery.isArray( data.selected) ) {
+							
+						
+							data.selected = selected;
+							
+						} else {
+							
+							data.selected = Array( selected );
+							
+						}
 						loadField( data );				
 						
 					});
@@ -223,7 +502,7 @@ TT.ui.panel = function() {
 				select.insert("option", ":first-child")
 					.html( "Select a different " + data.title );
 					
-				setTimeout(populateSelect, 300);
+				setTimeout( populateSelect, 300 );
 				
 			}
 			
@@ -231,6 +510,7 @@ TT.ui.panel = function() {
 			addHeader();
 			addOperations();
 			addInstructions();
+			
 			addSelect();
 			
 		}
@@ -238,7 +518,6 @@ TT.ui.panel = function() {
 		function loadFilterByColour( data ) {
 			
 			function addHeader () {
-			
 				
 				var header = p.elements.panel.append("ul")
 					.attr("class", "header");
@@ -274,23 +553,24 @@ TT.ui.panel = function() {
 					.append("li")
 					.style("background-color", function(d) {
 						
-						return colour[ d%3 ](d);
+						return colour[ d % 3 ](d);
 						
 					})
-					.on("click", function(index) {
+					.on("click", function( index ) {
 					
 							if( p.heap ) {
 							
-								p.data.forEach( function(d) { 
+								p.data = p.heap.data();
+								
+								p.data.forEach( function(d) {
 									
-									if( data.accessor(d) == data.selected ) {
-									
-										d.color = colour[ index%3 ](index);
+									if ( doesMatch( d, data ) ) {
+										
+										d.color = colour[ index % 3 ](index);
 										
 									}
-									
-								} );
 								
+								} );
 								
 								p.heap.data( p.data ); 
 								
@@ -306,9 +586,30 @@ TT.ui.panel = function() {
 			addHeader();
 			addSwatches();
 		}
+		
+		function makePanel() {
 			
-		showPanel( params );
-		loadContent ( params.data );
+			showPanel( params );
+		
+			loadContent ( params.data );	
+			
+		}
+		
+		if ( ! params.data.initialise ) {
+			
+			makePanel();
+
+		} else {
+			
+			if ( typeof params.data.initialise == "function" ) {
+				
+				bufferPanel();
+				
+				params.data.initialise( makePanel );
+				
+			}
+			
+		}
 		
 	}
 	
@@ -329,9 +630,12 @@ TT.ui.panel = function() {
 	
 	function showPanel( params ) {
 		
+		// Displays panel at the position of the item
+		
 		p.elements.panel.style({
 			"display": "block"
 		});	
+		
 		p.elements.panel.datum( params.data );
 		
 		p.elements.panel.overlay.style("display", "block");
@@ -363,13 +667,13 @@ TT.ui.panel = function() {
 
 	}
 	
-	function populateFields() {
+	function populateField( field ) {
 	
-		fields.forEach( function(field) { 
+		field.values = []; 
 		
-			field.values = []; 
+		p.data = p.heap.data(); // to make sure dataset is complete
 			
-			p.data.forEach( function(d) { 
+		p.data.forEach( function(d) { 
 			
 				value = field.accessor.call(field.accessor, d); 
 				
@@ -394,7 +698,7 @@ TT.ui.panel = function() {
 							
 						}
 						
-						if (!objectInArray) {
+						if (! objectInArray ) {
 							
 							field.values.push(v);
 							
@@ -409,9 +713,7 @@ TT.ui.panel = function() {
 				});
 			} );
 			
-			field.values.sort();
-			
-		} );
+		field.values.sort();
 		
 	}
 	
@@ -426,9 +728,13 @@ TT.ui.panel = function() {
 				break;
 				
 			case "dblclick":
+			
 				if ( params.data && params.data.url ) {
+					
 					window.open( params.data.url );
+					
 				}
+				
 				break;
 			
 		}
@@ -470,10 +776,47 @@ TT.ui.panel = function() {
 			p.elements.panel.append("div")
 				.attr("class", "pointer pointerRight");
 				
+			
+			// Add listener for progress bar
+			jQuery( document ).on("loadingProgressed", function ( event, numFetched, numRows ) {
+			
+				var div = p.elements.panel.select( "div.loading" );
+				
+				if ( div.empty() ) {
+					
+					return false;
+					
+				}
+				
+					
+				var barWidth = function( d ) {
+					
+					return 100 / d.numRows * d.numFetched + "%";
+					
+				};
+				
+				if ( ! div.classed( "progress" ) ) {
+					
+					div.classed( "progress", true );
+					
+				}
+				
+				div.selectAll( "div.bar" )
+					.data( [ { numFetched: numFetched, numRows: numRows } ] )
+				.enter()
+					.append( "div" )
+					.attr( "class", "bar" )
+					.style( "width", barWidth );
+					
+				div.selectAll( "div.bar" )	
+					.style( "width", barWidth );
+				
+			
+			} );
+				
 					
 		}
 		
-		populateFields();
 		initPanel();
 		
 		initialised = true;
