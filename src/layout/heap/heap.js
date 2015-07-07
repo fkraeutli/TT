@@ -46,6 +46,8 @@ TT.layout.heap = function() {
 			
 		},
 		
+		height: 400,
+		
 		parent: false,
 		
 		styles: {
@@ -62,7 +64,7 @@ TT.layout.heap = function() {
 		thresholds: {
 			
 			display: 2000, // amount of events
-			images: 30 // zoom factor
+			images: 50 // zoom factor
 			
 		},
 		
@@ -145,11 +147,11 @@ TT.layout.heap = function() {
 		}
 		
 		function updateDataValues() {
-		
+					
 			if (p.grid.initialised) return false;
 					
-			function makeGrid() {
-				
+			function makeGrid() {				
+			
 				p.grid.availableWidth = p.scales.dateToPx( p.view.to ) - p.scales.dateToPx( p.view.from );
 				p.grid.numCols = Math.floor( p.grid.availableWidth / p.styles.events.diameter );
 					
@@ -195,7 +197,6 @@ TT.layout.heap = function() {
 					d[nmsp].row = minRow;
 					
 					// Add to grid
-					
 					p.grid.table[ d[nmsp].col ][ d[nmsp].row ] = d;
 					
 					if (minRow == p.grid.maxRow) {
@@ -222,6 +223,12 @@ TT.layout.heap = function() {
 				
 			});
 			
+			p.height = d3.max( p.data, function(d) {
+				
+				return d[nmsp].y;
+				
+			} );
+			
 			p.grid.initialised = true;
 		}
 		
@@ -237,30 +244,61 @@ TT.layout.heap = function() {
 			
 			if(zoom.scale() > p.thresholds.images) {
 				
-				var imagesEnter = events.filter(function(d) { return !d.hasImage && d.thumbnailUrl; });
+				var imagesEnter = events.filter( function(d) { return ! d.hasImage && d.thumbnailUrl; });
 				
 				imagesEnter.append("image")
-						.attr("xlink:href", function(d) {
+					.attr("xlink:href", function(d) {
 						
-							d3.select("#hs" + id + "_event_" + d.id + " image").on("error", function(event) {
-								d3.select(this).style("display", "none");
-							});
-						
-							d.hasImage = true;
-							return d.thumbnailUrl;
+						d3.select("#hs" + id + "_event_" + d.id + " image").on("error", function(event) {
+							
+							d3.select(this).style("display", "none");
+							
+							
 						});
+					
+						d.hasImage = true;
+						
+						if ( typeof d.thumbnailUrl == "function" ) {
+							
+							var element = this,
+								datum = d;
+							
+							d.thumbnailUrl( function( url ) {
+								
+								d3.select( element )
+									.attr( "xlink:href", url );
+								
+								d.thumbnailUrl = url;
+								
+							} );
+							
+						} else {
+						
+							return d.thumbnailUrl;
+							
+						}
+					});
 				
 					
 				events.selectAll("image")
 					.attr("x", -zoom.scale() / 2 * p.styles.images.factor)
 					.attr("y", -zoom.scale() / 2 * p.styles.images.factor)
 					.attr("width", zoom.scale() * p.styles.images.factor + "px")
-					.attr("height", zoom.scale() * p.styles.images.factor + "px");
+					.attr("height", zoom.scale() * p.styles.images.factor + "px")
+					.attr("xlink:href", function(d) {
+					
+						if ( typeof d.thumbnailUrl != "function" ) {
+						
+							return d.thumbnailUrl;
+							
+						}
+						
+					});
 					
 				
 			} else {
 			
-				events.selectAll("image").remove();
+				events.selectAll( "image" ).remove();
 				events.each( function(d) { d.hasImage = false; } );
 				
 			}
@@ -352,6 +390,7 @@ TT.layout.heap = function() {
 					//path.unshift( "S", _x( d[ 0 ][nmsp].x + p.styles.events.diameter/2 ), ",", _y( d[ 0 ][nmsp].y ) , " " , _x( d[ 0 ][nmsp].x ), ",", _y( d[ 0 ][nmsp].y ) ); 
 					
 					path.push( "L", _x( d[ d.length-1 ][nmsp].x ), ",", _y( d[ d.length-1 ][nmsp].y  - p.styles.events.diameter / 2 ) );	
+					
 					path.unshift( "L", _x( d[ 0 ][nmsp].x ), ",", _y( d[ 0 ][nmsp].y ) +  p.styles.events.diameter / 2 ); 
 					
 				} else {
@@ -396,44 +435,48 @@ TT.layout.heap = function() {
 	me.apply = function () {
 		
 		function initHeap() {
-						
-			function initEvents() {
-			
-				p.elements.outline = p.svg.insert("g")
-					.attr("class", "heap_outline")
-					.attr("id", "hs" + id + "_outline")
-					.append("path")
-					.on("click", function(d) { 
-						if( me.hasOwnProperty("publish") ) {	
 		
-							var event = d3.event;
-		
-							// Determine Column					
-							var dateClicked = new Date( p.scales.pxToDate( event.x + x.domain()[0] ) ),
-								offset =  dateClicked.valueOf() - p.view.from.valueOf(),
-								col = Math.floor(offset / p.grid.resolution);
-							
-							// Determine Row
-							var displace = p.grid.table[ col ].length * p.styles.events.diameter / 2  + p.view.height / 2 ,
-								yClicked = event.y + y.domain()[0],
-								row = Math.floor(( displace - yClicked) / zoom.scale() * p.styles.events.diameter );
-							
-							// FIXME: column and row incorrectly determined after zooming (panning works)
-							
-							console.log(col + "," + row);
+			p.elements.outline = p.svg.insert("g")
+				.attr("class", "heap_outline")
+				.attr("id", "hs" + id + "_outline")
+				.append("path")
+				.on("click", function(d) { 
+					if( me.hasOwnProperty("publish") ) {	
 	
-							me.publish( {data: p.grid.table[ col ][ row ], event: d3.event} );
-					
-						}
-					});
-					
-				p.elements.events = p.svg.insert("g")
-					.attr("class", "heap_events")
-					.attr("id", "hs" + id + "_events");
-					
-			}
+						var event = d3.event;
+	
+						// Determine Column					
+						var dateClicked = new Date( p.scales.pxToDate( event.x + x.domain()[0] ) ),
+							offset =  dateClicked.valueOf() - p.view.from.valueOf(),
+							col = Math.floor(offset / p.grid.resolution);
+						
+						// Determine Row
+						var displace = p.grid.table[ col ].length * p.styles.events.diameter / 2  + p.view.height / 2 ,
+							yClicked = event.y + y.domain()[0],
+							row = Math.floor(( displace - yClicked) / zoom.scale() * p.styles.events.diameter );
+						
+						// FIXME: column and row incorrectly determined after zooming (panning works)
+						
+						console.log(col + "," + row);
+
+						me.publish( {data: p.grid.table[ col ][ row ], event: d3.event} );
 				
-			initEvents();
+					}
+				});
+				
+			var dragOutline = d3.behavior.drag().on( "drag", function( d ) {
+			
+				p.translate[1] += d3.event.dy;
+				update();
+				
+			} );
+			
+			p.elements.outline.call( dragOutline );
+				
+			p.elements.events = p.svg.insert("g")
+				.attr("class", "heap_events")
+				.attr("id", "hs" + id + "_events");
+					
 			
 		}
 		
@@ -448,13 +491,22 @@ TT.layout.heap = function() {
 	// Accessors
 	me.data = function(_) {
 		if( !arguments.length ) return p.data;
-		p.data = _;
 		
-		p.data.forEach( function(d) {
-			if( !d.hasOwnProperty(nmsp) ) {
+		p.data = [];
+		
+		// Some cleaning: TODO notify user of records that didn't pass test
+		_.forEach( function(d) {
+			
+			if ( d.from && d.to && d.id && d.from <= d.to ) {
+			
 				d[nmsp] = {};
+				
+				p.data.push( d );
+				
 			}
+			
 		});
+		
 		
 		p.grid.initialised = false;
 		
@@ -465,13 +517,13 @@ TT.layout.heap = function() {
 			
 			if( minFrom < p.view.from ) {
 				
-				parent.from( minFrom);
+				p.parent.from( minFrom);
 				
 			}
 			
 			if (maxTo > p.view.to ) {
 			
-				parent.to( maxTo );
+				p.parent.to( maxTo );
 				
 			}
 		
@@ -479,6 +531,12 @@ TT.layout.heap = function() {
 		}
 		
 		return me;
+	};
+	
+	me.height = function() {
+	
+		return p.height / 10;
+		
 	};
 	
 	me.identifier = function() {
@@ -532,7 +590,6 @@ TT.layout.heap = function() {
 		
 	};
 	
-		
 	me.styles.images = function(name, value) {
 		
 		if (arguments.length < 2) {
@@ -563,6 +620,17 @@ TT.layout.heap = function() {
 		
 		if( !arguments.length ) return p.svg;
 		p.svg = _;
+		
+		return me;
+		
+	};
+	
+	me.translate = function(_) {
+		
+		if( !arguments.length ) return p.translate;
+		p.translate = _;
+		
+		update();
 		
 		return me;
 		
