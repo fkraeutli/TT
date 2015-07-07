@@ -61,11 +61,7 @@ if (!location.hash) {
 	
 }
 
-<<<<<<< HEAD
-loadFormat = "csv";
 
-=======
->>>>>>> SSL-API
 $j = jQuery.noConflict();
 
 var dataset = [],
