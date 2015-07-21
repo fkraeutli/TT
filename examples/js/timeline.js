@@ -278,6 +278,7 @@ function make() {
 						
 						d.from = new Date( +d.year_start, 0, 1 );
 						d.to = new Date( +d.year_end, 0, 1 );
+						
 					
 						if ( d.primary_image && d.primary_image !== "" ) {
 							d.thumbnailUrl = d.primary_image.replace(/(_n.jpg|_z.jpg)/, "_b.jpg");
@@ -595,6 +596,18 @@ function makeHeap() {
 				accessor: function(d) {
 					
 					return d.room;
+					
+				}
+				
+			},
+			
+			{
+				
+				title: "Has image",
+				field: "thumbURL",
+				accessor: function(d) {
+					
+					return d.thumbnailUrl === "" ? "No" : "Yes";
 					
 				}
 				
