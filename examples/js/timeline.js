@@ -10,7 +10,7 @@ VANDA = 8;
 
 if (!location.hash) {
 
-	loadDataset = VANDA;
+	loadDataset = TATEART;
 
 } else {
 	

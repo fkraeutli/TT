@@ -254,9 +254,10 @@ TT.timeline = function() {
 		updateAxis();
 		updateZoom();
 		
-			
 		p.children.forEach( function(child) {
+			
 			child.refresh();
+		
 		} );
 		
 	};

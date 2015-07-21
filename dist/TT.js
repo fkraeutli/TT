@@ -1440,6 +1440,9 @@ TT.layout.heap = function() {
 	
 	if(!TT.layout.heap.id) TT.layout.heap.id = 0;
 	
+	var LAYOUT_SYMMETRICAL = "symmetrical",
+		LAYOUT_HEAP = "heap";
+	
 	var	initialised = false,
 		id = TT.layout.heap.id++,
 		me = {},
@@ -1470,6 +1473,8 @@ TT.layout.heap = function() {
 		},
 		
 		height: 400,
+		
+		layout: LAYOUT_SYMMETRICAL,
 		
 		parent: false,
 		
@@ -1641,8 +1646,16 @@ TT.layout.heap = function() {
 				
 				d[nmsp].x = computeGridXForColumn( d[nmsp].col ); 
 				
-				var displace = computeDisplaceForColumn( d[nmsp].col );
-				d[nmsp].y = -d[nmsp].row * p.styles.events.diameter + displace - displace % p.styles.events.diameter;
+				if ( p.layout == LAYOUT_SYMMETRICAL ) {
+				
+					var displace = computeDisplaceForColumn( d[nmsp].col );
+					d[nmsp].y = -d[nmsp].row * p.styles.events.diameter + displace - displace % p.styles.events.diameter;
+					
+				} else if ( p.layout == LAYOUT_HEAP ) {
+					
+					d[nmsp].y = -d[nmsp].row * p.styles.events.diameter;// - p.view.height / 2;
+										
+				}
 				
 			});
 			
@@ -1737,7 +1750,7 @@ TT.layout.heap = function() {
 		var drawOutline = false;
 		
 		// Draw no events if too many would be visible
-		if(eventData.length > p.thresholds.display) {
+		if( eventData.length > p.thresholds.display ) {
 		
 			drawOutline = true;
 		
@@ -1960,6 +1973,16 @@ TT.layout.heap = function() {
 	
 		return p.height / 10;
 		
+	};
+	
+	me.layout = function(_) {
+		
+		if( !arguments.length ) return p.layout;
+		
+		p.layout = _;
+		p.grid.initialised = false;
+		
+		update();
 	};
 	
 	me.identifier = function() {
@@ -2435,9 +2458,10 @@ TT.layout.heap = function() {
 		updateAxis();
 		updateZoom();
 		
-			
 		p.children.forEach( function(child) {
+			
 			child.refresh();
+		
 		} );
 		
 	};
