@@ -89,11 +89,14 @@ function make() {
 		.attr("height", $j(window).height() )
 		.call(timeline);
 	
+	/*
+	
 	$j(window).resize(function() {
 		timeline.width( $j(window).width() )
 			.height( $j(window).height() );
 	});
 	
+	*/
 	
 	if ( loadDataset == TATEART ) {
 		
