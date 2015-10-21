@@ -7,6 +7,7 @@ TATEJSON = 5;
 LTM = 6;
 PENN = 7;
 VANDA = 8;
+MOMA = 9;
 
 if (!location.hash) {
 
@@ -54,6 +55,10 @@ if (!location.hash) {
 			
 		case "#vanda":
 			loadDataset = VANDA;
+			break;
+			
+		case "#moma":
+			loadDataset = MOMA;
 			break;
 		
 		
@@ -513,6 +518,60 @@ function make() {
 				console.log( dataset.length + " instances" );			
 
 				makeHeap();
+				
+			} else {
+				
+				console.error(error);
+			
+			}
+		});
+	} else if (loadDataset === MOMA) {
+		
+		d3.csv( "../../moma/Artworks.csv", function(error, data) {
+		
+			if( !error ) {
+		
+				
+				momadata = data;
+				
+				data.forEach( function( d ) { 
+					
+					d.id = d.ObjectID;
+					d.from = new Date( +d.Date, 0, 1 );
+					d.to = new Date( +d.Date+1, 12, 31 );
+					
+						
+					if ( !isNaN(d.from.valueOf()) &&  !isNaN(d.to.valueOf()) ){
+						dataset.push(d);
+					}
+					
+					
+				} );
+				
+				console.log( dataset.length + " instances" );			
+
+				makeHeap();
+				
+				/*
+				var newDataset = [];
+
+				// make another one with acquisition dates 
+				dataset.forEach( function( d ) { 
+					
+					d.from = new Date( d.DateAcquired );
+					d.to = new Date( d.DateAcquired );
+					
+					d.to.setFullYear( d.to.getFullYear() + 1 );
+					
+					newDataset.push( d );
+					
+				} );
+				
+				dataset = newDataset;
+				
+				console.log( dataset.length + " instances" );			
+				makeHeap();
+				*/
 				
 			} else {
 				
@@ -1383,6 +1442,84 @@ function makeHeap() {
 			
 			subtitle: function(d) {
 				return d.date_made;
+			},
+			
+			image: function(d) {
+				return false;
+			}
+			
+		};
+		
+	} else if ( loadDataset == MOMA ) {
+		
+
+		fields = [
+			{
+			
+				title: "Artist",
+				accessor: function(d) {
+					return d.Artist;
+				}
+				
+			},
+			{
+				
+				title: "Classification",
+				accessor: function(d) {
+					return d.Classification;
+				}
+				
+			},
+			{
+				
+				title: "CreditLine",
+				accessor: function(d) {
+				return d.CreditLine;
+				}
+				
+			},
+			{
+				
+				title: "Cur. Approv.",
+				accessor: function(d) {
+				return d.CuratorApproved;
+				}
+				
+			},
+			{
+				
+				title: "Department",
+				accessor: function(d) {
+				return d.Department;
+				}
+				
+			},
+			{
+				
+				title: "Medium",
+				accessor: function(d) {
+				return d.Medium;
+				}
+				
+			},
+			{
+				
+				title: "MoMANumber",
+				accessor: function(d) {
+				return d.MoMANumber;
+				}
+				
+			}
+		];
+		
+		record = {
+			
+			title: function(d) {
+				return d.Title;
+			},
+			
+			subtitle: function(d) {
+				return d.Date;
 			},
 			
 			image: function(d) {
