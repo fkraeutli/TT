@@ -9,6 +9,8 @@ PENN = 7;
 VANDA = 8;
 MOMA = 9;
 
+rescale = false;
+
 if (!location.hash) {
 
 	loadDataset = TATEART;
@@ -218,6 +220,7 @@ function make() {
 				
 				if ( initialLoading ) {
 					heap.data( dataset );
+					if ( rescale ) rescaleDots();
 				}
 				
 			}
@@ -597,6 +600,9 @@ function makeHeap() {
 	heap = TT.layout.heap().data( dataset );//.layout( "heap" );
 	
 	timeline.add( heap );	
+	
+	
+	if ( rescale ) rescaleDots();
 	
 	if ( loadDataset == GEFFRYE ) {
 	
@@ -1557,8 +1563,18 @@ function makeHeap() {
 		
 	} 
 	
-	
-	ui = TT.ui.panel().heap( heap ).fields( fields ).record( record ).initialise();
+	var ui = TT.ui.panel().heap( heap ).fields( fields ).record( record ).initialise();
 
 		
+}
+
+function rescaleDots( numDotsPerYear ) {
+	
+	
+	if ( ! numDotsPerYear) numDotsPerYear = 6;
+	var pixels = ( heap.scales().dateToPx( new Date(31536000000) ) - heap.scales().dateToPx( new Date(0) ) ) / numDotsPerYear; 
+	
+	heap.styles.events( "diameter", pixels / 2); // Display 4 events per year
+	heap.styles.images( "factor", pixels / 2); 
+	
 }
