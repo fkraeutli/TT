@@ -101,6 +101,7 @@ function make() {
 	if ( loadDataset == TATEART ) {
 		
 		d3.csv( "../../Tate/artwork_data_latest.csv", function(error, data) {
+		d3.csv( "../../Tate/artwork_data.csv", function(error, data) {
 		
 			if( !error ) {
 								
@@ -108,7 +109,7 @@ function make() {
 					
 					if(d.year) {
 						
-						d.from = new Date( +d.year, 0, 1 );
+						d.from = new Date( +d.year, 0, 1 ); // d.from = new Date( +d.acquisitionYear, 0, 1 );
 						
 						d.to = new Date( d.from.valueOf() );
 						d.to.setFullYear( d.from.getFullYear() + 1 );
