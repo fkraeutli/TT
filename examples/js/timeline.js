@@ -940,6 +940,30 @@ function makeHeap() {
 					return d.artistRole;
 				}
 				
+			},
+			{
+			
+				title: "Credit Line",
+				accessor: function(d) {
+					return d.creditLine;
+				}
+				
+			},
+			{
+			
+				title: "Year Acquired",
+				accessor: function(d) {
+					return d.acquisitionYear;
+				}
+				
+			},
+			{
+			
+				title: "Recency",
+				accessor: function(d) {
+					return (+d.acquisitionYear) - (+d.year);
+				}
+				
 			}
 		];
 		
