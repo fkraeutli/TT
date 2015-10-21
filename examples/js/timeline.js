@@ -100,7 +100,6 @@ function make() {
 	
 	if ( loadDataset == TATEART ) {
 		
-		d3.csv( "../../Tate/artwork_data_latest.csv", function(error, data) {
 		d3.csv( "../../Tate/artwork_data.csv", function(error, data) {
 		
 			if( !error ) {
@@ -595,7 +594,7 @@ function make() {
 
 function makeHeap() {
 
-	heap = TT.layout.heap().data( dataset );
+	heap = TT.layout.heap().data( dataset );//.layout( "heap" );
 	
 	timeline.add( heap );	
 	
