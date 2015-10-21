@@ -237,6 +237,9 @@ a:visited {
   color: white;
   text-shadow: -1px -1px 1em rgba(0, 0, 0, 0.2), 1px -1px 1em rgba(0, 0, 0, 0.2), -1px 1px 1em rgba(0, 0, 0, 0.2), 1px 1px 1em rgba(0, 0, 0, 0.2);
 }
+.ui_panel_container .ui_panel .header {
+  background-color: #ccc;
+}
 .ui_panel_container .ui_panel .header .values {
   margin: 0 -1em;
 }
