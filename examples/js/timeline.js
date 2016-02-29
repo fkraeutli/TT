@@ -3,18 +3,15 @@ COOPER = 1;
 TICTAC = 2;
 OXFORD = 3;
 GEFFRYE = 4;
-<<<<<<< HEAD
 BRITTEN = 5;
-=======
 TATEJSON = 5;
 LTM = 6;
 PENN = 7;
 VANDA = 8;
->>>>>>> develop
 
 if (!location.hash) {
 
-	loadDataset = VANDA;
+	loadDataset = TATEART;
 
 } else {
 	
@@ -44,10 +41,10 @@ if (!location.hash) {
 			loadDataset = GEFFRYE;
 			break;
 			
-<<<<<<< HEAD
 		case "#britten":
 			loadDataset = BRITTEN;
-=======
+			break;
+
 		case "#ltm":
 			loadDataset = LTM;
 			break;
@@ -62,7 +59,6 @@ if (!location.hash) {
 			
 		case "#vanda":
 			loadDataset = VANDA;
->>>>>>> develop
 			break;
 		
 		
@@ -77,13 +73,9 @@ var dataset = [],
 	heap,
 	timeline,
 	fields,
-<<<<<<< HEAD
 	ui,
 	urlsJSON = ["../../Tate/allartworks.js", false, false, false, "../../ssl/geffrye/geffrye-api-objects-20140826.json"];
 	urlsCSV = ["../../Tate/artwork_data.csv", "../../coopeHewittCollection/meta/objects.csv", "../../ssl/tictac/tictac_tablets.csv", "../../oxford/data/pottery.csv",  "../../ssl/geffrye/geffrye-api-objects-20140826.csv",  "../../britten/works_with_dates.csv"];
-=======
-	ui;
->>>>>>> develop
 
 
 $j( make );
@@ -521,14 +513,12 @@ function make() {
 					}
 					
 				} );
-				
-<<<<<<< HEAD
-				}
-			});
+
+			}
 		
-		}
+		} );
 		
-	}else if ( loadDataset == BRITTEN ) {
+	} else if ( loadDataset == BRITTEN ) {
 		
 		if( loadFormat == "json") {
 			
@@ -570,31 +560,12 @@ function make() {
 					makeHeap();
 				
 				}	
-			} )
+			} );
 		
 		}
 		
 	} 
-=======
-				//dataset.splice( 5080 );
-					
-				console.log( dataset.length + " instances" );			
 
-				makeHeap();
-				
-			} else {
-				
-				console.error(error);
-			
-			}
-		});
-	}
-				
-
-	//makeHeap();
-	
-		
->>>>>>> develop
 }
 
 
@@ -603,17 +574,7 @@ function makeHeap() {
 
 	heap = TT.layout.heap().data( dataset );
 	
-<<<<<<< HEAD
-	if ( dataset.length < 2000 ) {
-		
-		heap.styles.events( "diameter", 4);
-		
-	}
-	
-	timeline.add( heap );
-=======
 	timeline.add( heap );	
->>>>>>> develop
 	
 	if ( loadDataset == GEFFRYE ) {
 	
@@ -1442,23 +1403,8 @@ function makeHeap() {
 			}
 		];
 		
-<<<<<<< HEAD
 	}else if (loadDataset == BRITTEN) {
 		
-		record = {
-			
-			title: function(d) {
-			
-				return d.title;
-			},
-			
-			subtitle: function(d) {
-				return d.subtitle;
-			},
-			
-			image: function(d) {
-				return "";
-=======
 		record = {
 			
 			title: function(d) {
@@ -1471,12 +1417,10 @@ function makeHeap() {
 			
 			image: function(d) {
 				return false;
->>>>>>> develop
 			}
 			
 		};
 		
-<<<<<<< HEAD
 		fields = [
 		
 			
@@ -1579,8 +1523,6 @@ function makeHeap() {
 			
 		];
 		
-=======
->>>>>>> develop
 	} 
 	
 	
